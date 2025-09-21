@@ -24,15 +24,15 @@ WORKDIR /app
 RUN pip install --no-cache-dir \
     numpy pandas scipy scikit-learn \
     matplotlib seaborn jupyterlab notebook ipywidgets \
-    torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
-    transformers datasets tokenizers sentencepiece \
-    accelerate peft evaluate \
-    sentence-transformers spacy \
-    faiss-cpu chromadb \
+#    torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
+#    transformers datasets tokenizers sentencepiece \
+#    accelerate peft evaluate \
+#    sentence-transformers spacy \
+#    faiss-cpu chromadb \
     fastapi uvicorn[standard] gunicorn \
-    gradio streamlit \
-    rich loguru tqdm pyyaml \
-    huggingface_hub \
+#    gradio streamlit \
+#    rich loguru tqdm pyyaml \
+#    huggingface_hub \
     pydantic \
     flask-cors
 
