@@ -1,0 +1,24 @@
+{
+  "topics": [
+    "courseOverviewAndGoals",
+    "timeComplexityAndBigORefresh",
+    "concurrencyAndThreads",
+    "distributedCommunicationAndGrpc",
+    "replicationConsistencyAndCap",
+    "faultToleranceAndRaft",
+    "mapReduceAndSparkBasics",
+    "batchVsStreamProcessing",
+    "observabilityAndBackpressure",
+    "caseStudyGfsHdfs"
+  ],
+  "courseOverviewAndGoals": "Scope: Foundations of distributed systems for data-intensive apps. Goals: understand core trade-offs (consistency, availability, latency), reason about failures, and design simple scalable services. Deliverables: 3 homeworks, 1 mini-project, 1 paper presentation.",
+  "timeComplexityAndBigORefresh": "Quick refresher: asymptotic analysis (O, Ω, Θ); common classes: O(1), O(log n), O(n), O(n log n). Distributed angle: cost models also include network latency (RTT), throughput, serialization overhead, and coordination. Mini-exercise: compare local sort O(n log n) vs distributed sort with shuffle cost.",
+  "concurrencyAndThreads": "Concepts: threads, critical sections, locks, deadlocks, race conditions. Primitives: mutex, RW-lock, atomic operations, thread pools, futures/promises. Example: compute map(f, xs) in a thread pool with bounded queue. Takeaway: concurrency increases throughput but complicates reasoning.",
+  "distributedCommunicationAndGrpc": "RPC vs messaging; sync vs async; serialization (JSON, Protobuf); gRPC IDL and codegen; deadlines, retries, and idempotency keys. Example lab: build a tiny key-value service with Get/Put over gRPC and client-side timeouts.",
+  "replicationConsistencyAndCap": "Replication goals: durability, low-latency reads, HA. Consistency spectrum: strong, monotonic, read-your-writes, eventual. CAP & PACELC intuition: trade-offs under partitions and even without partitions. Pattern: primary/replica vs leaderless (quorums).",
+  "faultToleranceAndRaft": "Failure model: crash-stop vs Byzantine; partial failures and timeouts. Consensus purpose: agree on an ordered log. Raft roles: leader, follower, candidate; leader election; log replication; commit index; safety properties. Exercise: trace leader election with delayed heartbeats.",
+  "mapReduceAndSparkBasics": "MapReduce phases: map, shuffle/sort, reduce; combiner optimization. Spark basics: RDDs, transformations vs actions, narrow vs wide dependencies. Small example: word count with a custom partitioner to reduce skew.",
+  "batchVsStreamProcessing": "Batch = finite data, high throughput; Stream = unbounded data, low latency. Concepts: event time vs processing time, watermarks, windowing (tumbling, sliding), exactly-once via idempotent sinks and checkpoints. Design trade-off: latency vs completeness.",
+  "observabilityAndBackpressure": "Metrics, logs, traces; RED/USE methods; distributed tracing (context propagation). Backpressure: bounded queues, shedding, circuit breakers, token buckets. SLOs: latency percentiles and error budgets. Lab idea: add metrics and a circuit breaker to the gRPC service.",
+  "caseStudyGfsHdfs": "Motivation: large immutable files, high-throughput sequential reads/writes. Architecture: master/NameNode metadata, chunk/block servers, heartbeats, rack-aware replication. Write pipeline and consistency model. Lessons: simple master, large blocks, push computation to data."
+}
