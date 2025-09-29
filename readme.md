@@ -1,1 +1,1 @@
-Hello, World
+Aware - AI study guide
