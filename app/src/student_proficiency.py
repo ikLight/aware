@@ -14,15 +14,11 @@ class StudentProficiency():
     def __init__(self, json_path):
         with open(json_path) as f:
             self._data = json.load(f)
-
-    ##------------------------------------------------##
-
-    def __proficiency_map(self):
         self.__p_map = {0: "beginner", 1: "intermediate", 2: "competent"}
 
     ##------------------------------------------------##
 
     def set_proficiency(self):
-        self.proficiency = self.__p_map["proficiency"]
+        return self.__p_map[self._data["proficiency"]]
 
 ##------------------- END OF StudentProficiency -------------------##
