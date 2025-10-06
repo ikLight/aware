@@ -1,4 +1,4 @@
-# Flashcards Maker API (Gemini)
+# Flashcards Maker 
 
 Turn uploaded study materials into flashcards using Google’s Gemini.  
 Supports **PDF**, **DOCX**, **TXT**, and **images** (JPG/PNG via OCR).
