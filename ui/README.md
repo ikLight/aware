@@ -1,8 +1,8 @@
-# Welcome to Aware
+# Welcome to your Lovable project
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/c71840dc-f741-44f5-9ebd-1ee63ae0d215 
+**URL**: https://lovable.dev/projects/9504a189-2646-460f-a0e4-aaf773623749
 
 ## How can I edit this code?
 
@@ -10,7 +10,7 @@ There are several ways of editing your application.
 
 **Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c71840dc-f741-44f5-9ebd-1ee63ae0d215) and start prompting.
+Simply visit the [Lovable Project](https://lovable.dev/projects/9504a189-2646-460f-a0e4-aaf773623749) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
@@ -59,3 +59,15 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+
+## How can I deploy this project?
+
+Simply open [Lovable](https://lovable.dev/projects/9504a189-2646-460f-a0e4-aaf773623749) and click on Share -> Publish.
+
+## Can I connect a custom domain to my Lovable project?
+
+Yes, you can!
+
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
