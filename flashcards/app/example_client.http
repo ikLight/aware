@@ -1,0 +1,8 @@
+POST http://127.0.0.1:8000/generate
+Content-Type: multipart/form-data
+
+files=@/absolute/path/to/notes.pdf
+files=@/absolute/path/to/lecture.docx
+num_cards=20
+style=active_recall
+answer_format=short
