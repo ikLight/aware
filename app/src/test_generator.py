@@ -10,7 +10,7 @@ class testGenerator:
 
     def __init__(self, json_path, course_material_json):
         self._proficiency = StudentProficiency(json_path).set_proficiency()
-        self._model = "llama3.1:8b"
+        self._model = "deepseek-r1:1.5b"
         with open(course_material_json) as f:
             self._course_material = json.load(f)
     
