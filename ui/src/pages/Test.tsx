@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight, LogOut } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock questions
 const questions = [
@@ -67,9 +68,18 @@ const questions = [
 
 const Test = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Check for authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
@@ -106,15 +116,18 @@ const Test = () => {
 
   return (
     <div className="min-h-screen flex flex-col page-transition">
-      {/* Back Button */}
-      <div className="p-6">
+      {/* Navigation Header */}
+      <div className="p-6 flex justify-end">
         <Button
-          variant="ghost"
-          onClick={() => navigate("/upload")}
-          className="rounded-full"
+          variant="outline"
+          onClick={async () => {
+            await logout();
+            navigate('/login');
+          }}
+          className="rounded-full px-4"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
         </Button>
       </div>
 
@@ -181,7 +194,6 @@ const Test = () => {
                 onClick={handlePrevious}
                 className="rounded-full px-6"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
                 Previous
               </Button>
             )}

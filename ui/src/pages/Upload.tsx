@@ -1,14 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Upload as UploadIcon, FileText, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Upload as UploadIcon, FileText, CheckCircle2, Eye, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { GraphVisualization } from "@/components/GraphVisualization";
 
 const Upload = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logout } = useAuth();
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showVisualization, setShowVisualization] = useState(false);
+  
+  useEffect(() => {
+    // Check for authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -33,7 +47,7 @@ const Upload = () => {
     }
   };
 
-  const handleFiles = (newFiles: File[]) => {
+  const handleFiles = async (newFiles: File[]) => {
     const validFiles = newFiles.filter(file => {
       const validTypes = ['.pdf', '.docx', '.txt'];
       const fileExt = '.' + file.name.split('.').pop()?.toLowerCase();
@@ -46,15 +60,65 @@ const Upload = () => {
         description: "Only PDF, DOCX, and TXT files are supported.",
         variant: "destructive",
       });
+      return;
     }
 
-    setFiles(prev => [...prev, ...validFiles]);
-    
-    if (validFiles.length > 0) {
-      toast({
-        title: "Files uploaded successfully",
-        description: `${validFiles.length} file(s) added.`,
+    try {
+      setFiles(prev => [...prev, ...validFiles]);
+      setIsUploading(true);
+      
+      // Upload files to backend
+      const formData = new FormData();
+      validFiles.forEach(file => formData.append('files', file));
+      
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('http://localhost:8000/upload', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      setIsProcessing(true);
+      toast({
+        title: "Files uploaded",
+        description: "Analyzing your study materials...",
+      });
+
+      const data = await response.json();
+      
+      // Store the paths returned from the server
+      localStorage.setItem('courseMaterialPath', data.course_material);
+      localStorage.setItem('proficiencyPath', data.proficiency);
+      localStorage.setItem('knowledgeGraphPath', data.knowledge_graph);
+
+      toast({
+        title: "Analysis complete",
+        description: "Your study materials have been processed successfully!",
+      });
+
+      // Navigate to test page after successful processing
+      navigate("/test");
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Error",
+        description: "There was an error processing your files.",
+        variant: "destructive",
+      });
+      // Remove the files from state since upload failed
+      setFiles(prev => prev.filter(f => !validFiles.includes(f)));
+    } finally {
+      setIsUploading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -64,15 +128,18 @@ const Upload = () => {
 
   return (
     <div className="min-h-screen flex flex-col page-transition">
-      {/* Back Button */}
-      <div className="p-6">
+      {/* Navigation Header */}
+      <div className="p-6 flex justify-end">
         <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="rounded-full"
+          variant="outline"
+          onClick={async () => {
+            await logout();
+            navigate('/login');
+          }}
+          className="rounded-full px-4"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
         </Button>
       </div>
 
@@ -135,8 +202,11 @@ const Upload = () => {
               <div className="flex items-center gap-2 mb-4">
                 <CheckCircle2 className="w-5 h-5 text-accent" />
                 <p className="font-medium text-foreground">
-                  {files.length} file(s) uploaded
+                  {files.length} file(s) {isProcessing ? "being analyzed" : "uploaded"}
                 </p>
+                {(isUploading || isProcessing) && (
+                  <div className="ml-2 animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
+                )}
               </div>
               {files.map((file, index) => (
                 <div
@@ -163,17 +233,29 @@ const Upload = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="p-6 flex justify-center">
-        <Button
-          size="lg"
-          onClick={() => navigate("/test")}
-          disabled={files.length === 0}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Next: Knowledge Test
-          <ArrowRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
+      {files.length > 0 && !isUploading && !isProcessing && (
+        <div className="fixed bottom-8 right-8 flex gap-4">
+          <Button
+            onClick={() => setShowVisualization(true)}
+            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-full px-6 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
+          >
+            Preview Knowledge Graph
+            <Eye className="ml-2 w-5 h-5" />
+          </Button>
+          <Button
+            onClick={() => navigate("/test")}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
+          >
+            Continue to Test
+            <ArrowRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      )}
+
+      {/* Visualization Modal */}
+      {showVisualization && (
+        <GraphVisualization onClose={() => setShowVisualization(false)} />
+      )}
     </div>
   );
 };
