@@ -6,80 +6,90 @@ import { ArrowRight, LogOut } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import api from "@/services/api";
 
-// Mock questions
-const questions = [
-  {
-    id: 1,
-    question: "What is the primary purpose of a study plan?",
-    options: [
-      "To make studying more complicated",
-      "To organize and structure learning activities",
-      "To avoid studying altogether",
-      "To impress teachers",
-    ],
-    correctAnswer: 1,
-  },
-  {
-    id: 2,
-    question: "Which learning technique involves recalling information without looking at notes?",
-    options: [
-      "Passive reading",
-      "Active recall",
-      "Highlighting",
-      "Copying notes",
-    ],
-    correctAnswer: 1,
-  },
-  {
-    id: 3,
-    question: "What is spaced repetition?",
-    options: [
-      "Studying all material in one session",
-      "Reviewing material at increasing intervals",
-      "Reading notes multiple times in a row",
-      "Studying only the day before exams",
-    ],
-    correctAnswer: 1,
-  },
-  {
-    id: 4,
-    question: "What does 'active learning' mean?",
-    options: [
-      "Listening to lectures without taking notes",
-      "Engaging with material through questions and practice",
-      "Memorizing facts without understanding",
-      "Studying while walking around",
-    ],
-    correctAnswer: 1,
-  },
-  {
-    id: 5,
-    question: "Why is it important to take breaks while studying?",
-    options: [
-      "To procrastinate longer",
-      "To maintain focus and prevent burnout",
-      "To avoid learning too much",
-      "Breaks are not important",
-    ],
-    correctAnswer: 1,
-  },
-];
+interface Question {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  id: number;
+}
+
+const generateDistractors = (answer: string): string[] => {
+  // TODO: Implement distractor generation logic
+  return ["Option B", "Option C", "Option D"];
+};
 
 const Test = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { toast } = useToast();
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [answers, setAnswers] = useState<Record<number, number>>({});
 
   useEffect(() => {
     // Check for authentication
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
+      return;
     }
-  }, [navigate]);
+
+    const fetchQuestions = async () => {
+      try {
+        setIsLoading(true);
+        // Get paths from localStorage
+        const proficiencyPath = localStorage.getItem('proficiencyPath');
+        const courseMaterialPath = localStorage.getItem('courseMaterialPath');
+
+        if (!proficiencyPath || !courseMaterialPath) {
+          toast({
+            title: "Error",
+            description: "Missing required data. Please upload study materials first.",
+            variant: "destructive",
+          });
+          navigate('/upload');
+          return;
+        }
+
+        // Call the create-test endpoint
+        const response = await api.post('/create-test', {
+          json_path: proficiencyPath,
+          course_material_json: courseMaterialPath
+        });
+
+        // Transform the API response into the Question format
+        const transformedQuestions = response.data.items.map((item: any, index: number) => {
+          const parsed = typeof item === 'string' ? JSON.parse(item) : item;
+          // Generate some distractors based on the correct answer
+          const distractors = generateDistractors(parsed.answer);
+          return {
+            id: index + 1,
+            question: parsed.question,
+            options: [parsed.answer, ...distractors].sort(() => Math.random() - 0.5),
+            correctAnswer: 0 // First option is the correct one
+          };
+        });
+
+        setQuestions(transformedQuestions);
+      } catch (error) {
+        console.error('Failed to fetch questions:', error);
+        toast({
+          title: "Error",
+          description: "Failed to generate test questions. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchQuestions();
+  }, [navigate, toast]);
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
@@ -113,6 +123,14 @@ const Test = () => {
       setSelectedOption(answers[currentQuestion - 1] ?? null);
     }
   };
+
+  if (isLoading || questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-muted-foreground">Loading questions...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col page-transition">

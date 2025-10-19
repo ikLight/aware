@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Upload as UploadIcon, FileText, CheckCircle2, Ey
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { GraphVisualization } from "@/components/GraphVisualization";
+import { ProficiencyDialog } from "@/components/ProficiencyDialog";
 
 const Upload = () => {
   const navigate = useNavigate();
@@ -15,6 +16,24 @@ const Upload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showVisualization, setShowVisualization] = useState(false);
+  const [showProficiencyDialog, setShowProficiencyDialog] = useState(false);
+  
+  const handleViewGraph = () => {
+    console.log('Opening visualization...');
+    setShowVisualization(true);
+    setShowProficiencyDialog(false);
+  };
+
+  const handleSetProficiency = () => {
+    // TODO: Navigate to proficiency setting page once created
+    setShowProficiencyDialog(false);
+    navigate("/proficiency");
+  };
+
+  const handleTakeTest = () => {
+    setShowProficiencyDialog(false);
+    navigate("/test");
+  };
   
   useEffect(() => {
     // Check for authentication
@@ -104,8 +123,8 @@ const Upload = () => {
         description: "Your study materials have been processed successfully!",
       });
 
-      // Navigate to test page after successful processing
-      navigate("/test");
+      // Show the proficiency dialog instead of navigating directly
+      setShowProficiencyDialog(true);
 
     } catch (error) {
       console.error('Upload error:', error);
@@ -243,10 +262,10 @@ const Upload = () => {
             <Eye className="ml-2 w-5 h-5" />
           </Button>
           <Button
-            onClick={() => navigate("/test")}
+            onClick={() => handleFiles(files)}
             className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
           >
-            Continue to Test
+            Process Materials
             <ArrowRight className="ml-2 w-5 h-5" />
           </Button>
         </div>
@@ -256,6 +275,15 @@ const Upload = () => {
       {showVisualization && (
         <GraphVisualization onClose={() => setShowVisualization(false)} />
       )}
+
+      {/* Proficiency Dialog */}
+      <ProficiencyDialog
+        open={showProficiencyDialog}
+        onOpenChange={setShowProficiencyDialog}
+        onViewGraph={handleViewGraph}
+        onSetProficiency={handleSetProficiency}
+        onTakeTest={handleTakeTest}
+      />
     </div>
   );
 };

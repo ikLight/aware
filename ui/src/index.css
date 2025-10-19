@@ -44,10 +44,42 @@ All colors MUST be HSL.
     --ring: 210 80% 60%;
 
     --radius: 1rem;
+  }
 
-    --sidebar-background: 0 0% 98%;
+  .dark {
+    --background: 224 35% 11%;
+    --foreground: 210 20% 98%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --card: 224 35% 13%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 224 35% 13%;
+    --popover-foreground: 210 20% 98%;
+
+    /* Bright blue primary */
+    --primary: 210 80% 55%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 210 80% 25%;
+
+    /* Dark gray secondary */
+    --secondary: 215 25% 21%;
+    --secondary-foreground: 210 20% 90%;
+
+    /* Dark muted */
+    --muted: 215 25% 17%;
+    --muted-foreground: 220 15% 65%;
+
+    /* Mint accent */
+    --accent: 150 60% 40%;
+    --accent-foreground: 0 0% 100%;
+    --accent-light: 150 40% 20%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 25% 21%;
+    --input: 215 25% 19%;
+    --ring: 210 80% 55%;
 
     --sidebar-primary: 240 5.9% 10%;
 

@@ -6,9 +6,9 @@ from typing import List, Dict, Any
 
 # Set up gemini configuration
 try:
-    genai.configure(api_key="AIzaSyBWl60BJK0n3EbOPCJQB4gvYL95cEkfaeU")#os.environ["GOOGLE_API_KEY"])
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 except KeyError:
-    print("Error: GOOGLE_API_KEY environment variable not set.")
+    print("Error: GEMINI_API_KEY environment variable not set.")
 
 MODEL_NAME = "models/gemini-2.5-flash"
 
