@@ -121,13 +121,10 @@ def parse_course_materials(file_paths: List[str]) -> Dict[str, Any]:
         response = model.generate_content(combined_prompt)
         if not response or not hasattr(response, 'text'):
             print("Error: Empty or invalid response from Gemini API")
-            # Return a default knowledge graph structure
             return {
                 "nodes": ["Topic 1", "Topic 2"],
                 "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
             }
-    except Exception as e:
-        print(f"error 1 - {e}")
             
         # Clean up and format JSON string
         json_str = response.text.strip()
@@ -175,7 +172,6 @@ def parse_course_materials(file_paths: List[str]) -> Dict[str, Any]:
                 except json.JSONDecodeError as e:
                     print(f"Failed to parse JSON even after cleanup: {e}")
                     print(f"Problematic JSON string: {json_str}")
-                    # Return a default structure instead of raising an error
                     return {
                         "nodes": ["Topic 1", "Topic 2"],
                         "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
@@ -187,87 +183,79 @@ def parse_course_materials(file_paths: List[str]) -> Dict[str, Any]:
                     "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
                 }
         
-            # Validate and format the graph data
-            try:
-                # Ensure we have a dictionary
-                if not isinstance(graph_data, dict):
-                    print("Converting non-dict response to graph structure")
-                    graph_data = {"nodes": [], "edges": []}
-                
-                # Ensure required keys exist
-                if "nodes" not in graph_data:
-                    print("Adding missing nodes key")
-                    graph_data["nodes"] = []
-                if "edges" not in graph_data:
-                    print("Adding missing edges key")
-                    graph_data["edges"] = []
-                
-                # Convert and validate nodes
-                validated_nodes = []
-                for node in graph_data["nodes"]:
-                    try:
-                        node_str = str(node).strip()
-                        if node_str:  # Only add non-empty nodes
-                            validated_nodes.append(node_str)
-                    except:
-                        continue
-                graph_data["nodes"] = validated_nodes
-                
-                # Convert and validate edges
-                validated_edges = []
-                for edge in graph_data.get("edges", []):
-                    try:
-                        if isinstance(edge, dict):
-                            validated_edge = {
-                                "source": str(edge.get("source", "")).strip(),
-                                "target": str(edge.get("target", "")).strip(),
-                                "relationship": str(edge.get("relationship", "related_to")).strip()
-                            }
-                            if validated_edge["source"] and validated_edge["target"]:  # Only add edges with valid source and target
-                                validated_edges.append(validated_edge)
-                    except:
-                        continue
-                graph_data["edges"] = validated_edges
-                
-                # Ensure we have at least some nodes and edges
-                if not graph_data["nodes"] or not graph_data["edges"]:
-                    print("Warning: Empty graph structure, using default")
-                    graph_data = {
-                        "nodes": ["Topic 1", "Topic 2"],
-                        "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
-                    }
-                
-                print(f"✨ Successfully validated graph data:")
-                print(f"   Nodes found: {len(graph_data['nodes'])}")
-                print(f"   Edges found: {len(graph_data['edges'])}")
-                print(f"   Sample node: {next(iter(graph_data['nodes']), None)}")
-                print(f"   Sample edge: {next(iter(graph_data['edges']), None)}")
-                
-                return graph_data
-                
-            except Exception as validation_error:
-                print(f"Error during graph validation: {validation_error}")
-                return {
+        # Validate and format the graph data
+        try:
+            # Ensure we have a dictionary
+            if not isinstance(graph_data, dict):
+                print("Converting non-dict response to graph structure")
+                graph_data = {"nodes": [], "edges": []}
+            
+            # Ensure required keys exist
+            if "nodes" not in graph_data:
+                print("Adding missing nodes key")
+                graph_data["nodes"] = []
+            if "edges" not in graph_data:
+                print("Adding missing edges key")
+                graph_data["edges"] = []
+            
+            # Convert and validate nodes
+            validated_nodes = []
+            for node in graph_data["nodes"]:
+                try:
+                    node_str = str(node).strip()
+                    if node_str:  # Only add non-empty nodes
+                        validated_nodes.append(node_str)
+                except:
+                    continue
+            graph_data["nodes"] = validated_nodes
+            
+            # Convert and validate edges
+            validated_edges = []
+            for edge in graph_data.get("edges", []):
+                try:
+                    if isinstance(edge, dict):
+                        validated_edge = {
+                            "source": str(edge.get("source", "")).strip(),
+                            "target": str(edge.get("target", "")).strip(),
+                            "relationship": str(edge.get("relationship", "related_to")).strip()
+                        }
+                        if validated_edge["source"] and validated_edge["target"]:  # Only add edges with valid source and target
+                            validated_edges.append(validated_edge)
+                except:
+                    continue
+            graph_data["edges"] = validated_edges
+            
+            # Ensure we have at least some nodes and edges
+            if not graph_data["nodes"] or not graph_data["edges"]:
+                print("Warning: Empty graph structure, using default")
+                graph_data = {
                     "nodes": ["Topic 1", "Topic 2"],
-                    "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}],
-                    "target": str(edge.get("target", "")),
-                    "relationship": str(edge.get("relationship", "related_to"))
+                    "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
                 }
-                
-            # Validate and format the graph data
-            # try:
-            #     # Return the validated data
-            #     return graph_data
-
-            # except Exception as validation_error:
-            #     print(f"Error during validation: {validation_error}")
-            #     if 'response' in locals() and hasattr(response, 'text'):
-            #         print(f"Raw Model Response: {response.text}")
-            #     # Return a default structure instead of raising an error
-            #     return {
-            #         "nodes": ["Topic 1", "Topic 2"],
-            #         "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
-            #     }
+            
+            print(f"✨ Successfully validated graph data:")
+            print(f"   Nodes found: {len(graph_data['nodes'])}")
+            print(f"   Edges found: {len(graph_data['edges'])}")
+            print(f"   Sample node: {next(iter(graph_data['nodes']), None)}")
+            print(f"   Sample edge: {next(iter(graph_data['edges']), None)}")
+            
+            return graph_data
+            
+        except Exception as validation_error:
+            print(f"Error during graph validation: {validation_error}")
+            return {
+                "nodes": ["Topic 1", "Topic 2"],
+                "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
+            }
+            
+    except Exception as e:
+        print(f"An error occurred during processing: {e}")
+        if 'response' in locals() and hasattr(response, 'text'):
+            print(f"Raw Model Response: {response.text}")
+        return {
+            "nodes": ["Topic 1", "Topic 2"],
+            "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
+        }
 
 def convert_to_course_material(graph_data: Dict[str, Any]) -> Dict[str, Any]:
     """

@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, Depends, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from src.test_generator import testGenerator
-from src.study_plan import studyPlan
+from src.study_plan import StudyPlan
 from src.graph_visualizer import generate_graph_visualization
 from src.auth import (
     create_user,
@@ -94,6 +94,7 @@ async def upload_files(files: list[UploadFile] = File(...), user: dict = Depends
             "original_files": saved_files
         }
     except Exception as e:
+        print(f"error - {e}")
         raise HTTPException(status_code=500, detail=f"Error uploading files: {str(e)}")
 
 ##-----------------------------------------------------------##
@@ -115,6 +116,7 @@ def create_test_endpoint(payload: CreateTestRequest, user: dict = Depends(get_cu
         qa_list = tg.create_test()
         return {"items": qa_list}
     except Exception as e:
+        print(f"error - {e}")
         raise HTTPException(status_code=500, detail=f"Internal error: {e}") from e
 
 ##-----------------------------------------------------------##
@@ -128,15 +130,16 @@ def create_study_plan_endpoint(payload: CreateTestRequest, user: dict = Depends(
         raise HTTPException(status_code=400, detail="course_material_json does not exist.")
 
     try:
-        sp = studyPlan(
-            json_path=payload.json_path,
-            course_material_json=payload.course_material_json
+        sp = StudyPlan(
+            proficiency_path=payload.json_path,
+            course_material_path=payload.course_material_json
         )
-        print("sp object created")
+        print("Study plan generator created")
         study_plan = sp.create_study_plan()
         return {"items": study_plan}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal error: {e}") from e
+        print(f"Error creating study plan: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}") from e
 
 ##-----------------------------------------------------------##
 
@@ -186,24 +189,73 @@ async def visualize_graph(request: Request, user: dict = Depends(get_current_use
     """
     Generate an interactive visualization of the knowledge graph.
     """
+    print("Visualization endpoint called for user:", user['username'])
+    
     # Path to the knowledge graph JSON file
-    graph_file = Path("parse_course/knowledge_graph.json")
+    graph_file = UPLOAD_DIR / f"{user['username']}_knowledge_graph.json"
+    print("Looking for graph file at:", graph_file)
     
     if not graph_file.exists():
+        print("Graph file not found")
         raise HTTPException(status_code=404, detail="Knowledge graph data not found")
     
     try:
-        # Read the knowledge graph data
+        print("Reading graph data...")
+        # Read the knowledge graph data and handle potential formatting issues
         with open(graph_file, 'r', encoding='utf-8') as f:
-            graph_data = json.load(f)
+            content = f.read().strip()
             
-        # Generate the visualization HTML
-        html_content = generate_graph_visualization(graph_data)
+        # Remove any markdown formatting
+        content = content.replace("```json", "").replace("```", "").strip()
         
-        # Return the HTML content
-        return HTMLResponse(content=html_content)
+        # Fix unquoted property names
+        import re
+        content = re.sub(r'(?<!["\\])(\b\w+\b)(?=\s*:)', r'"\1"', content)
+        
+        try:
+            graph_data = json.loads(content)
+        except json.JSONDecodeError as e:
+            print("JSON parse error. Content:", content[:200])
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid knowledge graph data: {str(e)}"
+            )
+        
+        # Ensure proper structure
+        if not isinstance(graph_data, dict):
+            graph_data = {"nodes": [], "edges": []}
+        
+        if "nodes" not in graph_data or "edges" not in graph_data:
+            print("Missing required keys in graph data")
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid graph structure: missing nodes or edges"
+            )
+        
+        # Validate and clean data
+        graph_data["nodes"] = [str(node) for node in graph_data["nodes"]]
+        graph_data["edges"] = [{
+            "source": str(edge.get("source", "")),
+            "target": str(edge.get("target", "")),
+            "relationship": str(edge.get("relationship", "related_to"))
+        } for edge in graph_data["edges"]]
+        
+        print(f"Loaded graph data: {len(graph_data['nodes'])} nodes, {len(graph_data['edges'])} edges")
+        
+        # Generate the visualization HTML
+        print("Generating visualization...")
+        html_content = generate_graph_visualization(graph_data)
+        print("Visualization generated, length:", len(html_content))
+        
+        # Return the HTML content with proper headers
+        headers = {
+            'Content-Type': 'text/html',
+            'Cache-Control': 'no-cache',
+        }
+        return HTMLResponse(content=html_content, headers=headers)
         
     except Exception as e:
+        print("Visualization error:", str(e))
         raise HTTPException(
             status_code=500,
             detail=f"Failed to generate visualization: {str(e)}"
