@@ -14,7 +14,13 @@ const Register = () => {
     username: "",
     password: "",
     confirmPassword: "",
+    role: "student", // default role
   });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +37,7 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      const result = await register(formData.username, formData.password);
+      const result = await register(formData.username, formData.password, formData.role);
       if (result) {
         toast({
           title: "Registration successful",
@@ -129,6 +135,19 @@ const Register = () => {
                   required
                   minLength={6}
                 />
+              </div>
+              <div>
+                <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                  <option value="student">Student</option>
+                  <option value="professor">Professor</option>
+                </select>
               </div>
             </div>
 

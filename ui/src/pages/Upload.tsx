@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Upload as UploadIcon, FileText, CheckCircle2, Eye, LogOut } from "lucide-react";
@@ -17,6 +17,10 @@ const Upload = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showVisualization, setShowVisualization] = useState(false);
   const [showProficiencyDialog, setShowProficiencyDialog] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [proficiency, setProficiency] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
   
   const handleViewGraph = () => {
     console.log('Opening visualization...');
@@ -40,7 +44,21 @@ const Upload = () => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
+      return;
     }
+    // Fetch user info from backend
+    fetch('http://localhost:8000/auth/me', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+      .then(res => res.json())
+      .then(data => {
+        setUserRole(data.role);
+      })
+      .catch(() => {
+        setUserRole(null);
+      });
   }, [navigate]);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -145,10 +163,63 @@ const Upload = () => {
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleProficiencySave = async () => {
+    setSaving(true);
+    const token = localStorage.getItem('token');
+    await fetch('http://localhost:8000/student/set-proficiency', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ proficiency_level: proficiency }),
+    });
+    setSaving(false);
+    setSuccess(true);
+  };
+
+  if (userRole === 'student') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="text-2xl font-semibold mt-20">Student workflow</div>
+        <div className="mt-4 text-muted-foreground">Set your proficiency and take personalized tests below.</div>
+        {/* Proficiency Dropdown */}
+        <div className="mt-8">
+          <label htmlFor="proficiency" className="block mb-2 font-medium">Select your proficiency level:</label>
+          <select
+            id="proficiency"
+            value={proficiency}
+            onChange={e => { setProficiency(e.target.value); setSuccess(false); }}
+            className="px-4 py-2 rounded border"
+          >
+            <option value="">-- Select --</option>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
+          <Button
+            className="mt-4"
+            onClick={handleProficiencySave}
+            disabled={!proficiency || saving}
+          >
+            {saving ? 'Saving...' : 'Save Proficiency'}
+          </Button>
+          {success && <div className="mt-2 text-green-600">Proficiency saved!</div>}
+        </div>
+        {/* Personalized Test Button */}
+        <Button className="mt-8" onClick={() => navigate('/test')}>Take Personalized Test</Button>
+        <Button className="mt-8" onClick={async () => { await logout(); navigate('/login'); }}>Logout</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col page-transition">
       {/* Navigation Header */}
-      <div className="p-6 flex justify-end">
+      <div className="p-6 flex justify-between items-center">
+        <div className="text-lg font-semibold text-primary">
+          {userRole === 'professor' ? 'Prof' : userRole === 'student' ? 'Student' : ''}
+        </div>
         <Button
           variant="outline"
           onClick={async () => {
@@ -162,16 +233,16 @@ const Upload = () => {
         </Button>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content for Professors */}
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         <div className="max-w-2xl w-full space-y-8">
           {/* Title */}
           <div className="text-center space-y-3">
             <h1 className="text-4xl font-medium text-foreground">
-              Upload Your Study Material
+              Upload Your Course Material
             </h1>
             <p className="text-lg text-muted-foreground">
-              Add your PDFs, slides, or notes so Aware can understand what you're studying.
+              Add your PDFs, slides, or notes for knowledge graph creation.
             </p>
           </div>
 
@@ -180,110 +251,55 @@ const Upload = () => {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`bg-card rounded-2xl shadow-lg p-12 border-2 border-dashed transition-all ${
-              isDragging
-                ? "border-primary bg-primary-light/10"
-                : "border-border hover:border-primary/50"
-            }`}
+            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer ${isDragging ? 'border-primary bg-primary/10' : 'border-muted'}`}
           >
             <input
               type="file"
-              id="file-upload"
               multiple
               accept=".pdf,.docx,.txt"
+              style={{ display: 'none' }}
+              id="file-upload"
               onChange={handleFileInput}
-              className="hidden"
             />
-            <label
-              htmlFor="file-upload"
-              className="flex flex-col items-center cursor-pointer space-y-4"
-            >
-              <div className="bg-primary-light/30 rounded-full p-6">
-                <UploadIcon className="w-12 h-12 text-primary" />
-              </div>
-              <div className="text-center space-y-2">
-                <p className="text-lg font-medium text-foreground">
-                  Drag & Drop your files here
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  or click to browse
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Supported formats: PDF, DOCX, TXT
-                </p>
-              </div>
+            <label htmlFor="file-upload" className="cursor-pointer">
+              <UploadIcon className="mx-auto mb-2 w-8 h-8 text-primary" />
+              <span className="block font-medium">Drag and drop or click to select files</span>
+              <span className="block text-sm text-muted-foreground">PDF, DOCX, TXT supported</span>
             </label>
           </div>
 
           {/* Uploaded Files List */}
           {files.length > 0 && (
-            <div className="bg-card rounded-2xl shadow-lg p-6 border border-border space-y-3">
-              <div className="flex items-center gap-2 mb-4">
-                <CheckCircle2 className="w-5 h-5 text-accent" />
-                <p className="font-medium text-foreground">
-                  {files.length} file(s) {isProcessing ? "being analyzed" : "uploaded"}
-                </p>
-                {(isUploading || isProcessing) && (
-                  <div className="ml-2 animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
-                )}
-              </div>
-              {files.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-secondary rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-primary" />
-                    <span className="text-sm text-foreground">{file.name}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeFile(index)}
-                    className="text-destructive hover:text-destructive/80"
-                  >
-                    Remove
-                  </Button>
-                </div>
-              ))}
+            <div className="mt-4">
+              <div className="font-semibold mb-2">Files to upload:</div>
+              <ul className="space-y-2">
+                {files.map((file, idx) => (
+                  <li key={idx} className="flex items-center justify-between bg-muted rounded px-3 py-2">
+                    <span><FileText className="inline-block mr-2 w-4 h-4" />{file.name}</span>
+                    <Button variant="ghost" size="sm" onClick={() => removeFile(idx)}>Remove</Button>
+                  </li>
+                ))}
+              </ul>
             </div>
+          )}
+
+          {/* Upload Button */}
+          {files.length > 0 && (
+            <Button
+              className="w-full mt-4"
+              onClick={() => handleFiles(files)}
+              disabled={isUploading || isProcessing}
+            >
+              {isUploading ? 'Uploading...' : isProcessing ? 'Processing...' : 'Upload & Create Knowledge Graph'}
+            </Button>
+          )}
+
+          {/* Show success message for professors after upload */}
+          {isProcessing === false && files.length === 0 && (
+            <div className="mt-8 text-green-600 text-lg font-semibold">Knowledge graph created</div>
           )}
         </div>
       </div>
-
-      {/* Bottom Navigation */}
-      {files.length > 0 && !isUploading && !isProcessing && (
-        <div className="fixed bottom-8 right-8 flex gap-4">
-          <Button
-            onClick={() => setShowVisualization(true)}
-            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-full px-6 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
-          >
-            Preview Knowledge Graph
-            <Eye className="ml-2 w-5 h-5" />
-          </Button>
-          <Button
-            onClick={() => handleFiles(files)}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
-          >
-            Process Materials
-            <ArrowRight className="ml-2 w-5 h-5" />
-          </Button>
-        </div>
-      )}
-
-      {/* Visualization Modal */}
-      {showVisualization && (
-        <GraphVisualization onClose={() => setShowVisualization(false)} />
-      )}
-
-      {/* Proficiency Dialog */}
-      <ProficiencyDialog
-        open={showProficiencyDialog}
-        onOpenChange={setShowProficiencyDialog}
-        onViewGraph={handleViewGraph}
-        onSetProficiency={handleSetProficiency}
-        onTakeTest={handleTakeTest}
-      />
     </div>
   );
 };

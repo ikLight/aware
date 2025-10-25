@@ -6,13 +6,14 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import Welcome from "./pages/Welcome";
-import Upload from "./pages/Upload";
 import Test from "./pages/Test";
 import Result from "./pages/Result";
 import StudyPlan from "./pages/StudyPlan";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Prof from "./pages/Prof";
+import Student from "./pages/Student";
 
 const queryClient = new QueryClient();
 
@@ -35,10 +36,18 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route
-              path="/upload"
+              path="/prof"
               element={
                 <ProtectedRoute>
-                  <Upload />
+                  <Prof />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student"
+              element={
+                <ProtectedRoute>
+                  <Student />
                 </ProtectedRoute>
               }
             />

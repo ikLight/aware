@@ -21,15 +21,27 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await login(formData.username, formData.password);
+      const { access_token } = await login(
+        formData.username,
+        formData.password
+      );
       toast({
         title: "Login successful",
         description: "Welcome back!",
       });
-      // Add a small delay to ensure the toast is seen and state is updated
-      setTimeout(() => {
-        navigate("/upload");
-      }, 500);
+      localStorage.setItem("token", access_token);
+      // Fetch user info to get role
+      const res = await fetch("http://localhost:8000/auth/me", {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+      const data = await res.json();
+      const role = data.role;
+      localStorage.setItem("userRole", role);
+      if (role === "professor") {
+        navigate("/prof");
+      } else {
+        navigate("/student");
+      }
     } catch (error: any) {
       toast({
         title: "Login failed",
@@ -60,7 +72,9 @@ const Login = () => {
         <div className="max-w-md w-full space-y-8">
           {/* Title */}
           <div className="text-center space-y-3">
-            <h1 className="text-4xl font-medium text-foreground">Welcome Back</h1>
+            <h1 className="text-4xl font-medium text-foreground">
+              Welcome Back
+            </h1>
             <p className="text-lg text-muted-foreground">
               Please sign in to continue
             </p>

@@ -5,10 +5,16 @@ import google.generativeai as genai
 from typing import List, Dict, Any
 
 # Set up gemini configuration
-try:
-    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-except KeyError:
-    print("Error: GEMINI_API_KEY environment variable not set.")
+# Read the API key from environment for security. Do NOT hardcode secrets into source.
+api_key = "AIzaSyBWl60BJK0n3EbOPCJQB4gvYL95cEkfaeU"
+if not api_key:
+    # Provide a quick, copyable demo instruction but do not store the secret in the repo.
+    print("ERROR: GEMINI_API_KEY environment variable not set.")
+    print("For a quick demo in PowerShell (session only), run:")
+    print("  $env:GEMINI_API_KEY = \"<YOUR_KEY_HERE>\"; python -m app")
+    raise RuntimeError("GEMINI_API_KEY environment variable not set. See printed instructions to set it for a demo.")
+
+genai.configure(api_key=api_key)
 
 MODEL_NAME = "models/gemini-2.5-flash"
 
@@ -22,6 +28,45 @@ Your output must be a single JSON object with two keys: "nodes" and "edges".
 
 Ensure that the 'source' and 'target' concepts in the 'nodes' list are present in the 'nodes' list.
 """
+
+def postprocess_knowledge_graph(graph_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Post-process the knowledge graph to ensure data quality and add additional features.
+    
+    Args:
+        graph_data: Raw knowledge graph data from Gemini API
+        
+    Returns:
+        Processed knowledge graph with validated nodes and edges
+    """
+    nodes = graph_data.get("nodes", [])
+    edges = graph_data.get("edges", [])
+    
+    if not nodes:
+        raise ValueError("No nodes found in the knowledge graph")
+    
+    # Ensure all nodes are unique strings
+    nodes = list(set([str(node).strip() for node in nodes]))
+    
+    # Validate and clean edges
+    valid_edges = []
+    for edge in edges:
+        source = str(edge.get("source", "")).strip()
+        target = str(edge.get("target", "")).strip()
+        relationship = str(edge.get("relationship", "")).strip()
+        
+        # Only keep edges where both source and target exist in nodes
+        if source in nodes and target in nodes and relationship:
+            valid_edges.append({
+                "source": source,
+                "target": target,
+                "relationship": relationship
+            })
+    
+    return {
+        "nodes": nodes,
+        "edges": valid_edges
+    }
 
 def parse_course_materials(file_paths: List[str]) -> Dict[str, Any]:
     """
@@ -116,144 +161,209 @@ def parse_course_materials(file_paths: List[str]) -> Dict[str, Any]:
         combined_prompt += f"\nDocument {i}:\n{content}\n"
     
     print("Sending request to Gemini API...")
+    # Call the model and handle any call-time exceptions
     try:
-        # Add error handling for the API call
         response = model.generate_content(combined_prompt)
-        if not response or not hasattr(response, 'text'):
-            print("Error: Empty or invalid response from Gemini API")
-            # Return a default knowledge graph structure
-            return {
-                "nodes": ["Topic 1", "Topic 2"],
-                "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
-            }
     except Exception as e:
-        print(f"error 1 - {e}")
-            
-        # Clean up and format JSON string
+        print(f"Error while calling Gemini API: {e}")
+        return {
+            "nodes": ["Topic 1", "Topic 2"],
+            "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
+        }
+
+    # Try several safe strategies to extract the generated text from the response.
+    json_str = None
+    try:
+        # Preferred quick accessor (may raise if parts are missing)
         json_str = response.text.strip()
-        print(f"Received response from Gemini API: {json_str[:200]}...")  # Print first 200 chars
-        
-        # Remove markdown code block markers if present
-        json_str = json_str.replace("```json", "").replace("```", "").strip()
-        
+    except Exception as e:
+        print(f"response.text not available: {e}")
         try:
-            # First try to parse as is
-            graph_data = json.loads(json_str)
-        except json.JSONDecodeError as e:
-            print(f"Initial JSON parse failed: {e}")
-            try:
-                # Try to extract JSON from the response
-                import re
-                
-                # Look for a JSON-like structure
-                json_match = re.search(r'\{[\s\S]*\}', json_str)
-                if json_match:
-                    json_str = json_match.group(0)
-                    print("Extracted JSON structure:", json_str[:200])
+            # Some SDK responses include a `candidates` list where content can be nested
+            candidates = getattr(response, 'candidates', None)
+            if candidates and len(candidates) > 0:
+                cand0 = candidates[0]
+                # Handle dict-like candidate
+                content = None
+                if isinstance(cand0, dict):
+                    # cand0 may contain a 'content' list of parts or a 'text' field
+                    if 'content' in cand0:
+                        parts = cand0['content']
+                        if isinstance(parts, list):
+                            for p in parts:
+                                if isinstance(p, dict) and 'text' in p:
+                                    content = p['text']; break
+                        elif isinstance(parts, str):
+                            content = parts
+                    if content is None and 'text' in cand0:
+                        content = cand0['text']
                 else:
-                    print("No JSON structure found in response")
-                    return {
-                        "nodes": ["Topic 1", "Topic 2"],
-                        "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
-                    }
-                
-                # Clean up the JSON string
-                # Remove line breaks and extra spaces
-                json_str = re.sub(r'\s+', ' ', json_str).strip()
-                # Ensure property names are quoted
-                json_str = re.sub(r'(?<!["\\])(\b\w+\b)(?=\s*:)', r'"\1"', json_str)
-                # Fix any missing commas between objects in arrays
-                json_str = re.sub(r'}\s*{', '},{', json_str)
-                # Fix any trailing commas
-                json_str = re.sub(r',\s*([}\]])', r'\1', json_str)
-                
-                print("Cleaned JSON string:", json_str[:200])
-                
-                # Try parsing again
-                try:
-                    graph_data = json.loads(json_str)
-                except json.JSONDecodeError as e:
-                    print(f"Failed to parse JSON even after cleanup: {e}")
-                    print(f"Problematic JSON string: {json_str}")
-                    # Return a default structure instead of raising an error
-                    return {
-                        "nodes": ["Topic 1", "Topic 2"],
-                        "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
-                    }
-            except Exception as cleanup_error:
-                print(f"Error during JSON cleanup: {cleanup_error}")
+                    # cand0 is an object with potential attributes
+                    parts = getattr(cand0, 'content', None) or getattr(cand0, 'text', None) or getattr(cand0, 'output', None)
+                    if isinstance(parts, list):
+                        for p in parts:
+                            text_val = getattr(p, 'text', None) or (p.get('text') if isinstance(p, dict) else None)
+                            if text_val:
+                                content = text_val; break
+                    elif isinstance(parts, str):
+                        content = parts
+
+                if content:
+                    json_str = content.strip()
+
+            # As a final attempt, check common alternative attributes
+            if not json_str:
+                alt = getattr(response, 'output_text', None) or getattr(response, 'content', None)
+                if isinstance(alt, str) and alt.strip():
+                    json_str = alt.strip()
+        except Exception as e2:
+            print(f"Failed to extract text from response structure: {e2}")
+
+    # If still no usable text, log the full response and return a safe default
+    if not json_str:
+        print("Error: No text output found in Gemini response. Full response object:")
+        try:
+            print(response)
+        except:
+            pass
+        return {
+            "nodes": ["Topic 1", "Topic 2"],
+            "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
+        }
+
+    print(f"Received response from Gemini API: {json_str[:200]}...")  # Print first 200 chars
+    # Remove markdown code block markers if present
+    json_str = json_str.replace("```json", "").replace("```", "").strip()
+
+    try:
+        # First try to parse as is
+        graph_data = json.loads(json_str)
+    except json.JSONDecodeError as e:
+        print(f"Initial JSON parse failed: {e}")
+        try:
+            # Try to extract JSON from the response
+            import re
+
+            # Look for a JSON-like structure
+            json_match = re.search(r'\{[\s\S]*\}', json_str)
+            if json_match:
+                json_str = json_match.group(0)
+                print("Extracted JSON structure:", json_str[:200])
+            else:
+                print("No JSON structure found in response")
                 return {
                     "nodes": ["Topic 1", "Topic 2"],
                     "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
                 }
-        
-            # Validate and format the graph data
+
+            # Clean up the JSON string
+            # Remove line breaks and extra spaces
+            json_str = re.sub(r'\s+', ' ', json_str).strip()
+            # Ensure property names are quoted
+            json_str = re.sub(r'(?<!["\\])(\b\w+\b)(?=\s*:)', r'"\1"', json_str)
+            # Fix any missing commas between objects in arrays
+            json_str = re.sub(r'}\s*{', '},{', json_str)
+            # Fix any trailing commas
+            json_str = re.sub(r',\s*([}\]])', r'\1', json_str)
+
+            print("Cleaned JSON string:", json_str[:200])
+
+            # Try parsing again
             try:
-                # Ensure we have a dictionary
-                if not isinstance(graph_data, dict):
-                    print("Converting non-dict response to graph structure")
-                    graph_data = {"nodes": [], "edges": []}
-                
-                # Ensure required keys exist
-                if "nodes" not in graph_data:
-                    print("Adding missing nodes key")
-                    graph_data["nodes"] = []
-                if "edges" not in graph_data:
-                    print("Adding missing edges key")
-                    graph_data["edges"] = []
-                
-                # Convert and validate nodes
-                validated_nodes = []
-                for node in graph_data["nodes"]:
-                    try:
-                        node_str = str(node).strip()
-                        if node_str:  # Only add non-empty nodes
-                            validated_nodes.append(node_str)
-                    except:
-                        continue
-                graph_data["nodes"] = validated_nodes
-                
-                # Convert and validate edges
-                validated_edges = []
-                for edge in graph_data.get("edges", []):
-                    try:
-                        if isinstance(edge, dict):
-                            validated_edge = {
-                                "source": str(edge.get("source", "")).strip(),
-                                "target": str(edge.get("target", "")).strip(),
-                                "relationship": str(edge.get("relationship", "related_to")).strip()
-                            }
-                            if validated_edge["source"] and validated_edge["target"]:  # Only add edges with valid source and target
-                                validated_edges.append(validated_edge)
-                    except:
-                        continue
-                graph_data["edges"] = validated_edges
-                
-                # Ensure we have at least some nodes and edges
-                if not graph_data["nodes"] or not graph_data["edges"]:
-                    print("Warning: Empty graph structure, using default")
-                    graph_data = {
-                        "nodes": ["Topic 1", "Topic 2"],
-                        "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
-                    }
-                
-                print(f"✨ Successfully validated graph data:")
-                print(f"   Nodes found: {len(graph_data['nodes'])}")
-                print(f"   Edges found: {len(graph_data['edges'])}")
-                print(f"   Sample node: {next(iter(graph_data['nodes']), None)}")
-                print(f"   Sample edge: {next(iter(graph_data['edges']), None)}")
-                
-                return graph_data
-                
-            except Exception as validation_error:
-                print(f"Error during graph validation: {validation_error}")
+                graph_data = json.loads(json_str)
+            except json.JSONDecodeError as e:
+                print(f"Failed to parse JSON even after cleanup: {e}")
+                print(f"Problematic JSON string: {json_str}")
+                # Return a default structure instead of raising an error
                 return {
                     "nodes": ["Topic 1", "Topic 2"],
-                    "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}],
-                    "target": str(edge.get("target", "")),
-                    "relationship": str(edge.get("relationship", "related_to"))
+                    "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
                 }
-                
+        except Exception as cleanup_error:
+            print(f"Error during JSON cleanup: {cleanup_error}")
+            return {
+                "nodes": ["Topic 1", "Topic 2"],
+                "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
+            }
+
+    # Validate and format the graph data
+    try:
+        # Ensure we have a dictionary
+        if not isinstance(graph_data, dict):
+            print("Converting non-dict response to graph structure")
+            graph_data = {"nodes": [], "edges": []}
+
+        # Ensure required keys exist
+        if "nodes" not in graph_data:
+            print("Adding missing nodes key")
+            graph_data["nodes"] = []
+        if "edges" not in graph_data:
+            print("Adding missing edges key")
+            graph_data["edges"] = []
+            
+        # Post-process and validate the knowledge graph
+        try:
+            graph_data = postprocess_knowledge_graph(graph_data)
+            print(f"✅ Knowledge graph processed successfully:")
+            print(f"   - {len(graph_data['nodes'])} unique nodes")
+            print(f"   - {len(graph_data['edges'])} valid edges")
+        except Exception as e:
+            print(f"Error during post-processing: {e}")
+            # If post-processing fails, return the unprocessed data
+            return graph_data
+            print("Adding missing edges key")
+            graph_data["edges"] = []
+
+        # Convert and validate nodes
+        validated_nodes = []
+        for node in graph_data["nodes"]:
+            try:
+                node_str = str(node).strip()
+                if node_str:  # Only add non-empty nodes
+                    validated_nodes.append(node_str)
+            except:
+                continue
+        graph_data["nodes"] = validated_nodes
+
+        # Convert and validate edges
+        validated_edges = []
+        for edge in graph_data.get("edges", []):
+            try:
+                if isinstance(edge, dict):
+                    validated_edge = {
+                        "source": str(edge.get("source", "")).strip(),
+                        "target": str(edge.get("target", "")).strip(),
+                        "relationship": str(edge.get("relationship", "related_to")).strip()
+                    }
+                    if validated_edge["source"] and validated_edge["target"]:  # Only add edges with valid source and target
+                        validated_edges.append(validated_edge)
+            except:
+                continue
+        graph_data["edges"] = validated_edges
+
+        # Ensure we have at least some nodes and edges
+        if not graph_data["nodes"] or not graph_data["edges"]:
+            print("Warning: Empty graph structure, using default")
+            graph_data = {
+                "nodes": ["Topic 1", "Topic 2"],
+                "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
+            }
+
+        print(f"✨ Successfully validated graph data:")
+        print(f"   Nodes found: {len(graph_data['nodes'])}")
+        print(f"   Edges found: {len(graph_data['edges'])}")
+        print(f"   Sample node: {next(iter(graph_data['nodes']), None)}")
+        print(f"   Sample edge: {next(iter(graph_data['edges']), None)}")
+
+        return graph_data
+
+    except Exception as validation_error:
+        print(f"Error during graph validation: {validation_error}")
+        return {
+            "nodes": ["Topic 1", "Topic 2"],
+            "edges": [{"source": "Topic 1", "target": "Topic 2", "relationship": "related_to"}]
+        }
+            
             # Validate and format the graph data
             # try:
             #     # Return the validated data

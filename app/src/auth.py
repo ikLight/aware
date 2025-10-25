@@ -32,6 +32,7 @@ security = HTTPBearer()
 class UserCreate(BaseModel):
     username: str
     password: str
+    role: str  # 'student' or 'professor'
 
 ##-----------------------------------------------------------##
 
@@ -51,12 +52,17 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 ##-----------------------------------------------------------##
 
-def create_user(username: str, password: str) -> dict:
+def create_user(username: str, password: str, role: str) -> dict:
     existing = _query_db.find_user(username)
     if existing:
         raise HTTPException(status_code=400, detail="Username already exists")
     hashed = hash_password(password)
-    user = {"username": username, "password": hashed, "created_at": datetime.utcnow()}
+    user = {
+        "username": username,
+        "password": hashed,
+        "role": role,
+        "created_at": datetime.utcnow()
+    }
     _atomic_db.insert_user(user)
     user.pop("password", None)
     return user

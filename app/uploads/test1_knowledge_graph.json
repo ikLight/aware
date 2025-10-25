@@ -1,1 +1,13 @@
-null
+{
+  "nodes": [
+    "Topic 1",
+    "Topic 2"
+  ],
+  "edges": [
+    {
+      "source": "Topic 1",
+      "target": "Topic 2",
+      "relationship": "related_to"
+    }
+  ]
+}

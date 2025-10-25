@@ -20,10 +20,9 @@ api.interceptors.request.use((config) => {
 });
 
 // Auth APIs
-export const register = async (username: string, password: string) => {
+export const register = async (username: string, password: string, role: string) => {
   try {
-    const response = await api.post('/auth/register', { username, password });
-    // If we get here, the registration was successful (status 201)
+    const response = await api.post('/auth/register', { username, password, role });
     return response.data;
   } catch (error: any) {
     if (error.response) {
@@ -39,15 +38,15 @@ export const register = async (username: string, password: string) => {
   }
 };
 
-export const login = async (username: string, password: string) => {
+export const login = async (username: string, password: string): Promise<{ access_token: string; role: string }> => {
   try {
     const response = await api.post('/auth/login', { username, password });
-    const { access_token } = response.data;
+    const { access_token, role } = response.data;
     if (!access_token) {
       throw new Error('No access token received');
     }
     localStorage.setItem('token', access_token);
-    return response.data;
+    return { access_token, role };
   } catch (error: any) {
     if (error.response) {
       throw new Error(error.response.data.detail || 'Login failed');

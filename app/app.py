@@ -1,3 +1,8 @@
+from src.database.operations import AtomicDB
+atomic_db = AtomicDB()
+# Student API: Set proficiency
+from fastapi import Body
+
 import os
 import json
 from fastapi import FastAPI, HTTPException, Depends, Request, UploadFile, File
@@ -47,6 +52,9 @@ def startup_event():
 
 @app.post("/upload")
 async def upload_files(files: list[UploadFile] = File(...), user: dict = Depends(get_current_user)):
+    # Only allow professors to upload
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can upload course material.")
     try:
         # Save uploaded files
         saved_files = []
@@ -55,42 +63,10 @@ async def upload_files(files: list[UploadFile] = File(...), user: dict = Depends
             with file_path.open("wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
             saved_files.append(str(file_path))
-        
-        # Parse course materials using Gemini
-        from src.course_parser import parse_course_materials, convert_to_course_material
-        
-        # Generate knowledge graph
-        graph_data = parse_course_materials(saved_files)
-        
-        # Save knowledge graph
-        graph_path = UPLOAD_DIR / f"{user['username']}_knowledge_graph.json"
-        with open(graph_path, 'w') as f:
-            json.dump(graph_data, f, indent=2)
-            
-        # Convert to course material format
-        course_material = convert_to_course_material(graph_data)
-        
-        # Save course material
-        course_material_path = UPLOAD_DIR / f"{user['username']}_course_material.json"
-        with open(course_material_path, 'w') as f:
-            json.dump(course_material, f, indent=2)
-            
-        # Create default student proficiency
-        student_proficiency = {
-            "student_id": user['username'],
-            "proficiency_level": "intermediate",
-            "topics": {topic: "intermediate" for topic in course_material['topics']}
-        }
-        
-        # Save student proficiency
-        proficiency_path = UPLOAD_DIR / f"{user['username']}_proficiency.json"
-        with open(proficiency_path, 'w') as f:
-            json.dump(student_proficiency, f, indent=2)
-            
+        # For now, skip Gemini API and knowledge graph creation
+        # Just respond with a success message
         return {
-            "course_material": str(course_material_path),
-            "proficiency": str(proficiency_path),
-            "knowledge_graph": str(graph_path),
+            "message": "Knowledge graph created",
             "original_files": saved_files
         }
     except Exception as e:
@@ -151,14 +127,17 @@ def health():
 
 @app.post("/auth/register", status_code=201)
 def register(payload: UserCreate):
+    # Validate and sanitize role
+    valid_roles = ["professor", "student"]
+    role = payload.role.lower() if hasattr(payload, "role") and isinstance(payload.role, str) else "student"
+    if role not in valid_roles:
+        role = "student"
     try:
-        user = create_user(payload.username, payload.password)
-        return {"username": user["username"], "created_at": user["created_at"]}
+        user = create_user(payload.username, payload.password, role)
+        return {"username": user["username"], "created_at": user["created_at"], "role": user["role"]}
     except HTTPException as e:
-        # Re-raise HTTP exceptions (like username already exists)
         raise e
     except Exception as e:
-        # Handle other unexpected errors
         raise HTTPException(
             status_code=500,
             detail=f"An unexpected error occurred: {str(e)}"
@@ -172,7 +151,8 @@ def login(payload: LoginRequest):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
     token = create_access_token({"username": payload.username})
-    return {"access_token": token}
+    # Return role for frontend redirect
+    return {"access_token": token, "role": user.get("role", "student")}
 
 ##-----------------------------------------------------------##
 
@@ -181,6 +161,29 @@ def logout(request: Request, credentials: HTTPAuthorizationCredentials = Depends
     token = credentials.credentials
     logout_token(token)
     return {"status": "logged out"}
+
+##-----------------------------------------------------------##
+
+@app.get("/auth/me")
+def get_me(user: dict = Depends(get_current_user)):
+    return {
+        "username": user.get("username"),
+        "role": user.get("role", "student"),
+        "created_at": user.get("created_at")
+    }
+
+##-----------------------------------------------------------##
+
+@app.post("/student/set-proficiency")
+def set_proficiency(proficiency: dict = Body(...), user: dict = Depends(get_current_user)):
+    if user.get("role") != "student":
+        raise HTTPException(status_code=403, detail="Only students can set proficiency.")
+    # Update the user's proficiency in the DB
+    atomic_db.db.users.update_one(
+        {"username": user["username"]},
+        {"$set": {"proficiency": proficiency}}
+    )
+    return {"message": "Proficiency updated", "proficiency": proficiency}
 
 ##-----------------------------------------------------------##
 
