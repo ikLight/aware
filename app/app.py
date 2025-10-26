@@ -1,10 +1,14 @@
-from src.database.operations import AtomicDB
+from src.database.operations import AtomicDB, QueryDB
 atomic_db = AtomicDB()
+query_db = QueryDB()
 # Student API: Set proficiency
 from fastapi import Body
 
 import os
 import json
+import csv
+import io
+from datetime import datetime
 from fastapi import FastAPI, HTTPException, Depends, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
@@ -72,6 +76,157 @@ async def upload_files(files: list[UploadFile] = File(...), user: dict = Depends
     except Exception as e:
         print(f"error - {e}")
         raise HTTPException(status_code=500, detail=f"Error uploading files: {str(e)}")
+
+##-----------------------------------------------------------##
+
+@app.post("/course/create")
+async def create_course(
+    course_name: str = Body(...),
+    roster_file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Create a new course with a roster of students.
+    Only professors can create courses.
+    """
+    # Only allow professors to create courses
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can create courses.")
+    
+    try:
+        # Parse the CSV file
+        content = await roster_file.read()
+        csv_content = content.decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(csv_content))
+        
+        # Extract student roster
+        roster = []
+        for row in csv_reader:
+            # Expecting columns: studentName, emailID
+            student_name = row.get('studentName', '').strip()
+            email_id = row.get('emailID', '').strip()
+            
+            if student_name and email_id:
+                roster.append({
+                    "studentName": student_name,
+                    "emailID": email_id
+                })
+        
+        if not roster:
+            raise HTTPException(status_code=400, detail="No valid students found in roster file.")
+        
+        # Create course document
+        course_doc = {
+            "course_name": course_name,
+            "professor_username": user["username"],
+            "roster": roster,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Insert course into database
+        course_id = atomic_db.insert_course(course_doc)
+        
+        return {
+            "message": "Course created successfully",
+            "course_id": course_id,
+            "course_name": course_name,
+            "student_count": len(roster)
+        }
+        
+    except csv.Error as e:
+        raise HTTPException(status_code=400, detail=f"Invalid CSV file: {str(e)}")
+    except Exception as e:
+        print(f"Error creating course: {e}")
+        raise HTTPException(status_code=500, detail=f"Error creating course: {str(e)}")
+
+##-----------------------------------------------------------##
+
+@app.get("/course/list")
+def list_courses(user: dict = Depends(get_current_user)):
+    """
+    List all courses for the current professor.
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can view their courses.")
+    
+    try:
+        courses = query_db.find_courses_by_professor(user["username"])
+        # Convert ObjectId and datetime to string for JSON serialization
+        for course in courses:
+            course["_id"] = str(course["_id"])
+            if "created_at" in course:
+                course["created_at"] = course["created_at"].isoformat()
+            if "updated_at" in course:
+                course["updated_at"] = course["updated_at"].isoformat()
+        return {"courses": courses}
+    except Exception as e:
+        print(f"Error listing courses: {e}")
+        raise HTTPException(status_code=500, detail=f"Error listing courses: {str(e)}")
+
+##-----------------------------------------------------------##
+
+@app.get("/course/{course_id}")
+def get_course_details(course_id: str, user: dict = Depends(get_current_user)):
+    """
+    Get detailed information about a specific course.
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can view course details.")
+    
+    try:
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        
+        # Verify the professor owns this course
+        if course.get("professor_username") != user["username"]:
+            raise HTTPException(status_code=403, detail="You don't have access to this course.")
+        
+        # Convert ObjectId and datetime to string for JSON serialization
+        course["_id"] = str(course["_id"])
+        if "created_at" in course:
+            course["created_at"] = course["created_at"].isoformat()
+        if "updated_at" in course:
+            course["updated_at"] = course["updated_at"].isoformat()
+        
+        return course
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching course details: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching course details: {str(e)}")
+
+##-----------------------------------------------------------##
+
+@app.delete("/course/{course_id}")
+def delete_course(course_id: str, user: dict = Depends(get_current_user)):
+    """
+    Delete a course. Only the professor who created it can delete it.
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can delete courses.")
+    
+    try:
+        # First, verify the course exists and belongs to this professor
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        
+        if course.get("professor_username") != user["username"]:
+            raise HTTPException(status_code=403, detail="You don't have permission to delete this course.")
+        
+        # Delete the course
+        deleted = atomic_db.delete_course_by_id(course_id)
+        if not deleted:
+            raise HTTPException(status_code=500, detail="Failed to delete course.")
+        
+        return {"message": "Course deleted successfully", "course_name": course.get("course_name")}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting course: {e}")
+        raise HTTPException(status_code=500, detail=f"Error deleting course: {str(e)}")
 
 ##-----------------------------------------------------------##
 

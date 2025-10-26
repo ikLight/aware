@@ -18,6 +18,20 @@ class AtomicDB(BaseDB):
     def delete_token_by_jti(self, jti: str) -> None:
         self.db.tokens.delete_one({"jti": jti})
 
+    def insert_course(self, course_doc: dict) -> str:
+        """Insert a course document and return the inserted ID."""
+        result = self.db.courses.insert_one(course_doc)
+        return str(result.inserted_id)
+
+    def delete_course_by_id(self, course_id: str) -> bool:
+        """Delete a course by its ID. Returns True if deleted, False otherwise."""
+        from bson import ObjectId
+        try:
+            result = self.db.courses.delete_one({"_id": ObjectId(course_id)})
+            return result.deleted_count > 0
+        except:
+            return False
+
 
 
 class QueryDB(BaseDB):
@@ -31,4 +45,16 @@ class QueryDB(BaseDB):
 
     def find_token_by_jti(self, jti: str) -> Optional[dict]:
         return self.db.tokens.find_one({"jti": jti})
+
+    def find_course_by_id(self, course_id: str) -> Optional[dict]:
+        """Find a course by its ID."""
+        from bson import ObjectId
+        try:
+            return self.db.courses.find_one({"_id": ObjectId(course_id)})
+        except:
+            return None
+
+    def find_courses_by_professor(self, professor_username: str) -> list[dict]:
+        """Find all courses created by a professor."""
+        return list(self.db.courses.find({"professor_username": professor_username}))
 
