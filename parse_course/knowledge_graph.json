@@ -1,718 +1,469 @@
 {
     "nodes": [
-        "CSCI-GA.3205 Course",
+        "CSCI-GA.3205",
         "Applied Cryptography & Network Security",
-        "Department of Computer Science",
         "New York University",
+        "Department of Computer Science",
         "Dr. Mazdak Zamani",
-        "Modern Cryptography",
-        "Codes",
-        "Ciphers",
-        "Encryption Schemes",
-        "Private-Key Encryption",
-        "Symmetric-Key Encryption",
-        "Public-Key Encryption",
-        "Key Generation Algorithm (Gen)",
-        "Encryption Algorithm (Enc)",
-        "Decryption Algorithm (Dec)",
-        "Message Space",
+        "Cryptography",
+        "Network Security",
+        "Information Security Fundamentals",
+        "Adversarial Attacks",
+        "Security Threats",
         "Key",
-        "Ciphertext",
         "Plaintext",
+        "Ciphertext",
+        "Encryption Scheme",
+        "Decryption Algorithm",
+        "Key-Generation Algorithm (Gen)",
+        "Message Space",
         "Key Space",
-        "Encryption Correctness Requirement",
+        "Ciphertext Space",
+        "Perfect Correctness",
+        "Deterministic Encryption",
+        "Probabilistic Encryption",
+        "Random Bits",
+        "Generating Randomness",
+        "High-Entropy Data",
+        "Statistical Test",
+        "Computational Effort",
+        "Computational Ciphers",
+        "Security Requirements",
+        "Mathematical Techniques in Cryptography",
+        "Perfectly Secure (Perfect Secrecy)",
+        "Semantically Secure (Semantic Security)",
+        "Perfect Indistinguishability",
         "Kerckhoffs' Principle",
-        "Historical Ciphers",
-        "Ad Hoc Cryptography",
+        "Sufficient Key-Space Principle",
+        "Formal Definitions in Cryptography",
+        "Precise Assumptions in Cryptography",
+        "Proofs of Security",
+        "Message Integrity",
+        "Authenticated Encryption",
+        "Data Secrecy (Confidentiality)",
+        "Collision Resistance",
+        "Symmetric-Key Cryptography",
+        "Asymmetric (Public-Key) Cryptography",
+        "Historical Encryption Schemes",
         "Caesar's Cipher",
         "Shift Cipher",
+        "Mono-Alphabetic Substitution Cipher",
+        "Vigen\u00e8re Cipher",
+        "Binary Cipher",
+        "XOR Operator",
+        "One-Time Pad",
+        "Stream Cipher",
+        "Pseudo-Random Generator (PRG)",
+        "Linear-Feedback Shift Registers (LFSRs)",
+        "Block Cipher",
+        "Iterated Cipher Paradigm",
+        "Round Cipher",
+        "Key Expansion Function",
+        "Data Encryption Standard (DES)",
+        "Feistel Permutation",
+        "S-boxes (DES/AES)",
+        "Advanced Encryption Standard (AES)",
+        "Electronic Codebook Mode (ECB)",
+        "Pseudo Random Function (PRF)",
+        "Pseudo Random Permutation (PRP)",
+        "Message Authentication Code (MAC)",
+        "Signing Algorithm (MAC)",
+        "Verification Algorithm (MAC)",
+        "Prefix-free PRFs",
+        "Cipher Block Chaining (CBC) MAC",
+        "Cascade Construction (MAC)",
+        "CMAC",
+        "Hash Function",
+        "Message Digests",
+        "Keyed Hash Functions",
+        "Universal Hash Functions (UHFs)",
+        "Hash-then-PRF Paradigm",
+        "Keyless Hash Function",
+        "Merkle-Damgard Paradigm",
+        "SHA256",
+        "ElGamal Encryption",
+        "Digital Signature",
+        "Trapdoor Function Scheme",
+        "One-Way Function",
+        "Trapdoor",
+        "Trapdoor Permutation Scheme",
+        "RSA",
+        "Diffie-Hellman Key Exchange",
+        "Merkle Puzzles",
+        "DMZs",
+        "Extranets",
+        "Intranets",
+        "Network Infrastructure Elements",
+        "TCP/IP Protocols",
+        "Port Security",
+        "HTTPS",
+        "SSH",
+        "TLS/SSL",
+        "Wireless Network Security",
+        "WEP (Wireless Security)",
+        "WPA (Wireless Security)",
+        "IPsec",
+        "Pretty Good Privacy (PGP)",
         "Brute-Force Attack",
-        "Exhaustive-Search Attack",
-        "Sufficient Key-Space Principle",
-        "Mono-alphabetic Substitution Cipher",
-        "Statistical Patterns",
-        "Frequency Distribution Analysis",
-        "Vigen\u00e8re (Poly-alphabetic Shift) Cipher",
-        "Principles of Modern Cryptography",
-        "Formal Definitions",
-        "Precise Assumptions",
-        "Proofs of Security",
-        "Threat Models",
+        "Statistical Attack",
         "Ciphertext-Only Attack",
         "Known-Plaintext Attack",
         "Chosen-Plaintext Attack",
         "Chosen-Ciphertext Attack",
-        "Perfectly Secret Encryption",
-        "Computational Effort",
-        "Unbounded Adversary",
-        "Random Bits",
-        "Random-Number Generation",
-        "High-Entropy Data",
-        "Unpredictability",
-        "Uniform Distribution",
-        "Source of Unpredictable Data",
-        "Cryptographically Secure Random-Number Generator",
-        "General-Purpose Random-Number Generator",
-        "Probabilistic Algorithm",
-        "Deterministic Encryption",
-        "Probabilistic Encryption",
-        "Ciphertext Space",
-        "Probability Distributions",
-        "Independence of Key and Message",
-        "Bayes' Theorem",
-        "XOR Encryption",
-        "XOR Operator",
-        "Binary/Bit String",
-        "ASCII Table",
-        "Perfect Secrecy",
-        "Adversary's Knowledge",
-        "Perfect Indistinguishability",
-        "Adversarial Indistinguishability Experiment",
-        "One-Time Pad",
-        "Shannon's Definition of Perfect Secrecy",
-        "Shannon's Theorem",
-        "Limitations of Perfect Secrecy",
-        "Computational Ciphers",
-        "Computationally Feasible Adversary",
-        "Real-World Adversary",
-        "Computational Cipher Definition",
-        "Efficient Algorithms",
-        "Semantic Security",
-        "Negligible Value (epsilon)",
-        "Attack Game (Semantic Security)",
-        "Challenger",
-        "Semantic Security Advantage (SSadv)",
-        "Stream Cipher",
-        "Block Cipher",
-        "Pseudo-Random Generators (PRG)",
-        "Seed",
-        "Output",
-        "Seed Space",
-        "Output Space",
-        "Computational Indistinguishability",
-        "Statistical Test",
-        "Effective Statistical Test",
-        "Random String Bias",
-        "Two-Time Pad Attack",
-        "One-Time Pad Malleability",
-        "Linear-Feedback Shift Registers (LFSRs)",
-        "Tap Positions",
-        "CSS Stream Cipher",
-        "Key Recovery Attack (on LFSRs)",
-        "Data Block",
-        "Data Block Space",
-        "Block Cipher Permutation",
-        "Electronic Codebook Mode (ECB)",
-        "Pseudo Random Function (PRF)",
-        "Pseudo Random Permutation (PRP)",
-        "Iterated Cipher Paradigm",
-        "Round Cipher",
-        "Key Expansion Function",
-        "Block Cipher Round",
-        "Round Keys",
-        "DES Algorithm",
-        "3DES Algorithm",
-        "AES Algorithm",
-        "Feistel Permutation",
-        "Feistel Network",
-        "Feistel Ciphers",
-        "DES Round Function F(k,x)",
-        "DES Expansion Function (E)",
-        "DES Mixing Permutation (P)",
-        "S-boxes (in DES)",
-        "Complete DES Circuit",
-        "Initial Permutation (IP)",
-        "Final Permutation (FP)",
-        "AES-128",
-        "AES-192",
-        "AES-256",
-        "AES Round Permutation",
-        "AES ByteSub",
-        "AES ShiftRow",
-        "AES MixColumns",
-        "AES Subs-Perm Network",
-        "Message Integrity",
-        "Authenticated Encryption (AE)",
-        "Active Adversary",
-        "Message Integrity Tag",
-        "Signing Algorithm (S)",
-        "Verification Algorithm (V)",
-        "Message",
-        "Tag",
-        "Message Authentication Code (MAC)",
-        "MAC Correctness Property",
-        "MAC Attack Game",
-        "MAC Security",
-        "MAC Advantage (MACadv)",
-        "PRF for MACs",
-        "Deterministic MAC System",
-        "Prefix-Free Secure PRFs",
-        "CBC Construction (for PRFs)",
-        "Cascade Construction (for PRFs)",
-        "Attack on CBC (for MAC)",
-        "CMAC",
-        "Randomized Prefix-Free Encoding (rpf)",
-        "Universal Hashing",
-        "Hash Functions",
-        "Message Digests",
-        "Keyed Hash Functions",
-        "Universal Hash Functions (UHFs)",
-        "Hash Collision",
-        "Collision Resistance Property",
-        "UHF Advantage (UHFadv)",
-        "Keyless Hash Function",
-        "Collision Resistant Hashing",
-        "SHA256",
-        "Hash-then-MAC Paradigm",
-        "Merkle-Damgard Paradigm",
-        "Compression Function",
-        "Initial Value (IV)",
-        "Message Blocks",
-        "Chaining Variables",
-        "Padding Block (PB)",
-        "Data Secrecy (Confidentiality)",
-        "TLS 1.2 Protocol",
-        "IPsec Protocol",
-        "GCM (NIST Standard)",
+        "Key Recovery Attack",
+        "Man-in-the-Middle Attack",
+        "Malleability (Cryptography)",
+        "Two-Time Pad (Weakness)",
+        "Number Theory",
+        "Prime Numbers",
+        "Modulo Arithmetic",
+        "Fermat's Theorem",
+        "Euler's Phi Function",
+        "Euler's Theorem",
+        "Cyclic Groups",
+        "Generators (Group Theory)",
+        "Lagrange's Theorem",
+        "Extended Euclidean Algorithm",
+        "Computer Forensics",
+        "Disaster Recovery",
+        "Business Continuity",
+        "Malware",
+        "Social Engineering Attacks",
+        "Operating System (OS) Security",
+        "Secure Network Design Elements",
+        "Network Monitoring and Analysis",
+        "TLS 1.2",
         "SSL 3.0",
-        "TLS 1.0",
+        "GCM (Galois/Counter Mode)",
         "802.11i WiFi Encryption Protocol",
+        "Hash-then-MAC Construction",
         "Encrypt-then-MAC",
         "MAC-then-Encrypt",
-        "Encrypt-and-MAC (SSH)",
-        "CPA-secure cipher",
-        "Number Theory",
-        "Positive Integer",
-        "Prime Number",
-        "Arithmetic Modulo Primes (Zp)",
-        "Invertible Elements (ZN*)",
-        "Greatest Common Divisor (gcd)",
-        "Fermat's Theorem",
-        "Modular Inverse",
-        "Solving Linear Equations (in Zp)",
-        "Cyclic Groups",
-        "Generators",
-        "Group Element Order",
-        "Lagrange's Theorem",
-        "Factorization",
-        "Euler's Totient Function (\u03c6(N))",
-        "Euler's Theorem",
-        "Key Exchange",
-        "Alice",
-        "Bob",
-        "Session Key",
-        "Anonymous Key Exchange",
-        "Protocol Transcript",
-        "Key Exchange Secret Key",
-        "Attack Game (Anonymous Key Exchange)",
-        "Adversary's Advantage (AnonKEadv)",
-        "One-Way Trapdoor Functions",
-        "One-Way Function",
-        "Trapdoor",
-        "Trapdoor Function Scheme",
-        "Trapdoor Function Key Generation (G)",
-        "Public Key",
-        "Secret Key",
-        "Trapdoor Function F",
-        "Inversion Algorithm (I)",
-        "Trapdoor Function Correctness Property",
-        "Trapdoor Permutation Scheme",
-        "One-Wayness Property",
-        "Attack Game (One-Way Trapdoor Function Scheme)",
-        "Adversary's Advantage in Inverting (OWadv)",
-        "RSA Algorithm",
-        "RSA Key Generation (RSAGen)",
-        "RSA Prime p",
-        "RSA Prime q",
-        "RSA Modulus n",
-        "RSA Encryption Exponent (e)",
-        "RSA Decryption Exponent (d)",
-        "Extended Euclidean Algorithm",
-        "RSA Factoring Problem",
         "RSA Assumption",
-        "Key Exchange based on RSA Assumption",
-        "Diffie-Hellman Key Exchange",
-        "Diffie-Hellman Man-in-the-Middle Attack",
-        "Key Exchange Authentication",
-        "Merkle Puzzles",
-        "Symmetric-Key Primitives",
-        "Merkle Puzzles Block Cipher",
-        "Merkle Puzzle",
-        "Merkle Puzzles Brute Force Attack",
-        "Merkle Puzzles Workload",
-        "Merkle Puzzles AES",
-        "Network Security",
-        "Cryptanalysis",
-        "Digital Signature",
-        "Computer Forensics",
-        "DMZs",
-        "Extranets",
-        "Intranets",
-        "Network devices",
-        "Network media",
-        "Perimeter topologies",
-        "Public Key Infrastructure (PKI)",
-        "PKI certificates",
-        "Key agreement protocols",
-        "Information security fundamentals",
-        "Network infrastructure",
-        "Advanced communications",
-        "Affine Cipher",
-        "Steganography",
-        "Malware Attacks",
-        "Social Engineering Attacks",
-        "Application Security",
-        "Data Security",
-        "Host Security",
-        "Network Security Hardware",
-        "Operating System (OS) Security",
-        "Pretty Good Privacy (PGP)",
-        "TCP/IP Protocols",
-        "Logs monitoring and analysis",
-        "Port security",
-        "HTTPS (HTTP Secure)",
-        "SSH (Secure Shell)",
-        "TLS (Transport Layer Security)",
-        "Wireless Network Security",
-        "Wireless Attacks",
-        "Wireless Security Solutions",
-        "Wired Equivalent Privacy (WEP)",
-        "Wi-Fi Protected Access (WPA)",
-        "ElGamal Encryption",
-        "Adversary",
-        "AES",
-        "S-boxes"
+        "Authenticating Users",
+        "Electronic Auctions",
+        "Elections",
+        "Digital Cash",
+        "Message Length",
+        "Key Length",
+        "Unpredictability",
+        "General-Purpose Random-Number Generator",
+        "Cryptographic Use",
+        "Pseudorandom-Number Generation",
+        "Factoring (Number Theory Problem)",
+        "Perimeter Topologies",
+        "Computationally Feasible Adversaries",
+        "Sequence of Nearly Independent and Unbiased Bits",
+        "`rand()` function",
+        "Random Variable",
+        "Modulo N Reduction",
+        "Attacker"
     ],
     "edges": [
         {
-            "source": "CSCI-GA.3205 Course",
+            "source": "CSCI-GA.3205",
             "target": "Applied Cryptography & Network Security",
             "relationship": "is_titled"
         },
         {
             "source": "Applied Cryptography & Network Security",
-            "target": "Dr. Mazdak Zamani",
-            "relationship": "taught_by"
-        },
-        {
-            "source": "Dr. Mazdak Zamani",
             "target": "Department of Computer Science",
-            "relationship": "works_at"
+            "relationship": "is_offered_by"
         },
         {
             "source": "Department of Computer Science",
             "target": "New York University",
-            "relationship": "part_of"
+            "relationship": "is_part_of"
         },
         {
-            "source": "Modern Cryptography",
-            "target": "Encryption Schemes",
-            "relationship": "includes"
+            "source": "Applied Cryptography & Network Security",
+            "target": "Dr. Mazdak Zamani",
+            "relationship": "is_presented_by"
         },
         {
-            "source": "Modern Cryptography",
-            "target": "Key Exchange",
-            "relationship": "includes"
+            "source": "Applied Cryptography & Network Security",
+            "target": "Cryptography",
+            "relationship": "covers_topic"
         },
         {
-            "source": "Modern Cryptography",
-            "target": "Authentication Protocols",
-            "relationship": "includes"
+            "source": "Applied Cryptography & Network Security",
+            "target": "Network Security",
+            "relationship": "covers_topic"
         },
         {
-            "source": "Modern Cryptography",
+            "source": "Applied Cryptography & Network Security",
+            "target": "Information Security Fundamentals",
+            "relationship": "covers_topic"
+        },
+        {
+            "source": "Applied Cryptography & Network Security",
+            "target": "Adversarial Attacks",
+            "relationship": "covers_topic"
+        },
+        {
+            "source": "Applied Cryptography & Network Security",
+            "target": "Security Threats",
+            "relationship": "covers_topic"
+        },
+        {
+            "source": "Applied Cryptography & Network Security",
+            "target": "Symmetric-Key Cryptography",
+            "relationship": "covers_topic"
+        },
+        {
+            "source": "Applied Cryptography & Network Security",
+            "target": "Asymmetric (Public-Key) Cryptography",
+            "relationship": "covers_topic"
+        },
+        {
+            "source": "Applied Cryptography & Network Security",
             "target": "Message Integrity",
-            "relationship": "focuses_on"
+            "relationship": "covers_topic"
         },
         {
-            "source": "Encryption Schemes",
-            "target": "Codes",
-            "relationship": "evolved_from"
+            "source": "Applied Cryptography & Network Security",
+            "target": "Authenticated Encryption",
+            "relationship": "covers_topic"
         },
         {
-            "source": "Codes",
-            "target": "Ciphers",
-            "relationship": "also_called"
+            "source": "Applied Cryptography & Network Security",
+            "target": "Number Theory",
+            "relationship": "covers_topic"
         },
         {
-            "source": "Private-Key Encryption",
-            "target": "Encryption Schemes",
-            "relationship": "is_a_type_of"
+            "source": "Applied Cryptography & Network Security",
+            "target": "ElGamal Encryption",
+            "relationship": "covers_topic"
         },
         {
-            "source": "Symmetric-Key Encryption",
-            "target": "Private-Key Encryption",
-            "relationship": "is_a_type_of"
+            "source": "Applied Cryptography & Network Security",
+            "target": "Digital Signature",
+            "relationship": "covers_topic"
         },
         {
-            "source": "Public-Key Encryption",
-            "target": "Encryption Algorithm (Enc)",
-            "relationship": "uses_different_keys_for"
+            "source": "Applied Cryptography & Network Security",
+            "target": "Diffie-Hellman Key Exchange",
+            "relationship": "covers_topic"
         },
         {
-            "source": "Public-Key Encryption",
-            "target": "Decryption Algorithm (Dec)",
-            "relationship": "uses_different_keys_for"
+            "source": "Applied Cryptography & Network Security",
+            "target": "Computer Forensics",
+            "relationship": "covers_topic"
         },
         {
-            "source": "Encryption Schemes",
-            "target": "Key Generation Algorithm (Gen)",
-            "relationship": "defined_by_algorithm"
+            "source": "Applied Cryptography & Network Security",
+            "target": "Disaster Recovery",
+            "relationship": "covers_topic"
         },
         {
-            "source": "Encryption Schemes",
-            "target": "Encryption Algorithm (Enc)",
-            "relationship": "defined_by_algorithm"
+            "source": "Applied Cryptography & Network Security",
+            "target": "Business Continuity",
+            "relationship": "covers_topic"
         },
         {
-            "source": "Encryption Schemes",
-            "target": "Decryption Algorithm (Dec)",
-            "relationship": "defined_by_algorithm"
-        },
-        {
-            "source": "Encryption Algorithm (Enc)",
-            "target": "Key",
-            "relationship": "takes_input"
-        },
-        {
-            "source": "Encryption Algorithm (Enc)",
-            "target": "Plaintext",
-            "relationship": "takes_input"
-        },
-        {
-            "source": "Encryption Algorithm (Enc)",
-            "target": "Ciphertext",
-            "relationship": "outputs"
-        },
-        {
-            "source": "Decryption Algorithm (Dec)",
-            "target": "Key",
-            "relationship": "takes_input"
-        },
-        {
-            "source": "Decryption Algorithm (Dec)",
-            "target": "Ciphertext",
-            "relationship": "takes_input"
-        },
-        {
-            "source": "Decryption Algorithm (Dec)",
-            "target": "Plaintext",
-            "relationship": "outputs"
-        },
-        {
-            "source": "Key Generation Algorithm (Gen)",
-            "target": "Key",
-            "relationship": "outputs"
-        },
-        {
-            "source": "Key",
-            "target": "Key Space",
-            "relationship": "belongs_to"
-        },
-        {
-            "source": "Plaintext",
-            "target": "Message Space",
-            "relationship": "belongs_to"
-        },
-        {
-            "source": "Encryption Correctness Requirement",
-            "target": "Plaintext",
-            "relationship": "states_decryption_yields_original"
-        },
-        {
-            "source": "Kerckhoffs' Principle",
-            "target": "Key",
-            "relationship": "security_relies_on_secrecy_of"
-        },
-        {
-            "source": "Historical Ciphers",
-            "target": "Ad Hoc Cryptography",
-            "relationship": "demonstrates_weaknesses_of"
-        },
-        {
-            "source": "Caesar's Cipher",
-            "target": "Historical Ciphers",
-            "relationship": "is_an_example_of"
-        },
-        {
-            "source": "Shift Cipher",
-            "target": "Caesar's Cipher",
-            "relationship": "is_a_variant_of"
-        },
-        {
-            "source": "Shift Cipher",
-            "target": "Brute-Force Attack",
-            "relationship": "vulnerable_to"
-        },
-        {
-            "source": "Brute-Force Attack",
-            "target": "Exhaustive-Search Attack",
-            "relationship": "also_known_as"
-        },
-        {
-            "source": "Sufficient Key-Space Principle",
-            "target": "Brute-Force Attack",
-            "relationship": "aims_to_make_infeasible"
-        },
-        {
-            "source": "Mono-alphabetic Substitution Cipher",
-            "target": "Historical Ciphers",
-            "relationship": "is_an_example_of"
-        },
-        {
-            "source": "Mono-alphabetic Substitution Cipher",
-            "target": "Statistical Patterns",
-            "relationship": "vulnerable_to"
-        },
-        {
-            "source": "Statistical Patterns",
-            "target": "Frequency Distribution Analysis",
+            "source": "Applied Cryptography & Network Security",
+            "target": "Mathematical Techniques in Cryptography",
             "relationship": "uses"
         },
         {
-            "source": "Vigen\u00e8re (Poly-alphabetic Shift) Cipher",
-            "target": "Mono-alphabetic Substitution Cipher",
-            "relationship": "aims_to_counter_attack_on"
+            "source": "Cryptography",
+            "target": "Digital Signature",
+            "relationship": "involves_securing"
         },
         {
-            "source": "Principles of Modern Cryptography",
-            "target": "Formal Definitions",
-            "relationship": "includes"
+            "source": "Cryptography",
+            "target": "Diffie-Hellman Key Exchange",
+            "relationship": "involves_securing"
         },
         {
-            "source": "Principles of Modern Cryptography",
-            "target": "Precise Assumptions",
-            "relationship": "includes"
+            "source": "Cryptography",
+            "target": "Authenticating Users",
+            "relationship": "involves_securing"
         },
         {
-            "source": "Principles of Modern Cryptography",
-            "target": "Proofs of Security",
-            "relationship": "includes"
+            "source": "Cryptography",
+            "target": "Electronic Auctions",
+            "relationship": "involves_securing"
         },
         {
-            "source": "Threat Models",
-            "target": "Ciphertext-Only Attack",
-            "relationship": "categorizes_attack"
+            "source": "Cryptography",
+            "target": "Elections",
+            "relationship": "involves_securing"
         },
         {
-            "source": "Threat Models",
-            "target": "Known-Plaintext Attack",
-            "relationship": "categorizes_attack"
+            "source": "Cryptography",
+            "target": "Digital Cash",
+            "relationship": "involves_securing"
         },
         {
-            "source": "Threat Models",
-            "target": "Chosen-Plaintext Attack",
-            "relationship": "categorizes_attack"
+            "source": "Encryption Scheme",
+            "target": "Key-Generation Algorithm (Gen)",
+            "relationship": "is_defined_by"
         },
         {
-            "source": "Threat Models",
-            "target": "Chosen-Ciphertext Attack",
-            "relationship": "categorizes_attack"
+            "source": "Encryption Scheme",
+            "target": "Encryption Scheme",
+            "relationship": "is_defined_by"
         },
         {
-            "source": "Perfectly Secret Encryption",
-            "target": "Encryption Schemes",
-            "relationship": "is_a_type_of"
+            "source": "Encryption Scheme",
+            "target": "Decryption Algorithm",
+            "relationship": "is_defined_by"
         },
         {
-            "source": "Perfectly Secret Encryption",
-            "target": "Unbounded Adversary",
-            "relationship": "secure_against"
+            "source": "Encryption Scheme",
+            "target": "Message Space",
+            "relationship": "operates_on"
         },
         {
-            "source": "Historical Ciphers",
-            "target": "Computational Effort",
-            "relationship": "can_be_broken_with_low"
+            "source": "Key-Generation Algorithm (Gen)",
+            "target": "Key",
+            "relationship": "generates"
         },
         {
-            "source": "Perfectly Secret Encryption",
-            "target": "Random Bits",
+            "source": "Key-Generation Algorithm (Gen)",
+            "target": "Key Space",
+            "relationship": "outputs_to"
+        },
+        {
+            "source": "Encryption Scheme",
+            "target": "Plaintext",
+            "relationship": "transforms"
+        },
+        {
+            "source": "Encryption Scheme",
+            "target": "Key",
+            "relationship": "uses"
+        },
+        {
+            "source": "Encryption Scheme",
+            "target": "Ciphertext",
+            "relationship": "produces"
+        },
+        {
+            "source": "Decryption Algorithm",
+            "target": "Ciphertext",
+            "relationship": "transforms"
+        },
+        {
+            "source": "Decryption Algorithm",
+            "target": "Key",
+            "relationship": "uses"
+        },
+        {
+            "source": "Decryption Algorithm",
+            "target": "Plaintext",
+            "relationship": "produces"
+        },
+        {
+            "source": "Encryption Scheme",
+            "target": "Perfect Correctness",
             "relationship": "requires"
         },
         {
-            "source": "Random Bits",
-            "target": "Random-Number Generation",
-            "relationship": "generated_by"
-        },
-        {
-            "source": "Random-Number Generation",
-            "target": "High-Entropy Data",
-            "relationship": "involves"
-        },
-        {
-            "source": "High-Entropy Data",
-            "target": "Unpredictability",
-            "relationship": "measures"
-        },
-        {
-            "source": "High-Entropy Data",
-            "target": "Uniform Distribution",
-            "relationship": "processed_to_yield"
-        },
-        {
-            "source": "Source of Unpredictable Data",
-            "target": "Network events delays",
-            "relationship": "includes"
-        },
-        {
-            "source": "Source of Unpredictable Data",
-            "target": "Hard-disk access times",
-            "relationship": "includes"
-        },
-        {
-            "source": "Source of Unpredictable Data",
-            "target": "Keystrokes",
-            "relationship": "includes"
-        },
-        {
-            "source": "Source of Unpredictable Data",
-            "target": "Mouse movements",
-            "relationship": "includes"
-        },
-        {
-            "source": "Random-Number Generation",
-            "target": "Hardware-level Randomness",
-            "relationship": "incorporates"
-        },
-        {
-            "source": "Cryptographically Secure Random-Number Generator",
-            "target": "Cryptographic Applications",
-            "relationship": "is_suitable_for"
-        },
-        {
-            "source": "General-Purpose Random-Number Generator",
-            "target": "Cryptographically Secure Random-Number Generator",
-            "relationship": "is_not"
-        },
-        {
-            "source": "Key Generation Algorithm (Gen)",
-            "target": "Probabilistic Algorithm",
-            "relationship": "is_a"
-        },
-        {
-            "source": "Encryption Perfect Correctness",
-            "target": "Decryption Algorithm (Dec)",
-            "relationship": "implies_deterministic_nature_of"
-        },
-        {
             "source": "Deterministic Encryption",
-            "target": "Encryption Algorithm (Enc)",
+            "target": "Encryption Scheme",
             "relationship": "is_a_type_of"
         },
         {
             "source": "Probabilistic Encryption",
-            "target": "Encryption Algorithm (Enc)",
+            "target": "Encryption Scheme",
             "relationship": "is_a_type_of"
         },
         {
-            "source": "Ciphertext",
-            "target": "Ciphertext Space",
-            "relationship": "belongs_to"
+            "source": "Perfect Correctness",
+            "target": "Decryption Algorithm",
+            "relationship": "implies"
         },
         {
-            "source": "Probability Distributions",
-            "target": "Key Space",
-            "relationship": "describe_likelihood_of_values_over"
+            "source": "Random Bits",
+            "target": "Generating Randomness",
+            "relationship": "are_used_in"
         },
         {
-            "source": "Probability Distributions",
-            "target": "Message Space",
-            "relationship": "describe_likelihood_of_values_over"
+            "source": "Generating Randomness",
+            "target": "High-Entropy Data",
+            "relationship": "collects"
         },
         {
-            "source": "Probability Distributions",
-            "target": "Ciphertext Space",
-            "relationship": "describe_likelihood_of_values_over"
+            "source": "High-Entropy Data",
+            "target": "Unpredictability",
+            "relationship": "is_a_measure_of"
         },
         {
-            "source": "Key Space",
-            "target": "Message Space",
-            "relationship": "are_assumed_to_be_independent"
+            "source": "Generating Randomness",
+            "target": "Sequence of Nearly Independent and Unbiased Bits",
+            "relationship": "produces"
         },
         {
-            "source": "Shift Cipher",
-            "target": "Probability Distributions",
-            "relationship": "is_an_example_for"
+            "source": "`rand()` function",
+            "target": "General-Purpose Random-Number Generator",
+            "relationship": "is_an_example_of"
         },
         {
-            "source": "Bayes' Theorem",
-            "target": "Conditional Probabilities",
-            "relationship": "used_to_calculate"
+            "source": "General-Purpose Random-Number Generator",
+            "target": "Cryptographic Use",
+            "relationship": "is_not_suitable_for"
         },
         {
-            "source": "XOR Encryption",
-            "target": "Symmetric-Key Encryption",
-            "relationship": "is_a_method_of"
+            "source": "Perfectly Secure (Perfect Secrecy)",
+            "target": "Encryption Scheme",
+            "relationship": "is_a_security_property_for"
         },
         {
-            "source": "XOR Encryption",
-            "target": "XOR Operator",
-            "relationship": "uses"
+            "source": "Perfectly Secure (Perfect Secrecy)",
+            "target": "Key Length",
+            "relationship": "requires"
         },
         {
-            "source": "Plaintext",
-            "target": "Binary/Bit String",
-            "relationship": "encoded_as_for_XOR_encryption"
+            "source": "Key Length",
+            "target": "Message Length",
+            "relationship": "is_as_long_as"
         },
         {
-            "source": "Key",
-            "target": "Binary/Bit String",
-            "relationship": "encoded_as_for_XOR_encryption"
+            "source": "Perfectly Secure (Perfect Secrecy)",
+            "target": "Shannon",
+            "relationship": "was_defined_by"
         },
         {
-            "source": "ASCII Table",
-            "target": "Binary/Bit String",
-            "relationship": "illustrates"
-        },
-        {
-            "source": "Perfect Secrecy",
-            "target": "Plaintext",
-            "relationship": "means_adversary_learns_nothing_about"
-        },
-        {
-            "source": "Adversary's Knowledge",
-            "target": "Perfect Secrecy",
-            "relationship": "should_not_affect"
-        },
-        {
-            "source": "Perfect Secrecy",
+            "source": "Perfectly Secure (Perfect Secrecy)",
             "target": "Perfect Indistinguishability",
             "relationship": "is_equivalent_to"
         },
         {
+            "source": "Semantically Secure (Semantic Security)",
+            "target": "Encryption Scheme",
+            "relationship": "is_a_security_property_for"
+        },
+        {
+            "source": "Semantically Secure (Semantic Security)",
+            "target": "Attacker",
+            "relationship": "is_defined_by_game_with"
+        },
+        {
             "source": "Perfect Indistinguishability",
-            "target": "Adversarial Indistinguishability Experiment",
-            "relationship": "defined_by"
+            "target": "Encryption Scheme",
+            "relationship": "is_a_security_property_for"
         },
         {
-            "source": "Adversarial Indistinguishability Experiment",
-            "target": "Adversary",
-            "relationship": "involves"
+            "source": "Perfect Indistinguishability",
+            "target": "Attacker",
+            "relationship": "is_defined_by_experiment_with"
         },
         {
-            "source": "Adversarial Indistinguishability Experiment",
-            "target": "Challenger",
-            "relationship": "involves"
+            "source": "Kerckhoffs' Principle",
+            "target": "Key",
+            "relationship": "states_security_relies_on_secrecy_of"
         },
         {
-            "source": "One-Time Pad",
-            "target": "Perfectly Secret Encryption",
-            "relationship": "is_an_example_of"
+            "source": "Sufficient Key-Space Principle",
+            "target": "Key Space",
+            "relationship": "states_must_be_large_enough_to_prevent"
         },
         {
-            "source": "Shannon's Definition of Perfect Secrecy",
-            "target": "One-Time Pad",
-            "relationship": "demonstrated_by"
-        },
-        {
-            "source": "Shannon's Theorem",
-            "target": "Perfect Secrecy",
-            "relationship": "states_key_length_equal_to_message_length_for"
-        },
-        {
-            "source": "Limitations of Perfect Secrecy",
-            "target": "Key length equal to Message length",
-            "relationship": "include"
+            "source": "Brute-Force Attack",
+            "target": "Sufficient Key-Space Principle",
+            "relationship": "is_prevented_by"
         },
         {
             "source": "Computational Ciphers",
@@ -721,218 +472,153 @@
         },
         {
             "source": "Computational Ciphers",
-            "target": "Computationally Feasible Adversary",
-            "relationship": "consider_only"
+            "target": "Computationally Feasible Adversaries",
+            "relationship": "consider"
         },
         {
-            "source": "Computationally Feasible Adversary",
-            "target": "Real-World Adversary",
-            "relationship": "are"
-        },
-        {
-            "source": "Computational Cipher Definition",
+            "source": "Computational Ciphers",
             "target": "Efficient Algorithms",
-            "relationship": "involves"
+            "relationship": "are_defined_by"
         },
         {
-            "source": "Computational Ciphers",
-            "target": "Key Space",
-            "relationship": "defined_over"
+            "source": "Symmetric-Key Cryptography",
+            "target": "Key",
+            "relationship": "uses_same_for"
         },
         {
-            "source": "Computational Ciphers",
-            "target": "Message Space",
-            "relationship": "defined_over"
+            "source": "Asymmetric (Public-Key) Cryptography",
+            "target": "Key",
+            "relationship": "uses_different_for"
         },
         {
-            "source": "Computational Ciphers",
-            "target": "Ciphertext Space",
-            "relationship": "defined_over"
+            "source": "Historical Encryption Schemes",
+            "target": "Computational Effort",
+            "relationship": "can_be_broken_with"
         },
         {
-            "source": "Semantic Security",
-            "target": "Computational Ciphers",
-            "relationship": "is_a_goal_for"
-        },
-        {
-            "source": "Semantic Security",
-            "target": "Negligible Value (epsilon)",
-            "relationship": "allows_for_small_difference_quantified_by"
-        },
-        {
-            "source": "Attack Game (Semantic Security)",
-            "target": "Semantic Security",
-            "relationship": "defines"
-        },
-        {
-            "source": "Attack Game (Semantic Security)",
-            "target": "Semantic Security Advantage (SSadv)",
-            "relationship": "determines"
-        },
-        {
-            "source": "Semantic Security",
-            "target": "Semantic Security Advantage (SSadv)",
-            "relationship": "requires_negligible_for_efficient_adversaries"
-        },
-        {
-            "source": "One-Time Pad",
-            "target": "Key is as long as message",
-            "relationship": "has_drawback"
-        },
-        {
-            "source": "One-Time Pad",
-            "target": "Used once",
-            "relationship": "is_secure_only_if"
-        },
-        {
-            "source": "Stream Cipher",
-            "target": "Cipher",
+            "source": "Caesar's Cipher",
+            "target": "Historical Encryption Schemes",
             "relationship": "is_a_type_of"
         },
         {
-            "source": "Stream Cipher",
-            "target": "Semantic Security",
+            "source": "Caesar's Cipher",
+            "target": "Key",
+            "relationship": "lacks"
+        },
+        {
+            "source": "Shift Cipher",
+            "target": "Caesar's Cipher",
+            "relationship": "is_a_keyed_variant_of"
+        },
+        {
+            "source": "Shift Cipher",
+            "target": "Statistical Attack",
+            "relationship": "can_be_attacked_by"
+        },
+        {
+            "source": "Mono-Alphabetic Substitution Cipher",
+            "target": "Statistical Attack",
+            "relationship": "can_be_attacked_by"
+        },
+        {
+            "source": "Vigen\u00e8re Cipher",
+            "target": "Shift Cipher",
+            "relationship": "is_a_poly_alphabetic_type_of"
+        },
+        {
+            "source": "Binary Cipher",
+            "target": "XOR Operator",
+            "relationship": "uses"
+        },
+        {
+            "source": "One-Time Pad",
+            "target": "Perfectly Secure (Perfect Secrecy)",
+            "relationship": "is_a_type_of_encryption_scheme_with"
+        },
+        {
+            "source": "One-Time Pad",
+            "target": "Vernam",
+            "relationship": "was_patented_by"
+        },
+        {
+            "source": "One-Time Pad",
+            "target": "Perfectly Secure (Perfect Secrecy)",
             "relationship": "achieves"
         },
         {
+            "source": "One-Time Pad",
+            "target": "Key Length",
+            "relationship": "has_drawback_key_length_as_long_as"
+        },
+        {
+            "source": "Message Length",
+            "target": "One-Time Pad",
+            "relationship": "is_a_factor_in"
+        },
+        {
+            "source": "One-Time Pad",
+            "target": "Used Once",
+            "relationship": "is_only_secure_if"
+        },
+        {
+            "source": "One-Time Pad",
+            "target": "Malleability (Cryptography)",
+            "relationship": "is_vulnerable_to"
+        },
+        {
             "source": "Stream Cipher",
-            "target": "Reasonably Short Keys",
+            "target": "Pseudo-Random Generator (PRG)",
             "relationship": "uses"
         },
         {
             "source": "Stream Cipher",
-            "target": "Pseudo-Random Generators (PRG)",
-            "relationship": "built_using"
+            "target": "Semantically Secure (Semantic Security)",
+            "relationship": "aims_for"
         },
         {
-            "source": "Pseudo-Random Generators (PRG)",
+            "source": "Stream Cipher",
+            "target": "Used Incorrectly",
+            "relationship": "is_brittle_if"
+        },
+        {
+            "source": "Two-Time Pad (Weakness)",
+            "target": "Stream Cipher",
+            "relationship": "is_a_limitation_of"
+        },
+        {
+            "source": "Pseudo-Random Generator (PRG)",
             "target": "Seed",
-            "relationship": "takes_input"
+            "relationship": "stretches_short_into_long_output"
         },
         {
-            "source": "Pseudo-Random Generators (PRG)",
-            "target": "Output",
-            "relationship": "generates"
-        },
-        {
-            "source": "Seed",
-            "target": "Seed Space",
-            "relationship": "comes_from"
-        },
-        {
-            "source": "Output",
-            "target": "Output Space",
-            "relationship": "comes_from"
-        },
-        {
-            "source": "Pseudo-Random Generators (PRG)",
-            "target": "Computational Indistinguishability",
-            "relationship": "requires"
-        },
-        {
-            "source": "Computational Indistinguishability",
+            "source": "Pseudo-Random Generator (PRG)",
             "target": "Statistical Test",
-            "relationship": "tested_by"
-        },
-        {
-            "source": "Statistical Test",
-            "target": "Random String Bias",
-            "relationship": "is_effective_if_detects"
-        },
-        {
-            "source": "Stream Cipher",
-            "target": "Two-Time Pad Attack",
-            "relationship": "vulnerable_to"
-        },
-        {
-            "source": "Stream Cipher",
-            "target": "One-Time Pad Malleability",
-            "relationship": "vulnerable_to"
-        },
-        {
-            "source": "Two-Time Pad Attack",
-            "target": "Plaintext",
-            "relationship": "exposes_XOR_of"
-        },
-        {
-            "source": "One-Time Pad Malleability",
-            "target": "Adversary",
-            "relationship": "allows_to_control_decrypted_plaintext_changes"
+            "relationship": "can_be_distinguished_by"
         },
         {
             "source": "Linear-Feedback Shift Registers (LFSRs)",
-            "target": "Pseudo-Random Generators (PRG)",
-            "relationship": "used_for"
-        },
-        {
-            "source": "Linear-Feedback Shift Registers (LFSRs)",
-            "target": "Hardware",
-            "relationship": "efficient_to_implement_in"
-        },
-        {
-            "source": "Linear-Feedback Shift Registers (LFSRs)",
-            "target": "Good Statistical Properties",
-            "relationship": "generate_output_with"
-        },
-        {
-            "source": "Linear-Feedback Shift Registers (LFSRs)",
-            "target": "Key Recovery Attack (on LFSRs)",
-            "relationship": "vulnerable_to"
+            "target": "Pseudorandom-Number Generation",
+            "relationship": "are_used_for"
         },
         {
             "source": "Linear-Feedback Shift Registers (LFSRs)",
             "target": "Stream Cipher",
-            "relationship": "can_be_component_in"
-        },
-        {
-            "source": "CSS Stream Cipher",
-            "target": "Linear-Feedback Shift Registers (LFSRs)",
-            "relationship": "built_from"
+            "relationship": "are_components_in"
         },
         {
             "source": "Linear-Feedback Shift Registers (LFSRs)",
-            "target": "Tap Positions",
-            "relationship": "defined_by"
-        },
-        {
-            "source": "Block Cipher",
-            "target": "Cipher",
-            "relationship": "is_a_type_of"
+            "target": "Key Recovery Attack",
+            "relationship": "are_vulnerable_to"
         },
         {
             "source": "Block Cipher",
             "target": "Deterministic Encryption",
-            "relationship": "is_a"
-        },
-        {
-            "source": "Block Cipher",
-            "target": "Data Block Space",
-            "relationship": "has_same_message_and_ciphertext_space_as"
-        },
-        {
-            "source": "Block Cipher",
-            "target": "Block Cipher Permutation",
-            "relationship": "defines_a"
-        },
-        {
-            "source": "Block Cipher",
-            "target": "Electronic Codebook Mode (ECB)",
-            "relationship": "used_to_encrypt_long_messages_with"
-        },
-        {
-            "source": "Pseudo Random Function (PRF)",
-            "target": "Block Cipher",
-            "relationship": "is_used_to_build"
-        },
-        {
-            "source": "Pseudo Random Permutation (PRP)",
-            "target": "Pseudo Random Function (PRF)",
-            "relationship": "is_a_stronger_form_of"
+            "relationship": "is_a_type_of"
         },
         {
             "source": "Block Cipher",
             "target": "Iterated Cipher Paradigm",
-            "relationship": "built_using"
+            "relationship": "can_be_constructed_by"
         },
         {
             "source": "Iterated Cipher Paradigm",
@@ -945,334 +631,129 @@
             "relationship": "uses"
         },
         {
-            "source": "Key Expansion Function",
-            "target": "Round Keys",
-            "relationship": "generates"
-        },
-        {
-            "source": "Block Cipher Round",
-            "target": "Iterated Cipher Paradigm",
-            "relationship": "is_a_step_in"
-        },
-        {
-            "source": "DES Algorithm",
+            "source": "Data Encryption Standard (DES)",
             "target": "Block Cipher",
             "relationship": "is_an_example_of"
         },
         {
-            "source": "DES Algorithm",
-            "target": "Feistel Network",
-            "relationship": "uses"
-        },
-        {
-            "source": "Feistel Network",
+            "source": "Data Encryption Standard (DES)",
             "target": "Feistel Permutation",
-            "relationship": "is_based_on"
-        },
-        {
-            "source": "Feistel Ciphers",
-            "target": "Feistel Network",
-            "relationship": "are_block_ciphers_designed_as"
-        },
-        {
-            "source": "DES Round Function F(k,x)",
-            "target": "DES Algorithm",
-            "relationship": "is_centerpiece_of"
-        },
-        {
-            "source": "DES Round Function F(k,x)",
-            "target": "DES Expansion Function (E)",
             "relationship": "uses"
         },
         {
-            "source": "DES Round Function F(k,x)",
-            "target": "DES Mixing Permutation (P)",
+            "source": "Feistel Permutation",
+            "target": "S-boxes (DES/AES)",
             "relationship": "uses"
         },
         {
-            "source": "DES Round Function F(k,x)",
-            "target": "S-boxes (in DES)",
-            "relationship": "uses"
-        },
-        {
-            "source": "Complete DES Circuit",
-            "target": "Initial Permutation (IP)",
-            "relationship": "includes"
-        },
-        {
-            "source": "Complete DES Circuit",
-            "target": "Feistel Network",
-            "relationship": "includes_16_round"
-        },
-        {
-            "source": "Complete DES Circuit",
-            "target": "Final Permutation (FP)",
-            "relationship": "includes"
-        },
-        {
-            "source": "AES Algorithm",
+            "source": "Advanced Encryption Standard (AES)",
             "target": "Block Cipher",
             "relationship": "is_an_example_of"
         },
         {
-            "source": "AES Algorithm",
-            "target": "Iterated Cipher Paradigm",
-            "relationship": "is_an"
+            "source": "Advanced Encryption Standard (AES)",
+            "target": "Subs-Perm Network (AES)",
+            "relationship": "is_a_type_of"
         },
         {
-            "source": "AES Algorithm",
-            "target": "AES Subs-Perm Network",
+            "source": "Advanced Encryption Standard (AES)",
+            "target": "ByteSub (AES)",
             "relationship": "uses"
         },
         {
-            "source": "AES Round Permutation",
-            "target": "AES ByteSub",
-            "relationship": "consists_of"
+            "source": "Advanced Encryption Standard (AES)",
+            "target": "ShiftRows (AES)",
+            "relationship": "uses"
         },
         {
-            "source": "AES Round Permutation",
-            "target": "AES ShiftRow",
-            "relationship": "consists_of"
+            "source": "Advanced Encryption Standard (AES)",
+            "target": "MixColumns (AES)",
+            "relationship": "uses"
         },
         {
-            "source": "AES Round Permutation",
-            "target": "AES MixColumns",
-            "relationship": "consists_of"
+            "source": "Electronic Codebook Mode (ECB)",
+            "target": "Block Cipher",
+            "relationship": "uses"
         },
         {
-            "source": "AES-128",
-            "target": "AES Algorithm",
-            "relationship": "is_a_variant_of"
+            "source": "Electronic Codebook Mode (ECB)",
+            "target": "Message Length",
+            "relationship": "is_for_encrypting_longer"
         },
         {
-            "source": "AES-192",
-            "target": "AES Algorithm",
-            "relationship": "is_a_variant_of"
-        },
-        {
-            "source": "AES-256",
-            "target": "AES Algorithm",
-            "relationship": "is_a_variant_of"
-        },
-        {
-            "source": "AES-128",
-            "target": "10 rounds",
-            "relationship": "has"
-        },
-        {
-            "source": "AES-192",
-            "target": "12 rounds",
-            "relationship": "has"
-        },
-        {
-            "source": "AES-256",
-            "target": "14 rounds",
-            "relationship": "has"
-        },
-        {
-            "source": "DES Algorithm",
-            "target": "16 rounds",
-            "relationship": "has"
-        },
-        {
-            "source": "3DES Algorithm",
-            "target": "48 rounds",
-            "relationship": "has"
-        },
-        {
-            "source": "DES Algorithm",
-            "target": "56 bits",
-            "relationship": "key_size"
-        },
-        {
-            "source": "3DES Algorithm",
-            "target": "168 bits",
-            "relationship": "key_size"
-        },
-        {
-            "source": "AES-128",
-            "target": "128 bits",
-            "relationship": "key_size"
-        },
-        {
-            "source": "AES-256",
-            "target": "256 bits",
-            "relationship": "key_size"
-        },
-        {
-            "source": "DES Algorithm",
-            "target": "64 bits",
-            "relationship": "block_size"
-        },
-        {
-            "source": "3DES Algorithm",
-            "target": "64 bits",
-            "relationship": "block_size"
-        },
-        {
-            "source": "AES-128",
-            "target": "128 bits",
-            "relationship": "block_size"
-        },
-        {
-            "source": "AES-256",
-            "target": "128 bits",
-            "relationship": "block_size"
-        },
-        {
-            "source": "Message Integrity",
-            "target": "Authenticated Encryption (AE)",
-            "relationship": "is_a_goal_of"
-        },
-        {
-            "source": "Message Integrity",
-            "target": "Active Adversary",
-            "relationship": "protects_against"
-        },
-        {
-            "source": "Eavesdropping Adversary",
-            "target": "Messages en-route",
-            "relationship": "cannot_change"
-        },
-        {
-            "source": "Active Adversary",
-            "target": "Messages en-route",
-            "relationship": "can_change"
-        },
-        {
-            "source": "Message Integrity",
-            "target": "Message Integrity Tag",
-            "relationship": "achieved_by"
-        },
-        {
-            "source": "Message Integrity Tag",
-            "target": "Signing Algorithm (S)",
-            "relationship": "computed_by"
-        },
-        {
-            "source": "Message Integrity Tag",
-            "target": "Verification Algorithm (V)",
-            "relationship": "verified_by"
-        },
-        {
-            "source": "Message",
-            "target": "Tag",
-            "relationship": "form_message_tag_pair_with"
-        },
-        {
-            "source": "Message Authentication Code (MAC)",
-            "target": "Signing Algorithm (S)",
-            "relationship": "defined_by"
-        },
-        {
-            "source": "Message Authentication Code (MAC)",
-            "target": "Verification Algorithm (V)",
-            "relationship": "defined_by"
-        },
-        {
-            "source": "Message Authentication Code (MAC)",
-            "target": "Key Space",
-            "relationship": "operates_over"
-        },
-        {
-            "source": "Message Authentication Code (MAC)",
-            "target": "Message Space",
-            "relationship": "operates_over"
-        },
-        {
-            "source": "Message Authentication Code (MAC)",
-            "target": "Ciphertext Space",
-            "relationship": "operates_over"
-        },
-        {
-            "source": "Message Authentication Code (MAC)",
-            "target": "MAC Correctness Property",
-            "relationship": "requires"
-        },
-        {
-            "source": "MAC Security",
-            "target": "MAC Attack Game",
-            "relationship": "defined_by"
-        },
-        {
-            "source": "MAC Attack Game",
-            "target": "MAC Advantage (MACadv)",
-            "relationship": "measures"
-        },
-        {
-            "source": "MAC Security",
-            "target": "MAC Advantage (MACadv)",
-            "relationship": "requires_negligible_for_secure_MAC"
-        },
-        {
-            "source": "PRF for MACs",
+            "source": "Pseudo Random Function (PRF)",
             "target": "Message Authentication Code (MAC)",
-            "relationship": "can_be_used_to_build"
+            "relationship": "can_be_used_to_construct"
         },
         {
-            "source": "Deterministic MAC System",
-            "target": "PRF for MACs",
-            "relationship": "is_derived_from"
+            "source": "Pseudo Random Permutation (PRP)",
+            "target": "Block Cipher",
+            "relationship": "is_a_type_of"
         },
         {
-            "source": "Prefix-Free Secure PRFs",
-            "target": "Long Messages",
-            "relationship": "are_used_for"
+            "source": "Message Authentication Code (MAC)",
+            "target": "Message Integrity",
+            "relationship": "ensures"
         },
         {
-            "source": "CBC Construction (for PRFs)",
-            "target": "Prefix-Free Secure PRFs",
+            "source": "Message Authentication Code (MAC)",
+            "target": "Signing Algorithm (MAC)",
+            "relationship": "is_defined_by"
+        },
+        {
+            "source": "Message Authentication Code (MAC)",
+            "target": "Verification Algorithm (MAC)",
+            "relationship": "is_defined_by"
+        },
+        {
+            "source": "Prefix-free PRFs",
+            "target": "MAC",
+            "relationship": "are_used_in_constructions_for_long_messages"
+        },
+        {
+            "source": "Cipher Block Chaining (CBC) MAC",
+            "target": "Prefix-free PRFs",
             "relationship": "is_a_construction_for"
         },
         {
-            "source": "Cascade Construction (for PRFs)",
-            "target": "Prefix-Free Secure PRFs",
+            "source": "Cipher Block Chaining (CBC) MAC",
+            "target": "Attacker",
+            "relationship": "is_vulnerable_to_attack_by"
+        },
+        {
+            "source": "Cascade Construction (MAC)",
+            "target": "Prefix-free PRFs",
             "relationship": "is_a_construction_for"
         },
         {
-            "source": "Attack on CBC (for MAC)",
-            "target": "CBC Construction (for PRFs)",
-            "relationship": "demonstrates_vulnerability_of"
-        },
-        {
             "source": "CMAC",
-            "target": "Prefix-Free Secure PRFs",
-            "relationship": "derived_from"
+            "target": "Prefix-free PRFs",
+            "relationship": "is_a_type_of"
         },
         {
-            "source": "CMAC",
-            "target": "Randomized Prefix-Free Encoding (rpf)",
-            "relationship": "uses"
-        },
-        {
-            "source": "Message Integrity",
-            "target": "Universal Hashing",
-            "relationship": "can_be_built_from"
-        },
-        {
-            "source": "Universal Hashing",
-            "target": "Hash Functions",
-            "relationship": "uses"
-        },
-        {
-            "source": "Hash Functions",
+            "source": "Hash Function",
             "target": "Message Space",
-            "relationship": "map"
+            "relationship": "maps_large_to_short"
         },
         {
-            "source": "Hash Functions",
+            "source": "Hash Function",
             "target": "Message Digests",
-            "relationship": "output_to"
+            "relationship": "produces"
         },
         {
-            "source": "Message Digests",
-            "target": "Tag Space",
-            "relationship": "are_short_outputs_in"
+            "source": "Hash Function",
+            "target": "Message Integrity from Universal Hashing",
+            "relationship": "is_used_in"
         },
         {
             "source": "Keyed Hash Functions",
-            "target": "Hash Functions",
+            "target": "Hash Function",
             "relationship": "is_a_type_of"
+        },
+        {
+            "source": "Keyed Hash Functions",
+            "target": "Key",
+            "relationship": "uses_as_selector"
         },
         {
             "source": "Universal Hash Functions (UHFs)",
@@ -1281,38 +762,63 @@
         },
         {
             "source": "Universal Hash Functions (UHFs)",
-            "target": "Collision Resistance Property",
-            "relationship": "have"
+            "target": "Polynomials Modulo a Prime",
+            "relationship": "can_be_constructed_using"
         },
         {
-            "source": "Hash Collision",
-            "target": "Message",
-            "relationship": "occurs_when_two_distinct_messages_map_to_same_digest"
+            "source": "Universal Hash Functions (UHFs)",
+            "target": "Collision Resistance",
+            "relationship": "satisfy_weak_form_of"
         },
         {
-            "source": "Collision Resistance Property",
-            "target": "Collision Resistant Hashing",
-            "relationship": "defined_by"
+            "source": "Hash-then-PRF Paradigm",
+            "target": "Hash Function",
+            "relationship": "uses"
         },
         {
-            "source": "Collision Resistant Hashing",
-            "target": "UHF Advantage (UHFadv)",
-            "relationship": "measures"
+            "source": "Hash-then-PRF Paradigm",
+            "target": "Pseudo Random Function (PRF)",
+            "relationship": "uses"
         },
         {
-            "source": "UHF Advantage (UHFadv)",
-            "target": "Hash Collision",
-            "relationship": "is_probability_of_adversary_finding"
+            "source": "Hash-then-PRF Paradigm",
+            "target": "Message Authentication Code (MAC)",
+            "relationship": "yields_secure"
         },
         {
             "source": "Keyless Hash Function",
-            "target": "Efficiently Computable Function",
-            "relationship": "is_an"
+            "target": "Hash Function",
+            "relationship": "is_a_type_of"
         },
         {
-            "source": "Collision Resistant Hashing",
-            "target": "UHF Advantage (UHFadv)",
-            "relationship": "requires_negligible_for_security"
+            "source": "Keyless Hash Function",
+            "target": "Secret Keys",
+            "relationship": "is_evaluated_publicly_without"
+        },
+        {
+            "source": "Merkle-Damgard Paradigm",
+            "target": "Hash Function",
+            "relationship": "is_a_construction_for"
+        },
+        {
+            "source": "Merkle-Damgard Paradigm",
+            "target": "Compression Function (h)",
+            "relationship": "uses"
+        },
+        {
+            "source": "Merkle-Damgard Paradigm",
+            "target": "Initial Value",
+            "relationship": "uses"
+        },
+        {
+            "source": "Merkle-Damgard Paradigm",
+            "target": "Padding Block",
+            "relationship": "uses"
+        },
+        {
+            "source": "SHA256",
+            "target": "Merkle-Damgard Paradigm",
+            "relationship": "is_an_example_of"
         },
         {
             "source": "SHA256",
@@ -1321,183 +827,268 @@
         },
         {
             "source": "SHA256",
-            "target": "Collision Resistance Property",
-            "relationship": "has"
+            "target": "Collision Resistance",
+            "relationship": "is"
         },
         {
-            "source": "Hash-then-MAC Paradigm",
-            "target": "Collision Resistant Hashing",
+            "source": "ElGamal Encryption",
+            "target": "Asymmetric (Public-Key) Cryptography",
+            "relationship": "is_an_example_of"
+        },
+        {
+            "source": "Digital Signature",
+            "target": "Cryptography",
+            "relationship": "is_a_tool_in"
+        },
+        {
+            "source": "Trapdoor Function Scheme",
+            "target": "Key Exchange",
+            "relationship": "is_a_tool_for"
+        },
+        {
+            "source": "Trapdoor Function Scheme",
+            "target": "One-Way Function",
             "relationship": "uses"
         },
         {
-            "source": "Hash-then-MAC Paradigm",
-            "target": "Message Authentication Code (MAC)",
-            "relationship": "uses_secure"
+            "source": "One-Way Function",
+            "target": "Trapdoor",
+            "relationship": "can_be_inverted_with"
         },
         {
-            "source": "Hash-then-MAC Paradigm",
-            "target": "MAC for Large Messages",
-            "relationship": "builds"
+            "source": "Trapdoor Permutation Scheme",
+            "target": "Trapdoor Function Scheme",
+            "relationship": "is_a_special_case_of"
         },
         {
-            "source": "Merkle-Damgard Paradigm",
-            "target": "Hash Functions",
-            "relationship": "is_a_construction_for"
+            "source": "RSA",
+            "target": "Trapdoor Permutation Scheme",
+            "relationship": "is_an_example_of"
         },
         {
-            "source": "Merkle-Damgard Paradigm",
-            "target": "Compression Function",
+            "source": "RSA",
+            "target": "RSAGen Algorithm",
+            "relationship": "works_via"
+        },
+        {
+            "source": "RSA",
+            "target": "Factoring (Number Theory Problem)",
+            "relationship": "is_based_on"
+        },
+        {
+            "source": "RSA",
+            "target": "RSA Assumption",
+            "relationship": "is_assumed_one_way_under"
+        },
+        {
+            "source": "Diffie-Hellman Key Exchange",
+            "target": "Key Exchange",
+            "relationship": "is_a_protocol_for"
+        },
+        {
+            "source": "Diffie-Hellman Key Exchange",
+            "target": "Number Theory",
+            "relationship": "requires"
+        },
+        {
+            "source": "Diffie-Hellman Key Exchange",
+            "target": "Man-in-the-Middle Attack",
+            "relationship": "is_vulnerable_to"
+        },
+        {
+            "source": "Merkle Puzzles",
+            "target": "Key Exchange",
+            "relationship": "is_a_protocol_for"
+        },
+        {
+            "source": "Merkle Puzzles",
+            "target": "Symmetric-Key Cryptography",
             "relationship": "uses"
         },
         {
-            "source": "Merkle-Damgard Paradigm",
-            "target": "Initial Value (IV)",
+            "source": "Network Security",
+            "target": "Network Devices",
+            "relationship": "involves_safeguarding"
+        },
+        {
+            "source": "Network Security",
+            "target": "Network Media",
+            "relationship": "involves_safeguarding"
+        },
+        {
+            "source": "Network Security",
+            "target": "Perimeter Topologies",
             "relationship": "uses"
         },
         {
-            "source": "Merkle-Damgard Paradigm",
-            "target": "Message Blocks",
-            "relationship": "processes"
+            "source": "Perimeter Topologies",
+            "target": "DMZs",
+            "relationship": "include"
         },
         {
-            "source": "Merkle-Damgard Paradigm",
-            "target": "Chaining Variables",
-            "relationship": "generates"
+            "source": "Perimeter Topologies",
+            "target": "Extranets",
+            "relationship": "include"
         },
         {
-            "source": "Merkle-Damgard Paradigm",
-            "target": "Padding Block (PB)",
+            "source": "Perimeter Topologies",
+            "target": "Intranets",
+            "relationship": "include"
+        },
+        {
+            "source": "Network Infrastructure Elements",
+            "target": "Network Security",
+            "relationship": "are_selected_and_purchased_for"
+        },
+        {
+            "source": "Advanced Communications",
+            "target": "Management and Protection",
+            "relationship": "require"
+        },
+        {
+            "source": "Administering a Secure Network",
+            "target": "TCP/IP Protocols",
+            "relationship": "involves"
+        },
+        {
+            "source": "Administering a Secure Network",
+            "target": "Network Monitoring and Analysis",
+            "relationship": "involves"
+        },
+        {
+            "source": "Administering a Secure Network",
+            "target": "Port Security",
+            "relationship": "involves"
+        },
+        {
+            "source": "HTTPS",
+            "target": "Secure Communication",
+            "relationship": "is_a_protocol_for"
+        },
+        {
+            "source": "SSH",
+            "target": "Secure Communication",
+            "relationship": "is_a_protocol_for"
+        },
+        {
+            "source": "TLS/SSL",
+            "target": "Secure Communication",
+            "relationship": "is_a_protocol_for"
+        },
+        {
+            "source": "Wireless Network Security",
+            "target": "Wireless Attacks",
+            "relationship": "addresses"
+        },
+        {
+            "source": "Wireless Network Security",
+            "target": "Wireless Security Solutions",
             "relationship": "uses"
         },
         {
-            "source": "SHA256",
-            "target": "Merkle-Damgard Paradigm",
-            "relationship": "is_a_function_using"
+            "source": "Wireless Security Solutions",
+            "target": "WEP (Wireless Security)",
+            "relationship": "include"
         },
         {
-            "source": "Authenticated Encryption (AE)",
-            "target": "Data Secrecy (Confidentiality)",
-            "relationship": "ensures"
+            "source": "Wireless Security Solutions",
+            "target": "WPA (Wireless Security)",
+            "relationship": "include"
         },
         {
-            "source": "Authenticated Encryption (AE)",
-            "target": "Message Integrity",
-            "relationship": "ensures"
+            "source": "IPsec",
+            "target": "Secure Communication",
+            "relationship": "is_a_protocol_for"
         },
         {
-            "source": "Authenticated Encryption (AE)",
-            "target": "Encryption",
-            "relationship": "combines"
+            "source": "Pretty Good Privacy (PGP)",
+            "target": "Network Security",
+            "relationship": "is_a_tool_in"
         },
         {
-            "source": "Authenticated Encryption (AE)",
-            "target": "Message Authentication Code (MAC)",
-            "relationship": "combines"
+            "source": "Brute-Force Attack",
+            "target": "Key Space",
+            "relationship": "targets_size_of"
         },
         {
-            "source": "Encrypt-then-MAC",
-            "target": "Encryption",
-            "relationship": "is_a_method_to_combine"
+            "source": "Statistical Attack",
+            "target": "Statistical Test",
+            "relationship": "exploits_patterns_detected_by"
         },
         {
-            "source": "Encrypt-then-MAC",
-            "target": "Message Authentication Code (MAC)",
-            "relationship": "is_a_method_to_combine"
+            "source": "Caesar's Cipher",
+            "target": "Statistical Attack",
+            "relationship": "is_vulnerable_to"
         },
         {
-            "source": "MAC-then-Encrypt",
-            "target": "Encryption",
-            "relationship": "is_a_method_to_combine"
+            "source": "Shift Cipher",
+            "target": "Statistical Attack",
+            "relationship": "is_vulnerable_to"
         },
         {
-            "source": "MAC-then-Encrypt",
-            "target": "Message Authentication Code (MAC)",
-            "relationship": "is_a_method_to_combine"
+            "source": "Mono-Alphabetic Substitution Cipher",
+            "target": "Statistical Attack",
+            "relationship": "is_vulnerable_to"
         },
         {
-            "source": "Encrypt-and-MAC (SSH)",
-            "target": "Encryption",
-            "relationship": "is_a_method_to_combine"
+            "source": "Ciphertext-Only Attack",
+            "target": "Threat Models",
+            "relationship": "is_a_type_of"
         },
         {
-            "source": "Encrypt-and-MAC (SSH)",
-            "target": "Message Authentication Code (MAC)",
-            "relationship": "is_a_method_to_combine"
+            "source": "Known-Plaintext Attack",
+            "target": "Threat Models",
+            "relationship": "is_a_type_of"
         },
         {
-            "source": "Encrypt-then-MAC",
-            "target": "TLS 1.2 Protocol",
-            "relationship": "supported_in"
+            "source": "Chosen-Plaintext Attack",
+            "target": "Threat Models",
+            "relationship": "is_a_type_of"
         },
         {
-            "source": "Encrypt-then-MAC",
-            "target": "IPsec Protocol",
-            "relationship": "supported_in"
+            "source": "Chosen-Ciphertext Attack",
+            "target": "Threat Models",
+            "relationship": "is_a_type_of"
         },
         {
-            "source": "Encrypt-then-MAC",
-            "target": "GCM (NIST Standard)",
-            "relationship": "supported_in"
+            "source": "Key Recovery Attack",
+            "target": "Key",
+            "relationship": "aims_to_find"
         },
         {
-            "source": "MAC-then-Encrypt",
-            "target": "SSL 3.0",
-            "relationship": "used_in"
+            "source": "Man-in-the-Middle Attack",
+            "target": "Diffie-Hellman Key Exchange",
+            "relationship": "affects"
         },
         {
-            "source": "MAC-then-Encrypt",
-            "target": "TLS 1.0",
-            "relationship": "used_in"
+            "source": "Malleability (Cryptography)",
+            "target": "One-Time Pad",
+            "relationship": "is_a_weakness_of"
         },
         {
-            "source": "MAC-then-Encrypt",
-            "target": "802.11i WiFi Encryption Protocol",
-            "relationship": "used_in"
-        },
-        {
-            "source": "Encrypt-then-MAC",
-            "target": "CPA-secure cipher",
-            "relationship": "is_secure_for"
-        },
-        {
-            "source": "Encrypt-then-MAC",
-            "target": "Message Authentication Code (MAC)",
-            "relationship": "is_secure_for"
-        },
-        {
-            "source": "MAC-then-Encrypt",
-            "target": "CPA-secure cipher",
-            "relationship": "is_not_secure_for_every_combination_of"
-        },
-        {
-            "source": "MAC-then-Encrypt",
-            "target": "Message Authentication Code (MAC)",
-            "relationship": "is_not_secure_for_every_combination_of"
+            "source": "Two-Time Pad (Weakness)",
+            "target": "Stream Cipher",
+            "relationship": "is_a_weakness_of"
         },
         {
             "source": "Number Theory",
-            "target": "Applied Cryptography & Network Security",
-            "relationship": "is_fundamental_to"
+            "target": "Diffie-Hellman Key Exchange",
+            "relationship": "is_a_foundation_for"
         },
         {
-            "source": "Positive Integer",
-            "target": "Number Theory",
-            "relationship": "is_basic_concept_in"
+            "source": "Number Theory",
+            "target": "RSA",
+            "relationship": "is_a_foundation_for"
         },
         {
-            "source": "Prime Number",
-            "target": "Number Theory",
-            "relationship": "is_basic_concept_in"
+            "source": "Number Theory",
+            "target": "Prime Numbers",
+            "relationship": "includes"
         },
         {
-            "source": "Arithmetic Modulo Primes (Zp)",
-            "target": "Number Theory",
-            "relationship": "involves_operations_in"
-        },
-        {
-            "source": "Invertible Elements (ZN*)",
-            "target": "Greatest Common Divisor (gcd)",
-            "relationship": "defined_by"
+            "source": "Number Theory",
+            "target": "Modulo Arithmetic",
+            "relationship": "includes"
         },
         {
             "source": "Fermat's Theorem",
@@ -1505,14 +1096,14 @@
             "relationship": "is_a_theorem_in"
         },
         {
-            "source": "Modular Inverse",
-            "target": "Arithmetic Modulo Primes (Zp)",
-            "relationship": "is_a_concept_in"
+            "source": "Euler's Phi Function",
+            "target": "Number Theory",
+            "relationship": "is_a_function_in"
         },
         {
-            "source": "Solving Linear Equations (in Zp)",
+            "source": "Euler's Theorem",
             "target": "Number Theory",
-            "relationship": "is_an_application_of"
+            "relationship": "is_a_theorem_in"
         },
         {
             "source": "Cyclic Groups",
@@ -1521,473 +1112,113 @@
         },
         {
             "source": "Cyclic Groups",
-            "target": "Generators",
+            "target": "Generators (Group Theory)",
             "relationship": "have"
         },
         {
-            "source": "Group Element Order",
-            "target": "Cyclic Groups",
-            "relationship": "is_a_property_of_elements_in"
-        },
-        {
             "source": "Lagrange's Theorem",
-            "target": "Group Element Order",
-            "relationship": "relates_to"
-        },
-        {
-            "source": "Factorization",
-            "target": "Group Element Order",
-            "relationship": "can_help_determine"
-        },
-        {
-            "source": "Euler's Totient Function (\u03c6(N))",
             "target": "Number Theory",
-            "relationship": "is_a_function_in"
+            "relationship": "is_a_theorem_in"
         },
         {
-            "source": "Euler's Theorem",
-            "target": "Euler's Totient Function (\u03c6(N))",
-            "relationship": "uses"
+            "source": "Extended Euclidean Algorithm",
+            "target": "RSA",
+            "relationship": "is_used_in"
         },
         {
-            "source": "Euler's Theorem",
-            "target": "Fermat's Theorem",
-            "relationship": "generalizes"
-        },
-        {
-            "source": "Key Exchange",
-            "target": "Alice",
-            "relationship": "is_a_goal_for"
-        },
-        {
-            "source": "Key Exchange",
-            "target": "Bob",
-            "relationship": "is_a_goal_for"
-        },
-        {
-            "source": "Key Exchange",
-            "target": "Shared Secret",
-            "relationship": "aims_to_generate"
-        },
-        {
-            "source": "Shared Secret",
-            "target": "Eavesdropping Adversary",
-            "relationship": "unknown_to"
-        },
-        {
-            "source": "Shared Secret",
-            "target": "Session Key",
-            "relationship": "can_be_used_as"
-        },
-        {
-            "source": "Anonymous Key Exchange",
-            "target": "Key Exchange",
-            "relationship": "is_a_type_of"
-        },
-        {
-            "source": "Anonymous Key Exchange",
-            "target": "Attack Game (Anonymous Key Exchange)",
-            "relationship": "defined_by"
-        },
-        {
-            "source": "Attack Game (Anonymous Key Exchange)",
-            "target": "Adversary's Advantage (AnonKEadv)",
-            "relationship": "measures"
-        },
-        {
-            "source": "Anonymous Key Exchange",
-            "target": "Adversary's Advantage (AnonKEadv)",
-            "relationship": "is_secure_if_negligible"
-        },
-        {
-            "source": "Protocol Transcript",
-            "target": "Eavesdropping Adversary",
-            "relationship": "is_observed_by"
-        },
-        {
-            "source": "Eavesdropping Adversary",
-            "target": "Key Exchange Secret Key",
-            "relationship": "goal_is_to_figure_out"
-        },
-        {
-            "source": "One-Way Trapdoor Functions",
-            "target": "Key Exchange Protocols",
-            "relationship": "are_tools_for_building_secure"
-        },
-        {
-            "source": "One-Way Function",
-            "target": "Easy to compute, hard to invert",
-            "relationship": "is"
-        },
-        {
-            "source": "Trapdoor",
-            "target": "One-Way Function",
-            "relationship": "allows_efficient_inversion_of"
-        },
-        {
-            "source": "Trapdoor Function Scheme",
-            "target": "Trapdoor Function Key Generation (G)",
-            "relationship": "defined_by"
-        },
-        {
-            "source": "Trapdoor Function Scheme",
-            "target": "Trapdoor Function F",
-            "relationship": "defined_by"
-        },
-        {
-            "source": "Trapdoor Function Scheme",
-            "target": "Inversion Algorithm (I)",
-            "relationship": "defined_by"
-        },
-        {
-            "source": "Trapdoor Function Key Generation (G)",
-            "target": "Public Key",
-            "relationship": "outputs"
-        },
-        {
-            "source": "Trapdoor Function Key Generation (G)",
-            "target": "Secret Key",
-            "relationship": "outputs"
-        },
-        {
-            "source": "Trapdoor Function F",
-            "target": "Public Key",
-            "relationship": "uses"
-        },
-        {
-            "source": "Inversion Algorithm (I)",
-            "target": "Secret Key",
-            "relationship": "uses"
-        },
-        {
-            "source": "Trapdoor Function Scheme",
-            "target": "Trapdoor Function Correctness Property",
-            "relationship": "requires"
-        },
-        {
-            "source": "Trapdoor Permutation Scheme",
-            "target": "Trapdoor Function Scheme",
-            "relationship": "is_a_special_case_of"
-        },
-        {
-            "source": "Trapdoor Permutation Scheme",
-            "target": "One-Wayness Property",
-            "relationship": "requires"
-        },
-        {
-            "source": "One-Wayness Property",
-            "target": "Attack Game (One-Way Trapdoor Function Scheme)",
-            "relationship": "defined_by"
-        },
-        {
-            "source": "Attack Game (One-Way Trapdoor Function Scheme)",
-            "target": "Adversary's Advantage in Inverting (OWadv)",
-            "relationship": "measures"
-        },
-        {
-            "source": "Trapdoor Function Scheme",
-            "target": "Adversary's Advantage in Inverting (OWadv)",
-            "relationship": "is_one_way_if_negligible"
-        },
-        {
-            "source": "RSA Algorithm",
-            "target": "Trapdoor Permutation Scheme",
-            "relationship": "is_a"
-        },
-        {
-            "source": "RSA Algorithm",
-            "target": "RSA Factoring Problem",
-            "relationship": "security_relies_on"
-        },
-        {
-            "source": "RSA Algorithm",
-            "target": "RSA Key Generation (RSAGen)",
-            "relationship": "uses"
-        },
-        {
-            "source": "RSA Key Generation (RSAGen)",
-            "target": "RSA Prime p",
-            "relationship": "generates"
-        },
-        {
-            "source": "RSA Key Generation (RSAGen)",
-            "target": "RSA Prime q",
-            "relationship": "generates"
-        },
-        {
-            "source": "RSA Key Generation (RSAGen)",
-            "target": "RSA Modulus n",
-            "relationship": "computes"
-        },
-        {
-            "source": "RSA Key Generation (RSAGen)",
-            "target": "RSA Encryption Exponent (e)",
-            "relationship": "computes"
-        },
-        {
-            "source": "RSA Key Generation (RSAGen)",
-            "target": "RSA Decryption Exponent (d)",
-            "relationship": "computes"
-        },
-        {
-            "source": "RSA Decryption Exponent (d)",
-            "target": "Extended Euclidean Algorithm",
-            "relationship": "computed_using"
-        },
-        {
-            "source": "RSA Assumption",
-            "target": "RSA Factoring Problem",
-            "relationship": "states"
-        },
-        {
-            "source": "Key Exchange based on RSA Assumption",
-            "target": "Anonymous Key Exchange",
-            "relationship": "is_a_secure"
-        },
-        {
-            "source": "Diffie-Hellman Key Exchange",
-            "target": "Key Exchange Protocols",
-            "relationship": "is_an_approach_to_secure"
-        },
-        {
-            "source": "Diffie-Hellman Key Exchange",
-            "target": "Number Theory",
-            "relationship": "requires"
-        },
-        {
-            "source": "Diffie-Hellman Man-in-the-Middle Attack",
-            "target": "Diffie-Hellman Key Exchange",
-            "relationship": "is_an_attack_on"
-        },
-        {
-            "source": "Diffie-Hellman Man-in-the-Middle Attack",
-            "target": "Key Exchange Authentication",
-            "relationship": "exploits_lack_of"
-        },
-        {
-            "source": "Merkle Puzzles",
-            "target": "Symmetric-Key Primitives",
-            "relationship": "is_a_key_exchange_protocol_using"
-        },
-        {
-            "source": "Merkle Puzzles",
-            "target": "Merkle Puzzles Block Cipher",
-            "relationship": "uses"
-        },
-        {
-            "source": "Merkle Puzzles",
-            "target": "Merkle Puzzle",
-            "relationship": "involves_solving"
-        },
-        {
-            "source": "Merkle Puzzle",
-            "target": "Merkle Puzzles Brute Force Attack",
-            "relationship": "solved_by"
-        },
-        {
-            "source": "Merkle Puzzles Workload",
-            "target": "Adversary",
-            "relationship": "is_higher_for"
-        },
-        {
-            "source": "Merkle Puzzles AES",
-            "target": "Merkle Puzzles Block Cipher",
-            "relationship": "can_be_used_as"
-        },
-        {
-            "source": "Applied Cryptography & Network Security",
-            "target": "Network Security",
-            "relationship": "covers"
-        },
-        {
-            "source": "Modern Cryptography",
-            "target": "Cryptanalysis",
-            "relationship": "includes"
-        },
-        {
-            "source": "Modern Cryptography",
-            "target": "Digital Signature",
-            "relationship": "includes"
-        },
-        {
-            "source": "Applied Cryptography & Network Security",
-            "target": "Computer Forensics",
-            "relationship": "covers"
-        },
-        {
-            "source": "Network Security",
-            "target": "DMZs",
-            "relationship": "uses"
-        },
-        {
-            "source": "Network Security",
-            "target": "Extranets",
-            "relationship": "uses"
-        },
-        {
-            "source": "Network Security",
-            "target": "Intranets",
-            "relationship": "uses"
-        },
-        {
-            "source": "Network Security",
-            "target": "Network devices",
-            "relationship": "secures"
-        },
-        {
-            "source": "Network Security",
-            "target": "Network media",
-            "relationship": "secures"
-        },
-        {
-            "source": "Network Security",
-            "target": "Perimeter topologies",
-            "relationship": "uses"
-        },
-        {
-            "source": "Public Key Infrastructure (PKI)",
-            "target": "PKI certificates",
-            "relationship": "uses"
-        },
-        {
-            "source": "Public Key Infrastructure (PKI)",
-            "target": "Digital Signature",
-            "relationship": "enables"
-        },
-        {
-            "source": "Public Key Infrastructure (PKI)",
-            "target": "Key agreement protocols",
-            "relationship": "enables"
-        },
-        {
-            "source": "CSCI-GA.3205 Course",
-            "target": "Information security fundamentals",
-            "relationship": "covers"
-        },
-        {
-            "source": "Network Security",
-            "target": "Network infrastructure",
-            "relationship": "involves"
-        },
-        {
-            "source": "Network Security",
-            "target": "Advanced communications",
-            "relationship": "involves"
-        },
-        {
-            "source": "Public-Key Encryption",
-            "target": "ElGamal Encryption",
-            "relationship": "is_an_example_of"
-        },
-        {
-            "source": "Historical Ciphers",
-            "target": "Affine Cipher",
+            "source": "Security Threats",
+            "target": "Malware",
             "relationship": "include"
         },
         {
-            "source": "CSCI-GA.3205 Course",
-            "target": "Steganography",
-            "relationship": "covers"
-        },
-        {
-            "source": "Threat Models",
-            "target": "Malware Attacks",
-            "relationship": "include"
-        },
-        {
-            "source": "Threat Models",
+            "source": "Security Threats",
             "target": "Social Engineering Attacks",
             "relationship": "include"
         },
         {
-            "source": "Network Security",
-            "target": "Application Security",
-            "relationship": "includes"
+            "source": "Operating System (OS) Security",
+            "target": "Network Security",
+            "relationship": "is_a_component_of"
         },
         {
-            "source": "Network Security",
-            "target": "Data Security",
-            "relationship": "includes"
+            "source": "Secure Network Design Elements",
+            "target": "Network Security",
+            "relationship": "are_part_of"
         },
         {
-            "source": "Network Security",
-            "target": "Host Security",
-            "relationship": "includes"
+            "source": "Network Monitoring and Analysis",
+            "target": "Administering a Secure Network",
+            "relationship": "is_part_of"
         },
         {
-            "source": "Network Security",
-            "target": "Network Security Hardware",
-            "relationship": "includes"
+            "source": "Encrypt-then-MAC",
+            "target": "Data Secrecy (Confidentiality)",
+            "relationship": "combines"
         },
         {
-            "source": "Network Security",
-            "target": "Operating System (OS) Security",
-            "relationship": "includes"
+            "source": "Encrypt-then-MAC",
+            "target": "Message Integrity",
+            "relationship": "combines"
         },
         {
-            "source": "Network Security",
-            "target": "Pretty Good Privacy (PGP)",
-            "relationship": "includes"
+            "source": "Encrypt-then-MAC",
+            "target": "TLS 1.2",
+            "relationship": "is_supported_by"
         },
         {
-            "source": "Network Security",
-            "target": "TCP/IP Protocols",
-            "relationship": "secures"
+            "source": "Encrypt-then-MAC",
+            "target": "IPsec",
+            "relationship": "is_supported_by"
         },
         {
-            "source": "Network Security",
-            "target": "Logs monitoring and analysis",
+            "source": "Encrypt-then-MAC",
+            "target": "GCM (Galois/Counter Mode)",
+            "relationship": "is_supported_by"
+        },
+        {
+            "source": "Encrypt-then-MAC",
+            "target": "Authenticated Encryption",
+            "relationship": "provides"
+        },
+        {
+            "source": "MAC-then-Encrypt",
+            "target": "Data Secrecy (Confidentiality)",
+            "relationship": "combines"
+        },
+        {
+            "source": "MAC-then-Encrypt",
+            "target": "Message Integrity",
+            "relationship": "combines"
+        },
+        {
+            "source": "MAC-then-Encrypt",
+            "target": "SSL 3.0",
+            "relationship": "is_used_by"
+        },
+        {
+            "source": "MAC-then-Encrypt",
+            "target": "802.11i WiFi Encryption Protocol",
+            "relationship": "is_used_by"
+        },
+        {
+            "source": "MAC-then-Encrypt",
+            "target": "Encrypt-then-MAC",
+            "relationship": "is_less_secure_than"
+        },
+        {
+            "source": "Hash-then-MAC Construction",
+            "target": "Hash Function",
             "relationship": "uses"
         },
         {
-            "source": "Network Security",
-            "target": "Port security",
-            "relationship": "includes"
-        },
-        {
-            "source": "Network Security",
-            "target": "HTTPS (HTTP Secure)",
+            "source": "Hash-then-MAC Construction",
+            "target": "Message Authentication Code (MAC)",
             "relationship": "uses"
         },
         {
-            "source": "Network Security",
-            "target": "SSH (Secure Shell)",
-            "relationship": "uses"
-        },
-        {
-            "source": "Network Security",
-            "target": "TLS (Transport Layer Security)",
-            "relationship": "uses"
-        },
-        {
-            "source": "Network Security",
-            "target": "Wireless Network Security",
-            "relationship": "includes"
-        },
-        {
-            "source": "Wireless Network Security",
-            "target": "Wireless Attacks",
-            "relationship": "protects_against"
-        },
-        {
-            "source": "Wireless Network Security",
-            "target": "Wireless Security Solutions",
-            "relationship": "employs"
-        },
-        {
-            "source": "Wireless Security Solutions",
-            "target": "Wired Equivalent Privacy (WEP)",
-            "relationship": "include"
-        },
-        {
-            "source": "Wireless Security Solutions",
-            "target": "Wi-Fi Protected Access (WPA)",
-            "relationship": "include"
-        },
-        {
-            "source": "Wireless Security Solutions",
-            "target": "IPsec Protocol",
-            "relationship": "include"
+            "source": "Hash-then-MAC Construction",
+            "target": "Collision Resistance",
+            "relationship": "requires"
         }
     ]
 }
