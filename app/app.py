@@ -12,6 +12,7 @@ from datetime import datetime
 from fastapi import FastAPI, HTTPException, Depends, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 from src.test_generator import testGenerator
 from src.study_plan import StudyPlan
 from src.graph_visualizer import generate_graph_visualization
@@ -79,22 +80,162 @@ async def upload_files(files: list[UploadFile] = File(...), user: dict = Depends
 
 ##-----------------------------------------------------------##
 
-@app.post("/course/create")
-async def create_course(
-    course_name: str = Body(...),
-    roster_file: UploadFile = File(...),
+class CourseInit(BaseModel):
+    course_name: str
+
+class CourseObjectives(BaseModel):
+    objectives: str
+
+##-----------------------------------------------------------##
+
+@app.post("/course/init")
+async def init_course(
+    payload: CourseInit,
     user: dict = Depends(get_current_user)
 ):
     """
-    Create a new course with a roster of students.
-    Only professors can create courses.
+    Step 1: Initialize a new course with a course name.
+    Returns the course_id for subsequent steps.
     """
-    # Only allow professors to create courses
     if user.get("role") != "professor":
         raise HTTPException(status_code=403, detail="Only professors can create courses.")
     
     try:
-        # Parse the CSV file
+        # Create initial course document
+        course_doc = {
+            "course_name": payload.course_name,
+            "professor_username": user["username"],
+            "course_plan": None,
+            "course_objectives": None,
+            "roster": [],
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        course_id = atomic_db.insert_course(course_doc)
+        
+        return {
+            "message": "Course initialized",
+            "course_id": course_id,
+            "course_name": payload.course_name
+        }
+    except Exception as e:
+        print(f"Error initializing course: {e}")
+        raise HTTPException(status_code=500, detail=f"Error initializing course: {str(e)}")
+
+##-----------------------------------------------------------##
+
+@app.post("/course/{course_id}/upload-plan")
+async def upload_course_plan(
+    course_id: str,
+    plan_file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Step 2: Upload the course plan (JSON file).
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can upload course plans.")
+    
+    try:
+        # Verify course exists and belongs to professor
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        if course.get("professor_username") != user["username"]:
+            raise HTTPException(status_code=403, detail="You don't have access to this course.")
+        
+        # For now, read the file and store it
+        content = await plan_file.read()
+        try:
+            # Validate it's valid JSON
+            plan_data = json.loads(content.decode('utf-8'))
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid JSON file.")
+        
+        # Update course with plan
+        updated = atomic_db.update_course(
+            course_id,
+            {"course_plan": plan_data}
+        )
+        
+        if not updated:
+            raise HTTPException(status_code=500, detail="Failed to update course plan.")
+        
+        return {
+            "message": "Course plan uploaded successfully",
+            "course_id": course_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error uploading course plan: {e}")
+        raise HTTPException(status_code=500, detail=f"Error uploading course plan: {str(e)}")
+
+##-----------------------------------------------------------##
+
+@app.post("/course/{course_id}/set-objectives")
+async def set_course_objectives(
+    course_id: str,
+    payload: CourseObjectives,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Step 3: Set course objectives.
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can set course objectives.")
+    
+    try:
+        # Verify course exists and belongs to professor
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        if course.get("professor_username") != user["username"]:
+            raise HTTPException(status_code=403, detail="You don't have access to this course.")
+        
+        # Update course with objectives
+        updated = atomic_db.update_course(
+            course_id,
+            {"course_objectives": payload.objectives}
+        )
+        
+        if not updated:
+            raise HTTPException(status_code=500, detail="Failed to update course objectives.")
+        
+        return {
+            "message": "Course objectives saved successfully",
+            "course_id": course_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error setting course objectives: {e}")
+        raise HTTPException(status_code=500, detail=f"Error setting course objectives: {str(e)}")
+
+##-----------------------------------------------------------##
+
+@app.post("/course/{course_id}/upload-roster")
+async def upload_course_roster(
+    course_id: str,
+    roster_file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Step 4: Upload the class roster (CSV file).
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can upload rosters.")
+    
+    try:
+        # Verify course exists and belongs to professor
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        if course.get("professor_username") != user["username"]:
+            raise HTTPException(status_code=403, detail="You don't have access to this course.")
+        
+        # Parse CSV file
         content = await roster_file.read()
         csv_content = content.decode('utf-8')
         csv_reader = csv.DictReader(io.StringIO(csv_content))
@@ -102,7 +243,6 @@ async def create_course(
         # Extract student roster
         roster = []
         for row in csv_reader:
-            # Expecting columns: studentName, emailID
             student_name = row.get('studentName', '').strip()
             email_id = row.get('emailID', '').strip()
             
@@ -115,31 +255,27 @@ async def create_course(
         if not roster:
             raise HTTPException(status_code=400, detail="No valid students found in roster file.")
         
-        # Create course document
-        course_doc = {
-            "course_name": course_name,
-            "professor_username": user["username"],
-            "roster": roster,
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
-        }
+        # Update course with roster
+        updated = atomic_db.update_course(
+            course_id,
+            {"roster": roster}
+        )
         
-        # Insert course into database
-        course_id = atomic_db.insert_course(course_doc)
+        if not updated:
+            raise HTTPException(status_code=500, detail="Failed to update course roster.")
         
         return {
-            "message": "Course created successfully",
+            "message": "Course roster uploaded successfully",
             "course_id": course_id,
-            "course_name": course_name,
             "student_count": len(roster)
         }
-        
+    except HTTPException:
+        raise
     except csv.Error as e:
         raise HTTPException(status_code=400, detail=f"Invalid CSV file: {str(e)}")
     except Exception as e:
-        print(f"Error creating course: {e}")
-        raise HTTPException(status_code=500, detail=f"Error creating course: {str(e)}")
-
+        print(f"Error uploading roster: {e}")
+        raise HTTPException(status_code=500, detail=f"Error uploading roster: {str(e)}")
 ##-----------------------------------------------------------##
 
 @app.get("/course/list")
@@ -196,6 +332,84 @@ def get_course_details(course_id: str, user: dict = Depends(get_current_user)):
     except Exception as e:
         print(f"Error fetching course details: {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching course details: {str(e)}")
+
+##-----------------------------------------------------------##
+
+class GraphData(BaseModel):
+    graph_data: list
+
+@app.post("/course/{course_id}/save-graph")
+def save_knowledge_graph(
+    course_id: str,
+    payload: GraphData,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Save the knowledge graph for a course.
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can save knowledge graphs.")
+    
+    try:
+        # Verify course exists and belongs to professor
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        if course.get("professor_username") != user["username"]:
+            raise HTTPException(status_code=403, detail="You don't have access to this course.")
+        
+        # Update course with graph data
+        updated = atomic_db.update_course(
+            course_id,
+            {"knowledge_graph": payload.graph_data}
+        )
+        
+        if not updated:
+            raise HTTPException(status_code=500, detail="Failed to save knowledge graph.")
+        
+        return {
+            "message": "Knowledge graph saved successfully",
+            "course_id": course_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error saving knowledge graph: {e}")
+        raise HTTPException(status_code=500, detail=f"Error saving knowledge graph: {str(e)}")
+
+##-----------------------------------------------------------##
+
+@app.get("/course/{course_id}/get-graph")
+def get_knowledge_graph(
+    course_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Retrieve the saved knowledge graph for a course.
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can view knowledge graphs.")
+    
+    try:
+        # Verify course exists and belongs to professor
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        if course.get("professor_username") != user["username"]:
+            raise HTTPException(status_code=403, detail="You don't have access to this course.")
+        
+        # Get the knowledge graph, return empty list if not found
+        knowledge_graph = course.get("knowledge_graph", [])
+        
+        return {
+            "course_id": course_id,
+            "knowledge_graph": knowledge_graph
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error retrieving knowledge graph: {e}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving knowledge graph: {str(e)}")
 
 ##-----------------------------------------------------------##
 

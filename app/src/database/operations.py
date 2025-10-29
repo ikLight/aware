@@ -32,6 +32,19 @@ class AtomicDB(BaseDB):
         except:
             return False
 
+    def update_course(self, course_id: str, update_doc: dict) -> bool:
+        """Update a course document. Returns True if updated, False otherwise."""
+        from bson import ObjectId
+        try:
+            update_doc["updated_at"] = datetime.utcnow()
+            result = self.db.courses.update_one(
+                {"_id": ObjectId(course_id)},
+                {"$set": update_doc}
+            )
+            return result.modified_count > 0
+        except:
+            return False
+
 
 
 class QueryDB(BaseDB):
