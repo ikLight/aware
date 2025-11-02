@@ -1,10 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload as UploadIcon, FileText, LogOut, BookOpen, List, Trash2, CheckCircle2, Circle } from "lucide-react";
+import { Upload as UploadIcon, FileText, LogOut, BookOpen, List, Trash2, CheckCircle2, Circle, BarChart3, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Users, Award, Target, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -23,6 +31,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+} from 'recharts';
 
 interface Course {
   _id: string;
@@ -83,6 +109,13 @@ const Prof = () => {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [graphData, setGraphData] = useState<Array<{ objective: string; importance: number }>>([]);
   const [isEditingGraph, setIsEditingGraph] = useState(false);
+
+  // Analytics state
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [analyticsCourse, setAnalyticsCourse] = useState<Course | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -343,7 +376,60 @@ const Prof = () => {
   const handleViewCourses = () => {
     setShowCourseList(true);
     setShowCourseCreation(false);
+    setShowAnalytics(false);
     fetchCourses();
+  };
+
+  const fetchAnalytics = async (courseId: string) => {
+    try {
+      setIsLoadingAnalytics(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8000/course/${courseId}/analytics`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics');
+      }
+
+      const data = await response.json();
+      setAnalyticsData(data);
+    } catch (error) {
+      toast({ 
+        title: "Error", 
+        description: "Failed to load analytics.", 
+        variant: "destructive" 
+      });
+      setAnalyticsData(null);
+    } finally {
+      setIsLoadingAnalytics(false);
+    }
+  };
+
+  const handleViewAnalytics = (course: Course) => {
+    setAnalyticsCourse(course);
+    setShowAnalytics(true);
+    setShowCourseList(false);
+    setShowCourseCreation(false);
+    fetchAnalytics(course._id);
+  };
+
+  const toggleStudentExpand = (username: string) => {
+    setExpandedStudents(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(username)) {
+        newSet.delete(username);
+      } else {
+        newSet.add(username);
+      }
+      return newSet;
+    });
+  };
+
+  const getScoreColor = (percentage: number) => {
+    if (percentage >= 80) return 'text-green-600 font-semibold';
+    if (percentage >= 60) return 'text-yellow-600 font-semibold';
+    return 'text-red-600 font-semibold';
   };
 
   const handleDeleteClick = (course: Course) => {
@@ -522,15 +608,15 @@ const Prof = () => {
 
   if (userRole !== 'professor') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800">
         <div className="text-2xl font-semibold mt-20">Access Denied</div>
         <div className="mt-4 text-muted-foreground">Only professors can access this page.</div>
         <Button className="mt-8" onClick={async () => { await logout(); navigate('/login'); }}>Logout</Button>
       </div>
     );
   }  return (
-    <div className="min-h-screen flex flex-col page-transition">
-      <div className="p-6 flex justify-between items-center">
+    <div className="min-h-screen flex flex-col page-transition bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800">
+      <div className="p-6 flex justify-between items-center border-b border-border">
         <div className="text-lg font-semibold text-primary">Prof Dashboard</div>
         <div className="flex gap-2">
           <Button 
@@ -538,6 +624,7 @@ const Prof = () => {
             onClick={() => {
               setShowCourseCreation(true);
               setShowCourseList(false);
+              setShowAnalytics(false);
             }}
           >
             <BookOpen className="w-4 h-4 mr-2" /> Create Course
@@ -547,6 +634,21 @@ const Prof = () => {
             onClick={handleViewCourses}
           >
             <List className="w-4 h-4 mr-2" /> View Courses
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setShowAnalytics(true);
+              setShowCourseList(false);
+              setShowCourseCreation(false);
+              // If we have courses, auto-select the first one
+              if (courses.length > 0 && !analyticsCourse) {
+                setAnalyticsCourse(courses[0]);
+                fetchAnalytics(courses[0]._id);
+              }
+            }}
+          >
+            <BarChart3 className="w-4 h-4 mr-2" /> Analytics
           </Button>
           <Button variant="outline" onClick={async () => { await logout(); navigate('/login'); }} className="rounded-full px-4">
             <LogOut className="w-4 h-4 mr-2" /> Logout
@@ -601,6 +703,14 @@ const Prof = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleViewAnalytics(course)}
+                              >
+                                <BarChart3 className="w-4 h-4 mr-1" />
+                                Analytics
+                              </Button>
                               <Button 
                                 variant="ghost" 
                                 size="sm"
@@ -823,8 +933,475 @@ const Prof = () => {
             </div>
           )}
           
+          {/* Analytics Section */}
+          {showAnalytics && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="space-y-8"
+            >
+              {/* Header */}
+              <div className="text-center space-y-4">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                >
+                  <BarChart3 className="mx-auto w-16 h-16 text-primary drop-shadow-lg" />
+                </motion.div>
+                <h1 className="text-5xl font-bold gradient-text">Course Analytics</h1>
+                <p className="text-lg text-muted-foreground">Comprehensive insights into student performance</p>
+              </div>
+
+              {/* Course Selector */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="flex gap-4 items-center justify-center"
+              >
+                <label className="font-semibold text-lg text-foreground">Course:</label>
+                <Select
+                  value={analyticsCourse?._id || ''}
+                  onValueChange={(value) => {
+                    const course = courses.find(c => c._id === value);
+                    if (course) {
+                      setAnalyticsCourse(course);
+                      fetchAnalytics(course._id);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[300px] border-2 border-primary/30 shadow-md hover:shadow-lg transition-all">
+                    <SelectValue placeholder="Select a course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map((course) => (
+                      <SelectItem key={course._id} value={course._id}>
+                        {course.course_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </motion.div>
+
+              {isLoadingAnalytics ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  >
+                    <BarChart3 className="w-16 h-16 text-primary" />
+                  </motion.div>
+                  <p className="mt-4 text-lg text-muted-foreground">Loading analytics...</p>
+                </div>
+              ) : analyticsData ? (
+                <div className="space-y-8">
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      className="relative overflow-hidden border-2 border-blue-200 rounded-2xl p-6 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-blue-200 rounded-full -mr-10 -mt-10 opacity-50" />
+                      <Users className="w-10 h-10 text-blue-600 mb-3" />
+                      <div className="text-sm font-medium text-blue-700 mb-1">Total Enrolled</div>
+                      <div className="text-4xl font-bold text-blue-700">
+                        {analyticsData.summary.total_enrolled}
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      className="relative overflow-hidden border-2 border-green-200 rounded-2xl p-6 bg-gradient-to-br from-green-50 to-green-100 shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-green-200 rounded-full -mr-10 -mt-10 opacity-50" />
+                      <Award className="w-10 h-10 text-green-600 mb-3" />
+                      <div className="text-sm font-medium text-green-700 mb-1">Active Students</div>
+                      <div className="text-4xl font-bold text-green-700">
+                        {analyticsData.summary.students_with_tests}
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      className="relative overflow-hidden border-2 border-purple-200 rounded-2xl p-6 bg-gradient-to-br from-purple-50 to-purple-100 shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-purple-200 rounded-full -mr-10 -mt-10 opacity-50" />
+                      <Zap className="w-10 h-10 text-purple-600 mb-3" />
+                      <div className="text-sm font-medium text-purple-700 mb-1">Tests Taken</div>
+                      <div className="text-4xl font-bold text-purple-700">
+                        {analyticsData.summary.total_tests_taken}
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      className="relative overflow-hidden border-2 border-orange-200 rounded-2xl p-6 bg-gradient-to-br from-orange-50 to-orange-100 shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-orange-200 rounded-full -mr-10 -mt-10 opacity-50" />
+                      <Target className="w-10 h-10 text-orange-600 mb-3" />
+                      <div className="text-sm font-medium text-orange-700 mb-1">Topics Covered</div>
+                      <div className="text-4xl font-bold text-orange-700">
+                        {analyticsData.summary.total_topics_tested}
+                      </div>
+                    </motion.div>
+                  </div>
+
+                  {/* Topic Analytics with Charts */}
+                  {analyticsData.topic_analytics.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="space-y-6"
+                    >
+                      <div className="flex items-center gap-3">
+                        <TrendingUp className="w-8 h-8 text-primary" />
+                        <h2 className="text-3xl font-bold">Topic Performance</h2>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        📊 Topics sorted by average score - struggling topics highlighted in red
+                      </p>
+
+                      {/* Bar Chart */}
+                      <div className="bg-card/80 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-border">
+                        <h3 className="text-xl font-semibold mb-4 text-foreground">Performance Overview</h3>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={analyticsData.topic_analytics.slice(0, 10)}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis 
+                              dataKey="topic" 
+                              angle={-45}
+                              textAnchor="end"
+                              height={100}
+                              tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }}
+                            />
+                            <YAxis 
+                              domain={[0, 100]} 
+                              tick={{ fill: 'hsl(var(--foreground))' }}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'hsl(var(--card))', 
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '12px',
+                                padding: '12px',
+                                color: 'hsl(var(--foreground))'
+                              }}
+                            />
+                            <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
+                            <Bar 
+                              dataKey="average_score" 
+                              name="Average Score (%)"
+                              fill="hsl(var(--primary))"
+                              radius={[8, 8, 0, 0]}
+                            >
+                              {analyticsData.topic_analytics.map((entry: any, index: number) => (
+                                <Cell 
+                                  key={`cell-${index}`} 
+                                  fill={entry.average_score < 60 ? '#ef4444' : entry.average_score < 80 ? '#f59e0b' : '#10b981'} 
+                                />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Detailed Topic Table */}
+                      <div className="border border-border rounded-2xl overflow-hidden shadow-lg bg-card/80 backdrop-blur-xl">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-muted/50 border-b border-border">
+                              <TableHead className="font-bold text-foreground">Topic</TableHead>
+                              <TableHead className="font-bold text-foreground">Students</TableHead>
+                              <TableHead className="font-bold text-foreground">Attempts</TableHead>
+                              <TableHead className="font-bold text-foreground">Avg Score</TableHead>
+                              <TableHead className="font-bold text-foreground">Highest</TableHead>
+                              <TableHead className="font-bold text-foreground">Lowest</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {analyticsData.topic_analytics.map((topic: any, idx: number) => (
+                              <motion.tr
+                                key={idx}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className={`${
+                                  topic.average_score < 60 
+                                    ? 'bg-red-500/10 hover:bg-red-500/20' 
+                                    : 'hover:bg-muted/30'
+                                } transition-colors border-b border-border/50`}
+                              >
+                                <TableCell className="font-semibold text-foreground">
+                                  {topic.average_score < 60 && (
+                                    <TrendingDown className="inline w-4 h-4 text-red-500 mr-2" />
+                                  )}
+                                  {topic.topic}
+                                </TableCell>
+                                <TableCell className="text-foreground">{topic.students_tested}</TableCell>
+                                <TableCell className="text-foreground">{topic.total_attempts}</TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <div className={`text-lg font-bold ${getScoreColor(topic.average_score)}`}>
+                                      {topic.average_score.toFixed(1)}%
+                                    </div>
+                                    <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                                      <div 
+                                        className={`h-full ${
+                                          topic.average_score >= 80 ? 'bg-green-500' : 
+                                          topic.average_score >= 60 ? 'bg-yellow-500' : 
+                                          'bg-red-500'
+                                        }`}
+                                        style={{ width: `${topic.average_score}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-green-500 font-semibold">
+                                  {topic.highest_score.toFixed(1)}%
+                                </TableCell>
+                                <TableCell className="text-red-500 font-semibold">
+                                  {topic.lowest_score.toFixed(1)}%
+                                </TableCell>
+                              </motion.tr>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Student Analytics */}
+                  {analyticsData.student_analytics.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6 }}
+                      className="space-y-6"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Users className="w-8 h-8 text-primary" />
+                        <h2 className="text-3xl font-bold text-foreground">Student Performance</h2>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        👥 Click on a student to see detailed topic-wise breakdown and test history
+                      </p>
+
+                      <div className="border border-border rounded-2xl overflow-hidden shadow-lg bg-card/80 backdrop-blur-xl">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-muted/50 border-b border-border">
+                              <TableHead className="w-12 font-bold text-foreground"></TableHead>
+                              <TableHead className="font-bold text-foreground">Student</TableHead>
+                              <TableHead className="font-bold text-foreground">Level</TableHead>
+                              <TableHead className="font-bold text-foreground">Tests</TableHead>
+                              <TableHead className="font-bold text-foreground">Overall Score</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {analyticsData.student_analytics.map((student: any, studentIdx: number) => (
+                              <>
+                                <motion.tr
+                                  key={student.student_username}
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: studentIdx * 0.05 }}
+                                  className="cursor-pointer hover:bg-muted/30 transition-all duration-300 border-b border-border/50"
+                                  onClick={() => toggleStudentExpand(student.student_username)}
+                                >
+                                  <TableCell>
+                                    <motion.div
+                                      animate={{ rotate: expandedStudents.has(student.student_username) ? 180 : 0 }}
+                                      transition={{ duration: 0.3 }}
+                                    >
+                                      <ChevronDown className="w-5 h-5 text-primary" />
+                                    </motion.div>
+                                  </TableCell>
+                                  <TableCell className="font-semibold text-lg text-foreground">{student.student_username}</TableCell>
+                                  <TableCell>
+                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                      student.current_proficiency === 'advanced' ? 'bg-purple-500/20 text-purple-400' :
+                                      student.current_proficiency === 'intermediate' ? 'bg-blue-500/20 text-blue-400' :
+                                      'bg-green-500/20 text-green-400'
+                                    }`}>
+                                      {student.current_proficiency}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell className="font-medium text-foreground">{student.total_tests}</TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center gap-3">
+                                      <div className={`text-xl font-bold ${getScoreColor(student.overall_percentage)}`}>
+                                        {student.overall_percentage.toFixed(1)}%
+                                      </div>
+                                      <div className="w-24 h-3 bg-muted rounded-full overflow-hidden">
+                                        <motion.div 
+                                          initial={{ width: 0 }}
+                                          animate={{ width: `${student.overall_percentage}%` }}
+                                          transition={{ duration: 1, delay: studentIdx * 0.1 }}
+                                          className={`h-full ${
+                                            student.overall_percentage >= 80 ? 'bg-green-500' : 
+                                            student.overall_percentage >= 60 ? 'bg-yellow-500' : 
+                                            'bg-red-500'
+                                          }`}
+                                        />
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                </motion.tr>
+
+                                {/* Expandable Details */}
+                                <AnimatePresence>
+                                  {expandedStudents.has(student.student_username) && (
+                                    <motion.tr
+                                      initial={{ opacity: 0, height: 0 }}
+                                      animate={{ opacity: 1, height: "auto" }}
+                                      exit={{ opacity: 0, height: 0 }}
+                                      transition={{ duration: 0.3 }}
+                                    >
+                                      <TableCell colSpan={5} className="bg-muted/30 p-8 border-b border-border">
+                                        <div className="space-y-6">
+                                          {/* Topic Breakdown */}
+                                          <div>
+                                            <h4 className="text-2xl font-bold mb-4 flex items-center gap-2 text-foreground">
+                                              <Target className="w-6 h-6 text-primary" />
+                                              Topic Breakdown
+                                            </h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                              {student.topics_breakdown.map((topic: any, topicIdx: number) => (
+                                                <motion.div
+                                                  key={topicIdx}
+                                                  initial={{ opacity: 0, scale: 0.8 }}
+                                                  animate={{ opacity: 1, scale: 1 }}
+                                                  transition={{ delay: topicIdx * 0.1 }}
+                                                  className="border border-border rounded-xl p-5 bg-card shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+                                                >
+                                                  <div className="font-bold text-lg mb-3 text-foreground">{topic.topic}</div>
+                                                  <div className="grid grid-cols-2 gap-3 text-sm">
+                                                    <div className="bg-blue-500/10 p-2 rounded-lg">
+                                                      <span className="text-muted-foreground block text-xs">Attempts</span>
+                                                      <span className="font-bold text-blue-400">{topic.attempts}</span>
+                                                    </div>
+                                                    <div className="bg-green-500/10 p-2 rounded-lg">
+                                                      <span className="text-muted-foreground block text-xs">Best</span>
+                                                      <span className="font-bold text-green-400">{topic.best_score.toFixed(1)}%</span>
+                                                    </div>
+                                                    <div className="bg-purple-500/10 p-2 rounded-lg">
+                                                      <span className="text-muted-foreground block text-xs">Average</span>
+                                                      <span className={`font-bold ${getScoreColor(topic.average_score)}`}>
+                                                        {topic.average_score.toFixed(1)}%
+                                                      </span>
+                                                    </div>
+                                                    <div className="bg-orange-500/10 p-2 rounded-lg">
+                                                      <span className="text-muted-foreground block text-xs">Latest</span>
+                                                      <span className={`font-bold ${getScoreColor(topic.latest_score)}`}>
+                                                        {topic.latest_score.toFixed(1)}%
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                </motion.div>
+                                              ))}
+                                            </div>
+                                          </div>
+
+                                          {/* Recent Tests */}
+                                          <div>
+                                            <h5 className="text-xl font-bold mb-3 flex items-center gap-2 text-foreground">
+                                              <Zap className="w-5 h-5 text-primary" />
+                                              Recent Test History
+                                            </h5>
+                                            <div className="border border-border rounded-xl overflow-hidden bg-card">
+                                              <Table>
+                                                <TableHeader>
+                                                  <TableRow className="bg-muted/50 border-b border-border">
+                                                    <TableHead className="font-bold text-foreground">Date</TableHead>
+                                                    <TableHead className="font-bold text-foreground">Topic</TableHead>
+                                                    <TableHead className="font-bold text-foreground">Score</TableHead>
+                                                    <TableHead className="font-bold text-foreground">Level</TableHead>
+                                                  </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                  {student.recent_tests.map((test: any, testIdx: number) => (
+                                                    <TableRow key={testIdx} className="hover:bg-muted/30 border-b border-border/50">
+                                                      <TableCell className="font-medium text-foreground">
+                                                        {new Date(test.date).toLocaleDateString()}
+                                                      </TableCell>
+                                                      <TableCell className="text-foreground">{test.topic}</TableCell>
+                                                      <TableCell>
+                                                        <div className="flex items-center gap-2">
+                                                          <span className={`font-bold ${getScoreColor(test.percentage)}`}>
+                                                            {test.score}/{test.total}
+                                                          </span>
+                                                          <span className={`text-sm ${getScoreColor(test.percentage)}`}>
+                                                            ({test.percentage.toFixed(1)}%)
+                                                          </span>
+                                                        </div>
+                                                      </TableCell>
+                                                      <TableCell>
+                                                        <span className="px-2 py-1 bg-muted rounded-md text-sm font-medium text-foreground">
+                                                          {test.proficiency}
+                                                        </span>
+                                                      </TableCell>
+                                                    </TableRow>
+                                                  ))}
+                                                </TableBody>
+                                              </Table>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </TableCell>
+                                    </motion.tr>
+                                  )}
+                                </AnimatePresence>
+                              </>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {analyticsData.topic_analytics.length === 0 && analyticsData.student_analytics.length === 0 && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center py-16 bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl border-2 border-dashed border-gray-300"
+                    >
+                      <BarChart3 className="w-20 h-20 text-gray-400 mx-auto mb-4" />
+                      <p className="text-xl text-gray-500 font-medium">No test data available yet</p>
+                      <p className="text-sm text-gray-400 mt-2">Students need to take tests first</p>
+                    </motion.div>
+                  )}
+                </div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-16 bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl border-2 border-dashed border-gray-300"
+                >
+                  <BarChart3 className="w-20 h-20 text-gray-400 mx-auto mb-4" />
+                  <p className="text-xl text-gray-500 font-medium">No analytics data available</p>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+          
           {/* Upload Section - shown after course creation or when toggled */}
-          {!showCourseCreation && !showCourseList && (
+          {!showCourseCreation && !showCourseList && !showAnalytics && (
             <>
               <div className="text-center space-y-3">
                 <h1 className="text-4xl font-medium text-foreground">Upload Your Course Material</h1>
