@@ -896,28 +896,28 @@ const Student = () => {
 
     // Question answering phase
     const currentQuestion = questions[currentQuestionIndex];
-    const currentAnswer = studentAnswers[currentQuestion.question_number];
+    const currentAnswer = studentAnswers[currentQuestion.question_number] || '';
     const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
     return (
-      <div className="min-h-screen p-6">
+      <div className="min-h-screen p-6 bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
-            <div className="flex justify-between text-sm mb-2">
+            <div className="flex justify-between text-sm mb-2 text-foreground">
               <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
               <span>{Object.keys(studentAnswers).length} answered</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div 
-                className="bg-blue-600 h-2 rounded-full transition-all"
+                className="bg-primary h-2 rounded-full transition-all"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
 
-          <Card>
+          <Card className="bg-card/80 backdrop-blur-xl border border-border">
             <CardHeader>
-              <CardTitle>Question {currentQuestion.question_number}</CardTitle>
+              <CardTitle className="text-foreground">Question {currentQuestion.question_number}</CardTitle>
               <CardDescription className="text-base mt-4">
                 {currentQuestion.question_text}
               </CardDescription>
@@ -925,9 +925,12 @@ const Student = () => {
             <CardContent>
               <RadioGroup value={currentAnswer} onValueChange={handleAnswerSelect}>
                 {Object.entries(currentQuestion.options).map(([key, value]) => (
-                  <div key={key} className="flex items-center space-x-2 p-3 border rounded hover:bg-gray-50">
+                  <div 
+                    key={key} 
+                    className="flex items-center space-x-2 p-3 border border-border rounded-lg hover:bg-primary/10 hover:border-primary/50 transition-all cursor-pointer"
+                  >
                     <RadioGroupItem value={key} id={`option-${key}`} />
-                    <Label htmlFor={`option-${key}`} className="flex-1 cursor-pointer">
+                    <Label htmlFor={`option-${key}`} className="flex-1 cursor-pointer text-foreground">
                       <span className="font-semibold">{key}.</span> {value}
                     </Label>
                   </div>
@@ -963,23 +966,23 @@ const Student = () => {
   // Test Results View
   if (view === 'test-results' && testResults) {
     const getScoreColor = () => {
-      if (testResults.percentage >= 80) return 'text-green-600';
-      if (testResults.percentage >= 60) return 'text-yellow-600';
-      return 'text-red-600';
+      if (testResults.percentage >= 80) return 'text-green-500';
+      if (testResults.percentage >= 60) return 'text-yellow-500';
+      return 'text-red-500';
     };
 
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800">
+        <Card className="w-full max-w-md bg-card/80 backdrop-blur-xl border border-border">
           <CardHeader>
-            <CardTitle className="text-center">Test Results</CardTitle>
+            <CardTitle className="text-center text-foreground">Test Results</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="text-center">
               <div className={`text-6xl font-bold ${getScoreColor()}`}>
                 {testResults.percentage}%
               </div>
-              <div className="text-2xl mt-4">
+              <div className="text-2xl mt-4 text-foreground">
                 {testResults.score} / {testResults.total_questions}
               </div>
               <div className="text-muted-foreground mt-2">
