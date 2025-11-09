@@ -81,6 +81,7 @@ const Prof = () => {
   
   // Step 1: Course name
   const [courseName, setCourseName] = useState("");
+  const [defaultProficiency, setDefaultProficiency] = useState("intermediate");
   
   // Step 2: Course plan
   const [coursePlanFile, setCoursePlanFile] = useState<File | null>(null);
@@ -116,6 +117,9 @@ const Prof = () => {
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
   const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set());
+  
+  // Proficiency management state
+  const [settingProficiency, setSettingProficiency] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -196,7 +200,10 @@ const Prof = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ course_name: courseName })
+        body: JSON.stringify({ 
+          course_name: courseName,
+          default_proficiency: defaultProficiency
+        })
       });
 
       if (!response.ok) {
@@ -328,6 +335,7 @@ const Prof = () => {
 
       // Reset the form
       setCourseName("");
+      setDefaultProficiency("intermediate");
       setCoursePlanFile(null);
       setCourseObjectives("");
       setRosterFile(null);
@@ -403,6 +411,48 @@ const Prof = () => {
       setAnalyticsData(null);
     } finally {
       setIsLoadingAnalytics(false);
+    }
+  };
+
+  const handleSetProficiency = async (studentUsername: string, proficiencyLevel: string) => {
+    try {
+      setSettingProficiency(studentUsername);
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8000/professor/set-student-proficiency', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          course_id: analyticsCourse?._id,
+          student_username: studentUsername,
+          proficiency_level: proficiencyLevel
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to set proficiency');
+      }
+
+      toast({
+        title: "Success!",
+        description: `Set ${studentUsername}'s proficiency to ${proficiencyLevel}`
+      });
+
+      // Refresh analytics to show updated proficiency
+      if (analyticsCourse) {
+        fetchAnalytics(analyticsCourse._id);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to set proficiency",
+        variant: "destructive"
+      });
+    } finally {
+      setSettingProficiency(null);
     }
   };
 
@@ -785,6 +835,36 @@ const Prof = () => {
                       disabled={isProcessingStep}
                     />
                   </div>
+                  
+                  <div>
+                    <label htmlFor="default-proficiency" className="block text-sm font-medium mb-2 text-foreground">
+                      Default Proficiency Level for New Students
+                    </label>
+                    <Select 
+                      value={defaultProficiency} 
+                      onValueChange={setDefaultProficiency}
+                      disabled={isProcessingStep}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select default proficiency" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border">
+                        <SelectItem value="beginner" className="text-green-400 focus:text-green-400 focus:bg-green-500/10">
+                          🌱 Beginner - Students new to the subject
+                        </SelectItem>
+                        <SelectItem value="intermediate" className="text-blue-400 focus:text-blue-400 focus:bg-blue-500/10">
+                          ⚡ Intermediate - Students with some background
+                        </SelectItem>
+                        <SelectItem value="advanced" className="text-purple-400 focus:text-purple-400 focus:bg-purple-500/10">
+                          🚀 Advanced - Students with strong foundation
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      All students enrolling will start at this level. Proficiency adapts based on test performance.
+                    </p>
+                  </div>
+                  
                   <Button 
                     className="w-full" 
                     onClick={handleStep1}
@@ -1234,13 +1314,31 @@ const Prof = () => {
                                   </TableCell>
                                   <TableCell className="font-semibold text-lg text-foreground">{student.student_username}</TableCell>
                                   <TableCell>
-                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                      student.current_proficiency === 'advanced' ? 'bg-purple-500/20 text-purple-400' :
-                                      student.current_proficiency === 'intermediate' ? 'bg-blue-500/20 text-blue-400' :
-                                      'bg-green-500/20 text-green-400'
-                                    }`}>
-                                      {student.current_proficiency}
-                                    </span>
+                                    {student.current_proficiency ? (
+                                      <div className="flex items-center gap-2">
+                                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                          student.current_proficiency === 'advanced' ? 'bg-purple-500/20 text-purple-400' :
+                                          student.current_proficiency === 'intermediate' ? 'bg-blue-500/20 text-blue-400' :
+                                          'bg-green-500/20 text-green-400'
+                                        }`}>
+                                          {student.current_proficiency}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <Select
+                                        disabled={settingProficiency === student.student_username}
+                                        onValueChange={(value) => handleSetProficiency(student.student_username, value)}
+                                      >
+                                        <SelectTrigger className="w-[180px] bg-yellow-500/10 border-yellow-500/30 text-yellow-400">
+                                          <SelectValue placeholder="⏳ Set Level" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-popover border-border">
+                                          <SelectItem value="beginner" className="text-green-400 focus:text-green-400 focus:bg-green-500/10">🌱 Beginner</SelectItem>
+                                          <SelectItem value="intermediate" className="text-blue-400 focus:text-blue-400 focus:bg-blue-500/10">⚡ Intermediate</SelectItem>
+                                          <SelectItem value="advanced" className="text-purple-400 focus:text-purple-400 focus:bg-purple-500/10">🚀 Advanced</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    )}
                                   </TableCell>
                                   <TableCell className="font-medium text-foreground">{student.total_tests}</TableCell>
                                   <TableCell>

@@ -67,10 +67,11 @@ class AtomicDB(BaseDB):
         result = self.db.test_results.insert_one(test_result_doc)
         return str(result.inserted_id)
 
-    def enroll_student(self, student_username: str, course_id: str, proficiency_level: str = "intermediate") -> bool:
+    def enroll_student(self, student_username: str, course_id: str, proficiency_level: str = None) -> bool:
         """
         Enroll a student in a course.
         Creates/updates enrollment record in student_enrollments collection.
+        proficiency_level can be None initially and will be set by professor.
         
         Returns True if enrolled successfully, False otherwise.
         """
@@ -79,7 +80,7 @@ class AtomicDB(BaseDB):
             enrollment_doc = {
                 "student_username": student_username,
                 "course_id": course_id,
-                "proficiency_level": proficiency_level,
+                "proficiency_level": proficiency_level,  # Can be None until professor sets it
                 "enrolled_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             }
@@ -105,9 +106,73 @@ class AtomicDB(BaseDB):
                 {"student_username": student_username, "course_id": course_id},
                 {"$set": {"proficiency_level": proficiency_level, "updated_at": datetime.utcnow()}}
             )
-            return result.modified_count > 0
+            return result.modified_count > 0 or result.matched_count > 0
         except:
             return False
+
+    def calculate_and_update_adaptive_proficiency(self, student_username: str, course_id: str) -> Optional[str]:
+        """
+        Calculate adaptive proficiency based on last 3 test results.
+        
+        Rules:
+        - Less than 30% on 3 consecutive tests → beginner
+        - More than 30% but less than 70% on 2 out of 3 tests → intermediate
+        - More than 70% on 3 out of 3 tests → advanced
+        
+        Returns the new proficiency level if updated, None otherwise.
+        """
+        try:
+            # Get last 3 test results for this student and course
+            last_3_tests = list(
+                self.db.test_results.find({
+                    "student_username": student_username,
+                    "course_id": course_id
+                }).sort("created_at", -1).limit(3)
+            )
+            
+            if len(last_3_tests) < 3:
+                # Not enough tests to determine adaptive proficiency
+                return None
+            
+            # Extract percentages
+            percentages = [test.get("percentage", 0) for test in last_3_tests]
+            
+            # Count results in different ranges
+            below_30 = sum(1 for p in percentages if p < 30)
+            between_30_70 = sum(1 for p in percentages if 30 <= p < 70)
+            above_70 = sum(1 for p in percentages if p >= 70)
+            
+            new_proficiency = None
+            
+            # Apply rules
+            if below_30 == 3:
+                # All 3 tests below 30%
+                new_proficiency = "beginner"
+            elif above_70 == 3:
+                # All 3 tests above 70%
+                new_proficiency = "advanced"
+            elif between_30_70 >= 2:
+                # At least 2 tests between 30-70%
+                new_proficiency = "intermediate"
+            elif above_70 >= 2:
+                # At least 2 tests above 70% (mixed with some lower)
+                new_proficiency = "advanced"
+            elif below_30 >= 2:
+                # At least 2 tests below 30%
+                new_proficiency = "beginner"
+            else:
+                # Mixed results, default to intermediate
+                new_proficiency = "intermediate"
+            
+            # Update enrollment with new proficiency
+            if new_proficiency:
+                self.update_enrollment_proficiency(student_username, course_id, new_proficiency)
+                return new_proficiency
+            
+            return None
+        except Exception as e:
+            print(f"Error calculating adaptive proficiency: {e}")
+            return None
 
 
 
