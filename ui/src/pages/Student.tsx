@@ -107,9 +107,6 @@ const Student = () => {
   // Enrollment state
   const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
   
-  // Proficiency state
-  const [updatingProficiency, setUpdatingProficiency] = useState<string | null>(null);
-  
   // Test workflow state
   const [selectedCourseForTest, setSelectedCourseForTest] = useState<EnrolledCourse | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -197,8 +194,7 @@ const Student = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          course_id: courseId,
-          proficiency_level: proficiencyLevel
+          course_id: courseId
         })
       });
 
@@ -210,7 +206,7 @@ const Student = () => {
       const data = await response.json();
       toast({
         title: "Enrolled!",
-        description: `Successfully enrolled in ${data.course_name}`
+        description: data.message || `Successfully enrolled in ${data.course_name}`
       });
 
       // Refresh courses
@@ -228,43 +224,6 @@ const Student = () => {
     }
   };
 
-  const handleUpdateProficiency = async (courseId: string, proficiencyLevel: string) => {
-    try {
-      setUpdatingProficiency(courseId);
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/student/update-proficiency', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          course_id: courseId,
-          proficiency_level: proficiencyLevel
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to update proficiency');
-      }
-
-      toast({
-        title: "Updated!",
-        description: "Proficiency level updated successfully"
-      });
-
-      fetchEnrolledCourses();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update proficiency",
-        variant: "destructive"
-      });
-    } finally {
-      setUpdatingProficiency(null);
-    }
-  };
 
   const fetchCourseTopics = async (courseId: string) => {
     try {
@@ -520,7 +479,7 @@ const Student = () => {
                   <div>
                     <CardTitle className="text-3xl">My Enrolled Courses</CardTitle>
                     <CardDescription className="text-base">
-                      Manage your courses, set proficiency levels, and take personalized tests
+                      Manage your courses and take personalized tests
                     </CardDescription>
                   </div>
                 </div>
@@ -578,23 +537,6 @@ const Student = () => {
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Award className="w-4 h-4" />
                                 <span>Professor: {course.professor_username}</span>
-                              </div>
-                              <div className="mt-3 flex items-center gap-3">
-                                <Label className="text-sm font-medium text-gray-700">Proficiency Level:</Label>
-                                <select
-                                  value={course.proficiency_level}
-                                  onChange={(e) => handleUpdateProficiency(course._id, e.target.value)}
-                                  disabled={updatingProficiency === course._id}
-                                  className={`px-4 py-2 rounded-lg border-2 font-medium transition-all ${
-                                    course.proficiency_level === 'advanced' ? 'border-purple-300 bg-purple-50 text-purple-700' :
-                                    course.proficiency_level === 'intermediate' ? 'border-blue-300 bg-blue-50 text-blue-700' :
-                                    'border-green-300 bg-green-50 text-green-700'
-                                  } ${updatingProficiency === course._id ? 'opacity-50' : 'hover:scale-105 cursor-pointer'}`}
-                                >
-                                  <option value="beginner">🌱 Beginner</option>
-                                  <option value="intermediate">⚡ Intermediate</option>
-                                  <option value="advanced">🚀 Advanced</option>
-                                </select>
                               </div>
                             </div>
                           </div>
@@ -703,15 +645,6 @@ const Student = () => {
                             <Target className="w-5 h-5 text-primary" />
                             <span className="font-bold text-lg text-gray-800">{result.topic}</span>
                           </div>
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              result.proficiency_level === 'advanced' ? 'bg-purple-100 text-purple-700' :
-                              result.proficiency_level === 'intermediate' ? 'bg-blue-100 text-blue-700' :
-                              'bg-green-100 text-green-700'
-                            }`}>
-                              {result.proficiency_level.toUpperCase()}
-                            </span>
-                          </div>
                         </div>
                         <div className="text-right">
                           <div className="text-sm text-gray-600 mb-1">Score</div>
@@ -797,27 +730,13 @@ const Student = () => {
                           {course.is_enrolled ? (
                             <Button size="sm" variant="outline" disabled>Already Enrolled</Button>
                           ) : (
-                            <div className="flex items-center gap-2">
-                              <select
-                                id={`proficiency-${course._id}`}
-                                className="px-3 py-1 rounded border text-sm"
-                                defaultValue="intermediate"
-                              >
-                                <option value="beginner">Beginner</option>
-                                <option value="intermediate">Intermediate</option>
-                                <option value="advanced">Advanced</option>
-                              </select>
-                              <Button 
-                                size="sm"
-                                onClick={() => {
-                                  const select = document.getElementById(`proficiency-${course._id}`) as HTMLSelectElement;
-                                  handleEnrollCourse(course._id, select.value);
-                                }}
-                                disabled={enrollingCourseId === course._id}
-                              >
-                                {enrollingCourseId === course._id ? 'Enrolling...' : 'Enroll'}
-                              </Button>
-                            </div>
+                            <Button 
+                              size="sm"
+                              onClick={() => handleEnrollCourse(course._id, '')}
+                              disabled={enrollingCourseId === course._id}
+                            >
+                              {enrollingCourseId === course._id ? 'Enrolling...' : 'Enroll'}
+                            </Button>
                           )}
                         </TableCell>
                       </TableRow>
@@ -852,10 +771,6 @@ const Student = () => {
                 <CardDescription>Select a topic to generate your personalized test</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div>
-                  <Label>Proficiency Level: <span className="font-semibold">{selectedCourseForTest?.proficiency_level}</span></Label>
-                </div>
-
                 <div>
                   <Label htmlFor="topic">Select Topic:</Label>
                   {isLoadingTopics ? (

@@ -83,6 +83,7 @@ async def upload_files(files: list[UploadFile] = File(...), user: dict = Depends
 
 class CourseInit(BaseModel):
     course_name: str
+    default_proficiency: str = "intermediate"  # Default proficiency for new students
 
 class CourseObjectives(BaseModel):
     objectives: str
@@ -106,6 +107,7 @@ async def init_course(
         course_doc = {
             "course_name": payload.course_name,
             "professor_username": user["username"],
+            "default_proficiency": payload.default_proficiency,
             "course_plan": None,
             "course_objectives": None,
             "roster": [],
@@ -593,6 +595,60 @@ def get_course_analytics(
 
 ##-----------------------------------------------------------##
 
+class SetStudentProficiencyRequest(BaseModel):
+    course_id: str
+    student_username: str
+    proficiency_level: str
+
+@app.post("/professor/set-student-proficiency")
+def set_student_proficiency(payload: SetStudentProficiencyRequest, user: dict = Depends(get_current_user)):
+    """
+    Professor sets initial proficiency level for a student enrolled in their course.
+    This is required before students can take tests.
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can set student proficiency.")
+    
+    try:
+        # Verify course exists and belongs to professor
+        course = query_db.find_course_by_id(payload.course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        if course.get("professor_username") != user["username"]:
+            raise HTTPException(status_code=403, detail="You don't have access to this course.")
+        
+        # Verify student is enrolled
+        if not query_db.is_student_enrolled(payload.student_username, payload.course_id):
+            raise HTTPException(status_code=400, detail="Student is not enrolled in this course.")
+        
+        # Validate proficiency level
+        if payload.proficiency_level not in ["beginner", "intermediate", "advanced"]:
+            raise HTTPException(status_code=400, detail="Invalid proficiency level. Must be beginner, intermediate, or advanced.")
+        
+        # Set proficiency
+        success = atomic_db.update_enrollment_proficiency(
+            payload.student_username,
+            payload.course_id,
+            payload.proficiency_level
+        )
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to update proficiency.")
+        
+        return {
+            "message": f"Successfully set {payload.student_username}'s proficiency to {payload.proficiency_level}",
+            "student_username": payload.student_username,
+            "proficiency_level": payload.proficiency_level
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error setting student proficiency: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to set proficiency: {str(e)}")
+
+##-----------------------------------------------------------##
+
 @app.delete("/course/{course_id}")
 def delete_course(course_id: str, user: dict = Depends(get_current_user)):
     """
@@ -811,12 +867,11 @@ def get_available_courses(user: dict = Depends(get_current_user)):
 
 class EnrollRequest(BaseModel):
     course_id: str
-    proficiency_level: str = "intermediate"
 
 @app.post("/student/enroll")
 def enroll_in_course(payload: EnrollRequest, user: dict = Depends(get_current_user)):
     """
-    Enroll a student in a course with a proficiency level.
+    Enroll a student in a course using the course's default proficiency level.
     """
     if user.get("role") != "student":
         raise HTTPException(status_code=403, detail="Only students can enroll in courses.")
@@ -827,21 +882,23 @@ def enroll_in_course(payload: EnrollRequest, user: dict = Depends(get_current_us
         if not course:
             raise HTTPException(status_code=404, detail="Course not found.")
         
-        # Enroll the student
+        # Get default proficiency from course (fallback to intermediate if not set)
+        default_proficiency = course.get("default_proficiency", "intermediate")
+        
+        # Enroll the student with course's default proficiency
         student_username = user["username"]
         success = atomic_db.enroll_student(
             student_username=student_username,
             course_id=payload.course_id,
-            proficiency_level=payload.proficiency_level
+            proficiency_level=default_proficiency
         )
         
         if not success:
             raise HTTPException(status_code=500, detail="Failed to enroll in course.")
         
         return {
-            "message": "Successfully enrolled in course",
-            "course_name": course.get("course_name"),
-            "proficiency_level": payload.proficiency_level
+            "message": f"Successfully enrolled in course with {default_proficiency} proficiency level.",
+            "course_name": course.get("course_name")
         }
     except HTTPException:
         raise
@@ -1149,11 +1206,18 @@ def submit_test(payload: SubmitTestRequest, user: dict = Depends(get_current_use
         
         test_id = atomic_db.insert_test_result(test_result_doc)
         
+        # Calculate and update adaptive proficiency after test submission
+        new_proficiency = atomic_db.calculate_and_update_adaptive_proficiency(
+            user["username"], 
+            payload.course_id
+        )
+        
         return {
             "test_id": test_id,
             "score": score,
             "total_questions": total_questions,
             "percentage": round(percentage, 2),
+            "proficiency_updated": new_proficiency,
             "message": f"Test submitted successfully! You scored {score}/{total_questions}"
         }
         
