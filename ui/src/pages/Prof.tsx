@@ -761,7 +761,7 @@ const Prof = () => {
                         <Circle className="w-6 h-6 text-white" />
                       )}
                     </div>
-                    <span className="text-xs font-medium text-center">
+                    <span className="text-xs font-medium text-center text-foreground">
                       {step === 1 && "Course Name"}
                       {step === 2 && "Course Plan"}
                       {step === 3 && "Objectives"}
@@ -775,7 +775,7 @@ const Prof = () => {
               {currentStep === 1 && (
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="course-name" className="block text-sm font-medium mb-2">Course Name</label>
+                    <label htmlFor="course-name" className="block text-sm font-medium mb-2 text-foreground">Course Name</label>
                     <Input
                       id="course-name"
                       type="text"
@@ -799,8 +799,8 @@ const Prof = () => {
               {currentStep === 2 && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Upload Course Plan (JSON)</label>
-                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                    <label className="block text-sm font-medium mb-2 text-foreground">Upload Course Plan (JSON)</label>
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center bg-card/50">
                       <input
                         type="file"
                         accept=".json"
@@ -816,10 +816,10 @@ const Prof = () => {
                       <label htmlFor="plan-file" className="cursor-pointer">
                         <FileText className="mx-auto mb-2 w-8 h-8 text-primary" />
                         {coursePlanFile ? (
-                          <span className="block font-medium">{coursePlanFile.name}</span>
+                          <span className="block font-medium text-foreground">{coursePlanFile.name}</span>
                         ) : (
                           <>
-                            <span className="block font-medium">Click to upload course plan</span>
+                            <span className="block font-medium text-foreground">Click to upload course plan</span>
                             <span className="block text-sm text-muted-foreground">JSON file</span>
                           </>
                         )}
@@ -850,14 +850,14 @@ const Prof = () => {
               {currentStep === 3 && (
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="objectives" className="block text-sm font-medium mb-2">Course Objectives</label>
+                    <label htmlFor="objectives" className="block text-sm font-medium mb-2 text-foreground">Course Objectives</label>
                     <textarea
                       id="objectives"
                       placeholder="Enter course objectives (one per line or comma-separated)"
                       value={courseObjectives}
                       onChange={(e) => setCourseObjectives(e.target.value)}
                       disabled={isProcessingStep}
-                      className="w-full p-3 border rounded-lg min-h-32"
+                      className="w-full p-3 border border-border rounded-lg min-h-32 bg-background text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
                   <div className="flex gap-2">
@@ -884,8 +884,8 @@ const Prof = () => {
               {currentStep === 4 && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Upload Class Roster (CSV)</label>
-                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                    <label className="block text-sm font-medium mb-2 text-foreground">Upload Class Roster (CSV)</label>
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center bg-card/50">
                       <input
                         type="file"
                         accept=".csv"
@@ -901,10 +901,10 @@ const Prof = () => {
                       <label htmlFor="roster-file-step4" className="cursor-pointer">
                         <FileText className="mx-auto mb-2 w-8 h-8 text-primary" />
                         {rosterFile ? (
-                          <span className="block font-medium">{rosterFile.name}</span>
+                          <span className="block font-medium text-foreground">{rosterFile.name}</span>
                         ) : (
                           <>
-                            <span className="block font-medium">Click to upload roster</span>
+                            <span className="block font-medium text-foreground">Click to upload roster</span>
                             <span className="block text-sm text-muted-foreground">CSV with columns: studentName, emailID</span>
                           </>
                         )}
