@@ -1,7 +1,7 @@
 # Use PyTorch CPU wheels
 --extra-index-url https://download.pytorch.org/whl/cpu
 
-# PyData
+# === Core PyData ===
 numpy==1.26.4
 pandas==2.2.2
 scipy==1.13.1
@@ -12,12 +12,12 @@ jupyterlab==4.2.4
 notebook==7.2.1
 ipywidgets==8.1.3
 
-# Torch (CPU) + vision/audio
+# === Torch (CPU) + vision/audio ===
 torch
 torchvision
 torchaudio
 
-# NLP / LLM
+# === NLP / LLM ===
 transformers>=4.41,<5
 datasets>=2.19,<3
 tokenizers>=0.15.2,<0.16
@@ -28,18 +28,27 @@ evaluate>=0.4
 sentence-transformers>=2.6
 spacy>=3.7,<4
 
-# Vector / retrieval
+# === Vector / Retrieval ===
 chromadb>=0.5
 faiss-cpu==1.7.4; platform_system == "Linux" and (platform_machine == "x86_64" or platform_machine == "AMD64")
 
-# App frameworks
+# === App Frameworks (Backend) ===
 fastapi>=0.111
 uvicorn[standard]>=0.30
 gunicorn>=21.2
 gradio>=4.36
 streamlit>=1.36
+python-multipart>=0.0.9
 
-# Utilities
+# === Auth / DB / Env ===
+motor>=3.1.1
+pymongo>=4.7
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-dotenv>=1.0.0
+
+# === Graphs / Utilities ===
+networkx>=3.3
 rich>=13.7
 loguru>=0.7.2
 tqdm>=4.66
@@ -47,7 +56,13 @@ PyYAML>=6.0.1
 huggingface_hub>=0.24
 pydantic>=2.7
 flask-cors>=4.0.0
-motor>=3.1.1
-python-jose>=3.3.0
-passlib[bcrypt]>=1.7.4
-python-dotenv>=1.0.0
+
+# === Generative AI (Gemini 2.5) ===
+google-generativeai>=0.5.0
+
+# === Local AI Models (Optional) ===
+ollama>=0.1.4
+
+# === Notes ===
+# Run with: pip install -r requirements.txt
+# Compatible with Google Gemini 2.5 API

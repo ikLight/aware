@@ -50,12 +50,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAuthenticated(false);
       setUsername(null);
       localStorage.removeItem('username');
+      localStorage.removeItem('token');
     } catch (error) {
       console.error('Logout error:', error);
       // Still clear local state even if API call fails
       setIsAuthenticated(false);
       setUsername(null);
       localStorage.removeItem('username');
+      localStorage.removeItem('token');
     }
   };
 

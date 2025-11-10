@@ -96,7 +96,7 @@ const Student = () => {
   const { toast } = useToast();
 
   // Main view state
-  const [view, setView] = useState<'dashboard' | 'browse-courses' | 'test-taking' | 'test-results'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'browse-courses' | 'test-taking' | 'test-results' | 'review'>('dashboard');
   
   // Course state
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
@@ -132,6 +132,17 @@ const Student = () => {
   const [testHistory, setTestHistory] = useState<TestResult[]>([]);
   const [selectedCourseForHistory, setSelectedCourseForHistory] = useState<EnrolledCourse | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  // Flashcard/Review state
+  const [selectedCourseForReview, setSelectedCourseForReview] = useState<EnrolledCourse | null>(null);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [reviewNumCards, setReviewNumCards] = useState<string>('10');
+  const [reviewStyle, setReviewStyle] = useState<string>('concise');
+  const [reviewAnswerFormat, setReviewAnswerFormat] = useState<string>('short');
+  const [isGeneratingFlashcards, setIsGeneratingFlashcards] = useState(false);
+  const [flashcards, setFlashcards] = useState<Array<{question: string; answer: string}>>([]);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
 
   useEffect(() => {
     fetchEnrolledCourses();
@@ -278,6 +289,53 @@ const Student = () => {
       setTestHistory([]);
     } finally {
       setIsLoadingHistory(false);
+    }
+  };
+
+  const handleGenerateReview = async () => {
+    if (!selectedCourseForReview) return;
+
+    try {
+      setIsGeneratingFlashcards(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8000/student/course/${selectedCourseForReview._id}/generate-flashcards`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          course_id: selectedCourseForReview._id,
+          num_cards: parseInt(reviewNumCards),
+          style: reviewStyle,
+          answer_format: reviewAnswerFormat
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to generate flashcards');
+      }
+
+      const data = await response.json();
+      setFlashcards(data.cards || []);
+      setCurrentCardIndex(0);
+      setShowAnswer(false);
+      setShowReviewDialog(false);
+      setView('review');
+      
+      toast({
+        title: "Flashcards Generated!",
+        description: `${data.num_cards} flashcards ready for review`
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate flashcards",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingFlashcards(false);
     }
   };
 
@@ -572,6 +630,16 @@ const Student = () => {
                               <BarChart3 className="w-5 h-5 mr-2" />
                               View Scores
                             </Button>
+                            <Button 
+                              size="lg"
+                              variant="secondary"
+                              onClick={() => { setSelectedCourseForReview(course); setShowReviewDialog(true); }}
+                              disabled={!course.has_course_plan}
+                              className="hover:scale-105 transition-all border-2"
+                            >
+                              <BookOpen className="w-5 h-5 mr-2" />
+                              Review
+                            </Button>
                           </div>
                         </div>
                       </motion.div>
@@ -673,6 +741,74 @@ const Student = () => {
                   ))}
                 </div>
               )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Review Options Dialog */}
+          <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+            <DialogContent className="max-w-md bg-white/95 backdrop-blur">
+              <DialogHeader>
+                <div className="flex items-center gap-3">
+                  <BookOpen className="w-8 h-8 text-primary" />
+                  <div>
+                    <DialogTitle className="text-2xl">Review Options</DialogTitle>
+                    <DialogDescription className="text-base">
+                      {selectedCourseForReview?.course_name} - Generate flashcards
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="num-cards">Number of Cards:</Label>
+                  <Select value={reviewNumCards} onValueChange={setReviewNumCards}>
+                    <SelectTrigger className="w-full mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5 cards</SelectItem>
+                      <SelectItem value="10">10 cards</SelectItem>
+                      <SelectItem value="15">15 cards</SelectItem>
+                      <SelectItem value="20">20 cards</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="style">Style:</Label>
+                  <Select value={reviewStyle} onValueChange={setReviewStyle}>
+                    <SelectTrigger className="w-full mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="concise">Concise</SelectItem>
+                      <SelectItem value="detailed">Detailed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="answer-format">Answer Format:</Label>
+                  <Select value={reviewAnswerFormat} onValueChange={setReviewAnswerFormat}>
+                    <SelectTrigger className="w-full mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="short">Short</SelectItem>
+                      <SelectItem value="detailed">Detailed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button 
+                  className="w-full" 
+                  onClick={handleGenerateReview}
+                  disabled={isGeneratingFlashcards}
+                >
+                  {isGeneratingFlashcards ? 'Generating...' : 'Generate Flashcards'}
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
@@ -910,6 +1046,121 @@ const Student = () => {
             </Button>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  // Review View - Flashcards
+  if (view === 'review') {
+    const currentCard = flashcards[currentCardIndex];
+
+    return (
+      <div className="min-h-screen p-6 bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-foreground">Review - {selectedCourseForReview?.course_name}</h1>
+            <Button variant="outline" onClick={handleBackToDashboard}>
+              Back to Dashboard
+            </Button>
+          </div>
+
+          {flashcards.length === 0 ? (
+            <Card className="bg-card/80 backdrop-blur-xl border border-border">
+              <CardContent className="p-12 text-center">
+                <p className="text-muted-foreground">No flashcards available.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="mb-6">
+                <div className="flex justify-between text-sm mb-2 text-foreground">
+                  <span>Card {currentCardIndex + 1} of {flashcards.length}</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all"
+                    style={{ width: `${((currentCardIndex + 1) / flashcards.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              <motion.div
+                key={currentCardIndex}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="bg-card/80 backdrop-blur-xl border border-border min-h-[400px] flex flex-col">
+                  <CardHeader>
+                    <CardTitle className="text-foreground text-2xl">
+                      {showAnswer ? 'Answer' : 'Question'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-1 flex items-center justify-center">
+                    <AnimatePresence mode="wait">
+                      {!showAnswer ? (
+                        <motion.div
+                          key="question"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="text-center"
+                        >
+                          <p className="text-2xl text-foreground">{currentCard.question}</p>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="answer"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="text-center"
+                        >
+                          <p className="text-2xl text-foreground">{currentCard.answer}</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <div className="flex justify-between mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (currentCardIndex > 0) {
+                      setCurrentCardIndex(prev => prev - 1);
+                      setShowAnswer(false);
+                    }
+                  }}
+                  disabled={currentCardIndex === 0}
+                >
+                  Previous Card
+                </Button>
+
+                <Button
+                  onClick={() => setShowAnswer(!showAnswer)}
+                  className="bg-primary"
+                >
+                  {showAnswer ? 'Show Question' : 'Show Answer'}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (currentCardIndex < flashcards.length - 1) {
+                      setCurrentCardIndex(prev => prev + 1);
+                      setShowAnswer(false);
+                    }
+                  }}
+                  disabled={currentCardIndex === flashcards.length - 1}
+                >
+                  Next Card
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   }

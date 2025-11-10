@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from src.database.operations import AtomicDB, QueryDB
 atomic_db = AtomicDB()
 query_db = QueryDB()
@@ -1271,6 +1274,137 @@ def get_test_history(course_id: str, user: dict = Depends(get_current_user)):
     except Exception as e:
         print(f"Error fetching test history: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch test history: {str(e)}")
+
+##-----------------------------------------------------------##
+
+class GenerateFlashcardsRequest(BaseModel):
+    course_id: str
+    num_cards: int = 10
+    style: str = "concise"  # concise or detailed
+    answer_format: str = "short"  # short or detailed
+
+@app.post("/student/course/{course_id}/generate-flashcards")
+def generate_flashcards(course_id: str, payload: GenerateFlashcardsRequest, user: dict = Depends(get_current_user)):
+    """
+    Generate flashcards for a course using Gemini AI.
+    Extracts content from course outline and generates review cards.
+    """
+    if user.get("role") != "student":
+        raise HTTPException(status_code=403, detail="Only students can generate flashcards.")
+    
+    try:
+        # Verify course exists
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        
+        # Verify student enrollment
+        student_identifier = user["username"]
+        is_enrolled = query_db.is_student_enrolled(student_identifier, course_id)
+        
+        if not is_enrolled:
+            raise HTTPException(status_code=403, detail="You are not enrolled in this course.")
+        
+        # Get course plan
+        course_plan = course.get("course_plan")
+        if not course_plan:
+            raise HTTPException(status_code=404, detail="Course plan not available.")
+        
+        print(f"[FLASHCARD GENERATION] Course plan type: {type(course_plan)}")
+        
+        # Extract content recursively from outline
+        def extract_all_content(items, content_parts=None):
+            """Recursively extract all content from course outline."""
+            if content_parts is None:
+                content_parts = []
+            
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                
+                label = item.get("label", "")
+                if label and not (label.lower().startswith("unit ") or label.lower().startswith("week ")):
+                    content_parts.append(label)
+                
+                # Recursively process children
+                if "children" in item and isinstance(item["children"], list):
+                    extract_all_content(item["children"], content_parts)
+            
+            return content_parts
+        
+        content_parts = []
+        if isinstance(course_plan, dict) and "outline" in course_plan:
+            outline = course_plan["outline"]
+            if isinstance(outline, list):
+                content_parts = extract_all_content(outline)
+        
+        if not content_parts:
+            raise HTTPException(status_code=404, detail="No content found in course plan.")
+        
+        course_content = " | ".join(content_parts)
+        print(f"[FLASHCARD GENERATION] Content length: {len(course_content)}")
+        
+        # Generate flashcards using Gemini
+        import google.generativeai as genai
+        
+        api_key = os.getenv('GEMINI_API_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured.")
+        
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        
+        prompt = f"""Based on the following course content, generate {payload.num_cards} flashcards for review.
+
+Course: {course.get("course_name")}
+Content: {course_content}
+
+Style: {payload.style}
+Answer Format: {payload.answer_format}
+
+Generate flashcards in JSON format with the following structure:
+{{
+  "cards": [
+    {{
+      "question": "Front of card - the question or prompt",
+      "answer": "Back of card - the answer or explanation"
+    }}
+  ]
+}}
+
+Make the flashcards {"concise and focused" if payload.style == "concise" else "detailed and comprehensive"}.
+Make the answers {"brief and to the point" if payload.answer_format == "short" else "detailed with explanations"}.
+"""
+        
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
+        
+        # Parse JSON response
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        response_text = response_text.strip()
+        
+        flashcard_data = json.loads(response_text)
+        cards = flashcard_data.get("cards", [])
+        
+        return {
+            "course_id": course_id,
+            "course_name": course.get("course_name"),
+            "cards": cards,
+            "num_cards": len(cards)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error generating flashcards: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to generate flashcards: {str(e)}")
 
 ##-----------------------------------------------------------##
 
