@@ -6,7 +6,7 @@ from typing import List, Dict, Any
 
 # Set up gemini configuration
 # Read the API key from environment for security. Do NOT hardcode secrets into source.
-api_key = "AIzaSyBWl60BJK0n3EbOPCJQB4gvYL95cEkfaeU"
+api_key = "AIzaSyBrJY7hXD90HOKHas7txAYQtapvyG_Ea6w"
 if not api_key:
     # Provide a quick, copyable demo instruction but do not store the secret in the repo.
     print("ERROR: GEMINI_API_KEY environment variable not set.")

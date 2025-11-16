@@ -1347,7 +1347,7 @@ def generate_flashcards(course_id: str, payload: GenerateFlashcardsRequest, user
         # Generate flashcards using Gemini
         import google.generativeai as genai
         
-        api_key = os.getenv('GEMINI_API_KEY')
+        api_key = "AIzaSyBrJY7hXD90HOKHas7txAYQtapvyG_Ea6w"#os.getenv('GEMINI_API_KEY')
         if not api_key:
             raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured.")
         

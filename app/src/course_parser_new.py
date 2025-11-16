@@ -6,7 +6,7 @@ from typing import List, Dict, Any
 
 # Set up gemini configuration
 try:
-    genai.configure(api_key="AIzaSyBWl60BJK0n3EbOPCJQB4gvYL95cEkfaeU")#os.environ["GOOGLE_API_KEY"])
+    genai.configure(api_key="AIzaSyBrJY7hXD90HOKHas7txAYQtapvyG_Ea6w")#os.environ["GOOGLE_API_KEY"])
 except KeyError:
     print("Error: GOOGLE_API_KEY environment variable not set.")
 

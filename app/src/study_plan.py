@@ -5,7 +5,7 @@ from typing import Dict, Any, List
 from pathlib import Path
 
 # Configure Gemini API
-genai.configure(api_key="AIzaSyBWl60BJK0n3EbOPCJQB4gvYL95cEkfaeU")
+genai.configure(api_key="AIzaSyBrJY7hXD90HOKHas7txAYQtapvyG_Ea6w")
 MODEL_NAME = "models/gemini-pro"
 
 class StudyPlan:
