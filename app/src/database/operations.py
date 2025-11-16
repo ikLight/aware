@@ -248,6 +248,16 @@ class QueryDB(BaseDB):
             "course_id": course_id
         })
         return enrollment.get("proficiency_level") if enrollment else None
+    
+    def find_enrollment(self, student_username: str, course_id: str) -> Optional[dict]:
+        """
+        Find a specific enrollment record for a student in a course.
+        Returns the enrollment document or None if not found.
+        """
+        return self.db.student_enrollments.find_one({
+            "student_username": student_username,
+            "course_id": course_id
+        })
 
     def find_test_results_by_course(self, course_id: str) -> list[dict]:
         """

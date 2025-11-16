@@ -3,10 +3,13 @@ import json
 import pathlib
 import google.generativeai as genai
 from typing import List, Dict, Any
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Set up gemini configuration
 # Read the API key from environment for security. Do NOT hardcode secrets into source.
-api_key = "AIzaSyBrJY7hXD90HOKHas7txAYQtapvyG_Ea6w"
+api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
     # Provide a quick, copyable demo instruction but do not store the secret in the repo.
     print("ERROR: GEMINI_API_KEY environment variable not set.")

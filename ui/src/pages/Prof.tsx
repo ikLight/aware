@@ -61,7 +61,7 @@ interface Course {
   updated_at: string;
 }
 
-type CourseCreationStep = 1 | 2 | 3 | 4;
+type CourseCreationStep = 1 | 2 | 3 | 4 | 5;
 
 const Prof = () => {
   const navigate = useNavigate();
@@ -86,10 +86,14 @@ const Prof = () => {
   // Step 2: Course plan
   const [coursePlanFile, setCoursePlanFile] = useState<File | null>(null);
   
-  // Step 3: Course objectives
+  // Step 3: Course materials (ZIP)
+  const [materialsZipFile, setMaterialsZipFile] = useState<File | null>(null);
+  const [materialsMapping, setMaterialsMapping] = useState<Record<string, string[]> | null>(null);
+  
+  // Step 4: Course objectives
   const [courseObjectives, setCourseObjectives] = useState("");
   
-  // Step 4: Roster
+  // Step 5: Roster
   const [rosterFile, setRosterFile] = useState<File | null>(null);
   
   const [isProcessingStep, setIsProcessingStep] = useState(false);
@@ -265,6 +269,50 @@ const Prof = () => {
   };
 
   const handleStep3 = async () => {
+    if (!materialsZipFile) {
+      toast({ title: "Error", description: "Please upload a materials ZIP file.", variant: "destructive" });
+      return;
+    }
+
+    if (!courseId) return;
+
+    try {
+      setIsProcessingStep(true);
+      const formData = new FormData();
+      formData.append('materials_zip', materialsZipFile);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8000/course/${courseId}/upload-materials`, {
+        method: 'POST',
+        body: formData,
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to upload course materials');
+      }
+
+      const data = await response.json();
+      setMaterialsMapping(data.topic_mapping || {});
+      
+      toast({ 
+        title: "Success", 
+        description: `${data.materials_count} materials uploaded and mapped to topics!` 
+      });
+      setCurrentStep(4);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to upload course materials.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessingStep(false);
+    }
+  };
+
+  const handleStep4 = async () => {
     if (!courseObjectives.trim()) {
       toast({ title: "Error", description: "Please enter course objectives.", variant: "destructive" });
       return;
@@ -290,7 +338,7 @@ const Prof = () => {
       }
 
       toast({ title: "Success", description: "Course objectives saved. Moving to final step..." });
-      setCurrentStep(4);
+      setCurrentStep(5);
     } catch (error) {
       toast({
         title: "Error",
@@ -302,7 +350,7 @@ const Prof = () => {
     }
   };
 
-  const handleStep4 = async () => {
+  const handleStep5 = async () => {
     if (!rosterFile) {
       toast({ title: "Error", description: "Please upload a class roster CSV file.", variant: "destructive" });
       return;
@@ -337,6 +385,8 @@ const Prof = () => {
       setCourseName("");
       setDefaultProficiency("intermediate");
       setCoursePlanFile(null);
+      setMaterialsZipFile(null);
+      setMaterialsMapping(null);
       setCourseObjectives("");
       setRosterFile(null);
       setCourseId(null);
@@ -798,7 +848,7 @@ const Prof = () => {
 
               {/* Step Indicator */}
               <div className="flex justify-between items-center">
-                {[1, 2, 3, 4].map((step) => (
+                {[1, 2, 3, 4, 5].map((step) => (
                   <div key={step} className="flex flex-col items-center flex-1">
                     <div className={`flex items-center justify-center w-10 h-10 rounded-full mb-2 ${
                       step < currentStep ? 'bg-green-500' :
@@ -814,8 +864,9 @@ const Prof = () => {
                     <span className="text-xs font-medium text-center text-foreground">
                       {step === 1 && "Course Name"}
                       {step === 2 && "Course Plan"}
-                      {step === 3 && "Objectives"}
-                      {step === 4 && "Roster"}
+                      {step === 3 && "Materials"}
+                      {step === 4 && "Objectives"}
+                      {step === 5 && "Roster"}
                     </span>
                   </div>
                 ))}
@@ -926,19 +977,48 @@ const Prof = () => {
                 </div>
               )}
 
-              {/* Step 3: Course Objectives */}
+              {/* Step 3: Course Materials (ZIP) */}
               {currentStep === 3 && (
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="objectives" className="block text-sm font-medium mb-2 text-foreground">Course Objectives</label>
-                    <textarea
-                      id="objectives"
-                      placeholder="Enter course objectives (one per line or comma-separated)"
-                      value={courseObjectives}
-                      onChange={(e) => setCourseObjectives(e.target.value)}
-                      disabled={isProcessingStep}
-                      className="w-full p-3 border border-border rounded-lg min-h-32 bg-background text-foreground placeholder:text-muted-foreground"
-                    />
+                    <label className="block text-sm font-medium mb-2 text-foreground">
+                      Upload Course Materials (ZIP)
+                    </label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Upload a ZIP file containing PDF or PowerPoint files. AI will automatically map them to course topics.
+                    </p>
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center bg-card/50">
+                      <input
+                        type="file"
+                        accept=".zip"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) {
+                            setMaterialsZipFile(e.target.files[0]);
+                          }
+                        }}
+                        style={{ display: 'none' }}
+                        id="materials-zip-file"
+                        disabled={isProcessingStep}
+                      />
+                      <label htmlFor="materials-zip-file" className="cursor-pointer">
+                        <UploadIcon className="mx-auto mb-2 w-8 h-8 text-primary" />
+                        {materialsZipFile ? (
+                          <span className="block font-medium text-foreground">{materialsZipFile.name}</span>
+                        ) : (
+                          <>
+                            <span className="block font-medium text-foreground">Click to upload materials ZIP</span>
+                            <span className="block text-sm text-muted-foreground">Supported: PDF, PPTX files</span>
+                          </>
+                        )}
+                      </label>
+                    </div>
+                    {materialsMapping && Object.keys(materialsMapping).length > 0 && (
+                      <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                        <p className="text-sm text-green-700 dark:text-green-400 font-medium">
+                          ✓ {Object.keys(materialsMapping).length} topics mapped with materials
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Button 
@@ -960,8 +1040,42 @@ const Prof = () => {
                 </div>
               )}
 
-              {/* Step 4: Roster */}
+              {/* Step 4: Course Objectives */}
               {currentStep === 4 && (
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="objectives" className="block text-sm font-medium mb-2 text-foreground">Course Objectives</label>
+                    <textarea
+                      id="objectives"
+                      placeholder="Enter course objectives (one per line or comma-separated)"
+                      value={courseObjectives}
+                      onChange={(e) => setCourseObjectives(e.target.value)}
+                      disabled={isProcessingStep}
+                      className="w-full p-3 border border-border rounded-lg min-h-32 bg-background text-foreground placeholder:text-muted-foreground"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline"
+                      className="flex-1" 
+                      onClick={() => setCurrentStep(3)}
+                      disabled={isProcessingStep}
+                    >
+                      Back
+                    </Button>
+                    <Button 
+                      className="flex-1" 
+                      onClick={handleStep4}
+                      disabled={isProcessingStep}
+                    >
+                      {isProcessingStep ? 'Processing...' : 'Next'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 5: Roster */}
+              {currentStep === 5 && (
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2 text-foreground">Upload Class Roster (CSV)</label>
@@ -995,14 +1109,14 @@ const Prof = () => {
                     <Button 
                       variant="outline"
                       className="flex-1" 
-                      onClick={() => setCurrentStep(3)}
+                      onClick={() => setCurrentStep(4)}
                       disabled={isProcessingStep}
                     >
                       Back
                     </Button>
                     <Button 
                       className="flex-1" 
-                      onClick={handleStep4}
+                      onClick={handleStep5}
                       disabled={isProcessingStep}
                     >
                       {isProcessingStep ? 'Creating Course...' : 'Create Course'}

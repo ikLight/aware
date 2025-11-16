@@ -282,6 +282,193 @@ async def upload_course_roster(
     except Exception as e:
         print(f"Error uploading roster: {e}")
         raise HTTPException(status_code=500, detail=f"Error uploading roster: {str(e)}")
+
+##-----------------------------------------------------------##
+
+@app.post("/course/{course_id}/upload-materials")
+async def upload_course_materials(
+    course_id: str,
+    materials_zip: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Step 2.5 (NEW): Upload course materials as a zip file containing PDFs and/or PPTX files.
+    Extracts files, parses content, and uses LLM to map materials to course topics.
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can upload course materials.")
+    
+    import zipfile
+    import tempfile
+    import shutil
+    from pathlib import Path
+    from src.material_mapper import map_materials_to_topics, extract_material_content
+    
+    try:
+        # Verify course exists and belongs to professor
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        if course.get("professor_username") != user["username"]:
+            raise HTTPException(status_code=403, detail="You don't have access to this course.")
+        
+        # Check if course has a plan (needed for mapping)
+        if not course.get("course_plan"):
+            raise HTTPException(status_code=400, detail="Please upload course plan before materials.")
+        
+        # Verify it's a zip file
+        if not materials_zip.filename.endswith('.zip'):
+            raise HTTPException(status_code=400, detail="File must be a ZIP archive.")
+        
+        # Create temporary directory for extraction
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_dir_path = Path(temp_dir)
+            zip_path = temp_dir_path / materials_zip.filename
+            
+            # Save uploaded zip file
+            content = await materials_zip.read()
+            with open(zip_path, 'wb') as f:
+                f.write(content)
+            
+            # Extract zip file
+            extract_dir = temp_dir_path / "extracted"
+            extract_dir.mkdir()
+            
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(extract_dir)
+            
+            # Find all PDF and PPTX files
+            materials = []
+            supported_extensions = ['.pdf', '.pptx', '.ppt']
+            
+            for file_path in extract_dir.rglob('*'):
+                if file_path.is_file() and file_path.suffix.lower() in supported_extensions:
+                    # Extract content from file
+                    content = extract_material_content(str(file_path))
+                    
+                    # Store material info
+                    materials.append({
+                        'filename': file_path.name,
+                        'content': content,
+                        'relative_path': str(file_path.relative_to(extract_dir))
+                    })
+            
+            if not materials:
+                raise HTTPException(
+                    status_code=400,
+                    detail="No PDF or PPTX files found in the zip archive."
+                )
+            
+            # Use LLM to map materials to course topics
+            print(f"Mapping {len(materials)} materials to course topics...")
+            topic_mapping = map_materials_to_topics(
+                course_plan=course['course_plan'],
+                materials=materials
+            )
+            
+            # Create materials directory for this course
+            course_materials_dir = UPLOAD_DIR / f"course_{course_id}_materials"
+            course_materials_dir.mkdir(exist_ok=True)
+            
+            # Save material files permanently
+            saved_materials = []
+            for material in materials:
+                source_path = extract_dir / material['relative_path']
+                dest_path = course_materials_dir / material['filename']
+                shutil.copy2(source_path, dest_path)
+                
+                saved_materials.append({
+                    'filename': material['filename'],
+                    'file_path': str(dest_path),
+                    'relative_path': material['relative_path']
+                })
+            
+            # Update course with materials and mapping
+            updated = atomic_db.update_course(
+                course_id,
+                {
+                    "course_materials": saved_materials,
+                    "material_topic_mapping": topic_mapping
+                }
+            )
+            
+            if not updated:
+                raise HTTPException(status_code=500, detail="Failed to update course materials.")
+            
+            return {
+                "message": "Course materials uploaded and mapped successfully",
+                "course_id": course_id,
+                "materials_count": len(saved_materials),
+                "topic_mapping": topic_mapping
+            }
+            
+    except HTTPException:
+        raise
+    except zipfile.BadZipFile:
+        raise HTTPException(status_code=400, detail="Invalid or corrupted ZIP file.")
+    except Exception as e:
+        print(f"Error uploading materials: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error uploading materials: {str(e)}")
+
+##-----------------------------------------------------------##
+
+@app.get("/course/{course_id}/materials")
+def get_course_materials(
+    course_id: str,
+    topic: str = None,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Get materials for a course, optionally filtered by topic.
+    
+    Query params:
+        topic: Optional topic path to filter materials (e.g., "Arrays/Introduction")
+    
+    Returns materials list and topic mapping.
+    """
+    try:
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        
+        # Check access - professors can see their courses, students can see enrolled courses
+        if user.get("role") == "professor":
+            if course.get("professor_username") != user["username"]:
+                raise HTTPException(status_code=403, detail="Access denied.")
+        elif user.get("role") == "student":
+            # Check if student is enrolled
+            enrollment = query_db.find_enrollment(user["username"], course_id)
+            if not enrollment:
+                raise HTTPException(status_code=403, detail="You are not enrolled in this course.")
+        else:
+            raise HTTPException(status_code=403, detail="Invalid user role.")
+        
+        materials = course.get("course_materials", [])
+        topic_mapping = course.get("material_topic_mapping", {})
+        
+        # If topic filter is specified, filter materials
+        if topic:
+            # Get filenames mapped to this topic
+            topic_files = topic_mapping.get(topic, [])
+            # Filter materials to only those mapped to this topic
+            materials = [m for m in materials if m['filename'] in topic_files]
+        
+        return {
+            "course_id": course_id,
+            "course_name": course.get("course_name"),
+            "materials": materials,
+            "topic_mapping": topic_mapping,
+            "filtered_topic": topic
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error getting course materials: {e}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving materials: {str(e)}")
+
 ##-----------------------------------------------------------##
 
 @app.get("/course/list")
@@ -1347,7 +1534,7 @@ def generate_flashcards(course_id: str, payload: GenerateFlashcardsRequest, user
         # Generate flashcards using Gemini
         import google.generativeai as genai
         
-        api_key = "AIzaSyBrJY7hXD90HOKHas7txAYQtapvyG_Ea6w"#os.getenv('GEMINI_API_KEY')
+        api_key = os.getenv('GEMINI_API_KEY')
         if not api_key:
             raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured.")
         

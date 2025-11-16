@@ -3,9 +3,16 @@ import json
 import google.generativeai as genai
 from typing import Dict, Any, List
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configure Gemini API
-genai.configure(api_key="AIzaSyBrJY7hXD90HOKHas7txAYQtapvyG_Ea6w")
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise RuntimeError("GEMINI_API_KEY environment variable not set.")
+
+genai.configure(api_key=api_key)
 MODEL_NAME = "models/gemini-pro"
 
 class StudyPlan:
