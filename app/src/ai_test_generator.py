@@ -28,8 +28,42 @@ class AITestGenerator:
     """
     
     def __init__(self):
-        """Initialize the Gemini model."""
-        self.model = genai.GenerativeModel(MODEL_NAME)
+        """Initialize the Gemini model with JSON response configuration."""
+        self.model = genai.GenerativeModel(
+            MODEL_NAME,
+            generation_config={
+                "response_mime_type": "application/json",
+                "response_schema": {
+                    "type": "object",
+                    "properties": {
+                        "questions": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "question_number": {"type": "integer"},
+                                    "question_text": {"type": "string"},
+                                    "options": {
+                                        "type": "object",
+                                        "properties": {
+                                            "A": {"type": "string"},
+                                            "B": {"type": "string"},
+                                            "C": {"type": "string"},
+                                            "D": {"type": "string"}
+                                        },
+                                        "required": ["A", "B", "C", "D"]
+                                    },
+                                    "correct_answer": {"type": "string"},
+                                    "explanation": {"type": "string"}
+                                },
+                                "required": ["question_number", "question_text", "options", "correct_answer"]
+                            }
+                        }
+                    },
+                    "required": ["questions"]
+                }
+            }
+        )
     
     def _build_test_prompt(
         self,
@@ -122,27 +156,15 @@ Generate the test now.
             # Build the prompt
             prompt = self._build_test_prompt(topic, topic_content, proficiency_level, num_questions)
             
-            # Generate content with Gemini
+            # Generate content with Gemini (structured JSON response)
             print("⏳ Calling Gemini API...")
             response = self.model.generate_content(prompt)
             
             if not response.parts:
                 raise ValueError("No response generated from Gemini API")
             
-            # Extract text response
-            response_text = response.text.strip()
-            
-            # Clean up response - remove markdown code blocks if present
-            if response_text.startswith("```json"):
-                response_text = response_text[7:]
-            if response_text.startswith("```"):
-                response_text = response_text[3:]
-            if response_text.endswith("```"):
-                response_text = response_text[:-3]
-            response_text = response_text.strip()
-            
-            # Parse JSON response
-            test_data = json.loads(response_text)
+            # Parse JSON response directly (no need to clean markdown)
+            test_data = json.loads(response.text)
             
             # Validate structure
             if "questions" not in test_data:
@@ -162,7 +184,7 @@ Generate the test now.
             
         except json.JSONDecodeError as e:
             print(f"❌ JSON parsing error: {e}")
-            print(f"Response text: {response_text[:500]}")
+            print(f"Response text: {response.text[:500]}")
             raise Exception(f"Failed to parse Gemini response as JSON: {str(e)}")
         except Exception as e:
             print(f"❌ Error generating test: {e}")

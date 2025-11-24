@@ -122,6 +122,11 @@ const Prof = () => {
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
   const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set());
   
+  // Course Report state
+  const [courseReport, setCourseReport] = useState<string | null>(null);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  
   // Proficiency management state
   const [settingProficiency, setSettingProficiency] = useState<string | null>(null);
 
@@ -461,6 +466,50 @@ const Prof = () => {
       setAnalyticsData(null);
     } finally {
       setIsLoadingAnalytics(false);
+    }
+  };
+
+  const generateCourseReport = async () => {
+    if (!analyticsCourse) return;
+    
+    try {
+      setIsGeneratingReport(true);
+      setCourseReport(null);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8000/course/${analyticsCourse._id}/generate-report`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate report');
+      }
+
+      const data = await response.json();
+      
+      if (!data.has_data) {
+        toast({
+          title: "No Data Available",
+          description: data.report,
+          variant: "default"
+        });
+        return;
+      }
+      
+      setCourseReport(data.report);
+      setShowReport(true);
+      toast({
+        title: "Report Generated!",
+        description: "AI-powered course analysis complete."
+      });
+    } catch (error) {
+      toast({ 
+        title: "Error", 
+        description: "Failed to generate course report.", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsGeneratingReport(false);
     }
   };
 
@@ -1254,6 +1303,93 @@ const Prof = () => {
                       </div>
                     </motion.div>
                   </div>
+
+                  {/* AI Course Report Section */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 rounded-2xl p-8 shadow-xl border-2 border-indigo-200 dark:border-indigo-800"
+                  >
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 bg-indigo-500 rounded-lg">
+                          <FileText className="w-8 h-8 text-white" />
+                        </div>
+                        <div>
+                          <h2 className="text-3xl font-bold text-foreground">AI Course Report</h2>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Get comprehensive AI-powered insights about class performance
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={generateCourseReport}
+                        disabled={isGeneratingReport}
+                        size="lg"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
+                      >
+                        {isGeneratingReport ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              className="mr-2"
+                            >
+                              <Zap className="w-5 h-5" />
+                            </motion.div>
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="w-5 h-5 mr-2" />
+                            Generate Report
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    <AnimatePresence>
+                      {showReport && courseReport && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.4 }}
+                          className="mt-6"
+                        >
+                          <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-inner border border-indigo-100 dark:border-indigo-900">
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                                <BarChart3 className="w-5 h-5 text-indigo-600" />
+                                Analysis Report
+                              </h3>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowReport(false)}
+                                className="text-muted-foreground hover:text-foreground"
+                              >
+                                Close
+                              </Button>
+                            </div>
+                            <div className="prose prose-sm max-w-none dark:prose-invert">
+                              <div className="whitespace-pre-wrap text-foreground leading-relaxed">
+                                {courseReport}
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {!showReport && !isGeneratingReport && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p className="text-lg">Click "Generate Report" to get AI-powered insights about your class performance</p>
+                        <p className="text-sm mt-2">Analysis includes topic trends, proficiency distribution, and actionable recommendations</p>
+                      </div>
+                    )}
+                  </motion.div>
 
                   {/* Topic Analytics with Charts */}
                   {analyticsData.topic_analytics.length > 0 && (

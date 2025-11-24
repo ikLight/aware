@@ -785,6 +785,228 @@ def get_course_analytics(
 
 ##-----------------------------------------------------------##
 
+@app.post("/course/{course_id}/generate-report")
+def generate_course_report(
+    course_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Generate an AI-powered comprehensive report about class performance.
+    Analyzes test scores, topic performance, proficiency distribution, and provides insights.
+    Only accessible by the professor who owns the course.
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can generate course reports.")
+    
+    try:
+        # Verify course exists and belongs to professor
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        if course.get("professor_username") != user["username"]:
+            raise HTTPException(status_code=403, detail="You don't have access to this course.")
+        
+        # Get all enrolled students
+        enrollments = query_db.find_enrolled_students_by_course(course_id)
+        enrolled_students = {e["student_username"]: e.get("proficiency_level", "intermediate") 
+                            for e in enrollments}
+        
+        # Get all test results for this course
+        test_results = query_db.find_test_results_by_course(course_id)
+        
+        if not test_results:
+            return {
+                "report": "No test data available yet. Students need to take tests before a report can be generated.",
+                "has_data": False
+            }
+        
+        # Organize data for analysis
+        topic_stats = {}
+        proficiency_distribution = {"beginner": 0, "intermediate": 0, "advanced": 0}
+        student_performance = {}
+        
+        for result in test_results:
+            topic = result.get("topic")
+            score = result.get("score", 0)
+            total = result.get("total_questions", 10)
+            percentage = result.get("percentage", 0)
+            student = result.get("student_username")
+            proficiency = result.get("proficiency_level", "intermediate")
+            
+            # Topic statistics
+            if topic not in topic_stats:
+                topic_stats[topic] = {
+                    "attempts": 0,
+                    "total_score": 0,
+                    "total_possible": 0,
+                    "scores": [],
+                    "students": set()
+                }
+            
+            topic_stats[topic]["attempts"] += 1
+            topic_stats[topic]["total_score"] += score
+            topic_stats[topic]["total_possible"] += total
+            topic_stats[topic]["scores"].append(percentage)
+            topic_stats[topic]["students"].add(student)
+            
+            # Student performance tracking
+            if student not in student_performance:
+                student_performance[student] = {
+                    "total_tests": 0,
+                    "total_score": 0,
+                    "total_possible": 0,
+                    "current_proficiency": enrolled_students.get(student, "intermediate")
+                }
+            
+            student_performance[student]["total_tests"] += 1
+            student_performance[student]["total_score"] += score
+            student_performance[student]["total_possible"] += total
+        
+        # Count proficiency distribution
+        for student_data in student_performance.values():
+            prof = student_data["current_proficiency"]
+            if prof in proficiency_distribution:
+                proficiency_distribution[prof] += 1
+        
+        # Prepare data summary for AI
+        topic_summary = []
+        for topic, stats in topic_stats.items():
+            avg_score = (stats["total_score"] / stats["total_possible"] * 100) if stats["total_possible"] > 0 else 0
+            topic_summary.append({
+                "topic": topic,
+                "average_score": round(avg_score, 2),
+                "attempts": stats["attempts"],
+                "students_tested": len(stats["students"]),
+                "highest_score": round(max(stats["scores"]) if stats["scores"] else 0, 2),
+                "lowest_score": round(min(stats["scores"]) if stats["scores"] else 0, 2)
+            })
+        
+        # Sort topics by performance (lowest first to highlight struggles)
+        topic_summary.sort(key=lambda x: x["average_score"])
+        
+        # Calculate overall class statistics
+        total_enrolled = len(enrolled_students)
+        students_with_tests = len(student_performance)
+        participation_rate = (students_with_tests / total_enrolled * 100) if total_enrolled > 0 else 0
+        
+        overall_scores = []
+        for student_data in student_performance.values():
+            if student_data["total_possible"] > 0:
+                overall_scores.append(
+                    (student_data["total_score"] / student_data["total_possible"]) * 100
+                )
+        
+        class_average = sum(overall_scores) / len(overall_scores) if overall_scores else 0
+        
+        # Build comprehensive prompt for Gemini
+        prompt = f"""You are an expert educational analyst. Generate a comprehensive course performance report based on the following data:
+
+COURSE: {course.get('course_name')}
+TOTAL ENROLLED STUDENTS: {total_enrolled}
+STUDENTS WITH TEST DATA: {students_with_tests} ({participation_rate:.1f}% participation)
+CLASS AVERAGE SCORE: {class_average:.2f}%
+
+PROFICIENCY DISTRIBUTION:
+- Beginner: {proficiency_distribution['beginner']} students
+- Intermediate: {proficiency_distribution['intermediate']} students
+- Advanced: {proficiency_distribution['advanced']} students
+
+TOPIC PERFORMANCE (sorted by difficulty):
+"""
+        
+        for topic in topic_summary:
+            prompt += f"\n{topic['topic']}:\n"
+            prompt += f"  - Average Score: {topic['average_score']}%\n"
+            prompt += f"  - Test Attempts: {topic['attempts']}\n"
+            prompt += f"  - Students Tested: {topic['students_tested']}\n"
+            prompt += f"  - Score Range: {topic['lowest_score']}% to {topic['highest_score']}%\n"
+        
+        prompt += """
+
+Please provide a detailed report that includes:
+
+1. OVERALL CLASS PERFORMANCE SUMMARY
+   - General assessment of how the class is performing
+   - Participation and engagement levels
+   - Overall trends in student performance
+
+2. TOPIC-SPECIFIC ANALYSIS
+   - Identify topics where students are excelling
+   - Identify topics where students are struggling
+   - Provide insights into why certain topics might be challenging
+
+3. PROFICIENCY INSIGHTS
+   - Analysis of the proficiency distribution
+   - Whether students are progressing appropriately
+   - Recommendations for proficiency-based interventions
+
+4. ACTIONABLE RECOMMENDATIONS
+   - Specific teaching strategies to address struggling topics
+   - Suggestions for additional resources or review sessions
+   - Ideas for differentiated instruction based on proficiency levels
+   - Recommendations for students who haven't participated yet
+
+5. STRENGTHS AND OPPORTUNITIES
+   - Highlight what's working well in the course
+   - Identify opportunities for improvement
+
+Format the report in a professional, clear manner with proper sections and bullet points. Be specific and data-driven in your analysis. The report should be comprehensive but concise (aim for 500-800 words).
+"""
+        
+        # Generate report using Gemini
+        api_key = os.getenv('GEMINI_API_KEY')
+        if not api_key:
+            raise RuntimeError("GEMINI_API_KEY not configured")
+        
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        
+        # Configure for JSON response
+        model = genai.GenerativeModel(
+            'gemini-2.0-flash-exp',
+            generation_config={
+                "response_mime_type": "application/json",
+                "response_schema": {
+                    "type": "object",
+                    "properties": {
+                        "report": {
+                            "type": "string",
+                            "description": "Comprehensive course performance report"
+                        }
+                    },
+                    "required": ["report"]
+                }
+            }
+        )
+        
+        response = model.generate_content(prompt)
+        response_data = json.loads(response.text)
+        report_text = response_data.get('report', response.text)
+        
+        return {
+            "report": report_text,
+            "has_data": True,
+            "statistics": {
+                "total_enrolled": total_enrolled,
+                "students_with_tests": students_with_tests,
+                "participation_rate": round(participation_rate, 2),
+                "class_average": round(class_average, 2),
+                "total_tests": sum(s["total_tests"] for s in student_performance.values()),
+                "topics_covered": len(topic_summary),
+                "proficiency_distribution": proficiency_distribution
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error generating course report: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
+
+##-----------------------------------------------------------##
+
 class SetStudentProficiencyRequest(BaseModel):
     course_id: str
     student_username: str
@@ -1539,7 +1761,31 @@ def generate_flashcards(course_id: str, payload: GenerateFlashcardsRequest, user
             raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured.")
         
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        
+        # Configure model for structured JSON response
+        model = genai.GenerativeModel(
+            'gemini-2.0-flash-exp',
+            generation_config={
+                "response_mime_type": "application/json",
+                "response_schema": {
+                    "type": "object",
+                    "properties": {
+                        "cards": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "question": {"type": "string"},
+                                    "answer": {"type": "string"}
+                                },
+                                "required": ["question", "answer"]
+                            }
+                        }
+                    },
+                    "required": ["cards"]
+                }
+            }
+        )
         
         prompt = f"""Based on the following course content, generate {payload.num_cards} flashcards for review.
 
@@ -1564,18 +1810,9 @@ Make the answers {"brief and to the point" if payload.answer_format == "short" e
 """
         
         response = model.generate_content(prompt)
-        response_text = response.text.strip()
         
-        # Parse JSON response
-        if response_text.startswith("```json"):
-            response_text = response_text[7:]
-        if response_text.startswith("```"):
-            response_text = response_text[3:]
-        if response_text.endswith("```"):
-            response_text = response_text[:-3]
-        response_text = response_text.strip()
-        
-        flashcard_data = json.loads(response_text)
+        # Parse structured JSON response directly
+        flashcard_data = json.loads(response.text)
         cards = flashcard_data.get("cards", [])
         
         return {

@@ -73,23 +73,26 @@ Return ONLY the JSON object, no additional text.
 """
     
     try:
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        # Configure model for structured JSON response
+        model = genai.GenerativeModel(
+            'gemini-2.0-flash-exp',
+            generation_config={
+                "response_mime_type": "application/json",
+                "response_schema": {
+                    "type": "object",
+                    "description": "Mapping of course topics to material filenames",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {"type": "string"}
+                    }
+                }
+            }
+        )
+        
         response = model.generate_content(prompt)
         
-        # Parse the response
-        response_text = response.text.strip()
-        
-        # Remove markdown code blocks if present
-        if response_text.startswith('```json'):
-            response_text = response_text[7:]
-        if response_text.startswith('```'):
-            response_text = response_text[3:]
-        if response_text.endswith('```'):
-            response_text = response_text[:-3]
-        
-        response_text = response_text.strip()
-        
-        mapping = json.loads(response_text)
+        # Parse the structured JSON response directly
+        mapping = json.loads(response.text)
         
         # Validate the mapping
         validated_mapping = validate_mapping(mapping, topic_paths, [m['filename'] for m in materials])
