@@ -1,0 +1,216 @@
+"""Test and assessment service layer."""
+
+from typing import Dict, List, Any
+from src.database.operations import AtomicDB, QueryDB
+
+
+class TestService:
+    """Business logic for test operations."""
+    
+    def __init__(self):
+        self.atomic_db = AtomicDB()
+        self.query_db = QueryDB()
+    
+    def extract_topic_content(
+        self,
+        course_plan: Dict[str, Any],
+        target_topic: str
+    ) -> str:
+        """
+        Extract content for a specific topic from course plan.
+        
+        Args:
+            course_plan: Course plan JSON
+            target_topic: Topic label to find
+            
+        Returns:
+            Topic content string
+        """
+        def find_content(items: List[Dict], target: str) -> str:
+            """Recursively search for topic content."""
+            for item in items:
+                label = item.get("label", "")
+                
+                if label == target:
+                    # Found the topic - extract content
+                    content_parts = []
+                    if "children" in item and isinstance(item["children"], list):
+                        for child in item["children"]:
+                            if child.get("label"):
+                                content_parts.append(child["label"])
+                    
+                    return " | ".join(content_parts) if content_parts else target
+                
+                # Search in children
+                if "children" in item and isinstance(item["children"], list):
+                    result = find_content(item["children"], target)
+                    if result:
+                        return result
+            
+            return ""
+        
+        content = ""
+        if isinstance(course_plan, dict) and "outline" in course_plan:
+            outline = course_plan["outline"]
+            if isinstance(outline, list):
+                content = find_content(outline, target_topic)
+        
+        return content or f"Topic: {target_topic}"
+    
+    def extract_topics_from_outline(
+        self,
+        course_plan: Dict[str, Any]
+    ) -> List[Dict[str, str]]:
+        """
+        Extract all topics from course outline.
+        
+        Args:
+            course_plan: Course plan JSON
+            
+        Returns:
+            List of topics with label and path
+        """
+        def extract_topics(items: List[Dict]) -> List[str]:
+            """Recursively extract topic labels."""
+            extracted = []
+            
+            if not isinstance(items, list):
+                return extracted
+            
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                
+                label = item.get("label", "")
+                
+                # Skip unit/week headers
+                if label and not (
+                    label.lower().startswith("unit ") or
+                    label.lower().startswith("week ") or
+                    ("unit" in label.lower() and ":" in label)
+                ):
+                    extracted.append(label)
+                
+                # Recursively process children
+                if "children" in item and isinstance(item["children"], list):
+                    child_topics = extract_topics(item["children"])
+                    extracted.extend(child_topics)
+            
+            return extracted
+        
+        topics = []
+        if isinstance(course_plan, dict) and "outline" in course_plan:
+            outline = course_plan["outline"]
+            if isinstance(outline, list):
+                topic_labels = extract_topics(outline)
+                topics = [{"label": label, "full_path": label} for label in topic_labels]
+        
+        return topics
+    
+    def submit_test(
+        self,
+        student_username: str,
+        course_id: str,
+        course_name: str,
+        topic: str,
+        proficiency_level: str,
+        questions: List[Dict[str, Any]],
+        student_answers: Dict[str, str]
+    ) -> Dict[str, Any]:
+        """
+        Submit test answers and calculate score.
+        
+        Args:
+            student_username: Student's username
+            course_id: Course identifier
+            course_name: Course name
+            topic: Topic tested
+            proficiency_level: Student's proficiency level
+            questions: List of question objects
+            student_answers: Student's answers
+            
+        Returns:
+            Test result with score and statistics
+        """
+        # Calculate score
+        correct_answers = {}
+        for question in questions:
+            q_num = question.get("question_number")
+            correct_ans = question.get("correct_answer")
+            if q_num and correct_ans:
+                correct_answers[str(q_num)] = correct_ans
+        
+        score = 0
+        for q_num, student_ans in student_answers.items():
+            if correct_answers.get(str(q_num)) == student_ans:
+                score += 1
+        
+        total_questions = len(questions)
+        percentage = (score / total_questions * 100) if total_questions > 0 else 0
+        
+        # Save to database
+        test_result_doc = {
+            "student_username": student_username,
+            "course_id": course_id,
+            "course_name": course_name,
+            "topic": topic,
+            "proficiency_level": proficiency_level,
+            "questions": questions,
+            "student_answers": student_answers,
+            "correct_answers": correct_answers,
+            "score": score,
+            "total_questions": total_questions,
+            "percentage": round(percentage, 2)
+        }
+        
+        test_id = self.atomic_db.insert_test_result(test_result_doc)
+        
+        # Calculate and update adaptive proficiency
+        new_proficiency = self.atomic_db.calculate_and_update_adaptive_proficiency(
+            student_username,
+            course_id
+        )
+        
+        return {
+            "test_id": test_id,
+            "score": score,
+            "total_questions": total_questions,
+            "percentage": round(percentage, 2),
+            "proficiency_updated": new_proficiency
+        }
+    
+    def get_test_history(
+        self,
+        student_username: str,
+        course_id: str
+    ) -> List[Dict[str, Any]]:
+        """
+        Get test history for a student in a course.
+        
+        Args:
+            student_username: Student's username
+            course_id: Course identifier
+            
+        Returns:
+            List of test results
+        """
+        test_results = self.query_db.find_test_results_by_student(
+            student_username,
+            course_id
+        )
+        
+        # Format results
+        formatted_results = []
+        for result in test_results:
+            formatted_results.append({
+                "_id": str(result["_id"]),
+                "date": result.get("created_at"),
+                "topic": result.get("topic"),
+                "score": result.get("score"),
+                "total_questions": result.get("total_questions"),
+                "percentage": result.get("percentage"),
+                "proficiency_level": result.get("proficiency_level", "intermediate"),
+                "course_name": result.get("course_name", "Unknown Course")
+            })
+        
+        return formatted_results

@@ -33,6 +33,7 @@ class UserCreate(BaseModel):
     username: str
     password: str
     role: str  # 'student' or 'professor'
+    email: str = None  # Optional email field
 
 ##-----------------------------------------------------------##
 
@@ -107,6 +108,19 @@ def create_access_token(data: dict) -> str:
     except Exception:
         pass
     return encoded_jwt
+
+##-----------------------------------------------------------##
+
+def decode_token(token: str) -> dict:
+    """Decode and validate JWT token."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials"
+        )
 
 ##-----------------------------------------------------------##
 

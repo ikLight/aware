@@ -173,6 +173,36 @@ class AtomicDB(BaseDB):
         except Exception as e:
             print(f"Error calculating adaptive proficiency: {e}")
             return None
+    
+    def unenroll_student(self, student_username: str, course_id: str) -> bool:
+        """
+        Unenroll a student from a course.
+        
+        Returns True if unenrolled successfully, False otherwise.
+        """
+        try:
+            result = self.db.student_enrollments.delete_one({
+                "student_username": student_username,
+                "course_id": course_id
+            })
+            return result.deleted_count > 0
+        except:
+            return False
+    
+    def update_user_password(self, username: str, hashed_password: str) -> bool:
+        """
+        Update user password.
+        
+        Returns True if updated successfully, False otherwise.
+        """
+        try:
+            result = self.db.users.update_one(
+                {"username": username},
+                {"$set": {"password": hashed_password}}
+            )
+            return result.modified_count > 0
+        except:
+            return False
 
 
 
@@ -193,7 +223,8 @@ class QueryDB(BaseDB):
         from bson import ObjectId
         try:
             return self.db.courses.find_one({"_id": ObjectId(course_id)})
-        except:
+        except Exception as e:
+            print(f"Error finding course by ID {course_id}: {e}")
             return None
 
     def find_courses_by_professor(self, professor_username: str) -> list[dict]:

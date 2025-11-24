@@ -1,0 +1,317 @@
+"""AI service layer for LLM operations."""
+
+import json
+import google.generativeai as genai
+from typing import Dict, List, Any
+
+from src.config.settings import settings
+from src.prompts.templates import PromptTemplates
+
+
+class AIService:
+    """Business logic for AI/LLM operations."""
+    
+    def __init__(self):
+        """Initialize Gemini API."""
+        if not settings.GEMINI_API_KEY:
+            raise RuntimeError("GEMINI_API_KEY not configured")
+        
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+    
+    def generate_test(
+        self,
+        topic: str,
+        topic_content: str,
+        proficiency_level: str,
+        num_questions: int = 10
+    ) -> Dict[str, Any]:
+        """
+        Generate MCQ test using Gemini AI.
+        
+        Args:
+            topic: Topic name
+            topic_content: Course content for the topic
+            proficiency_level: Student proficiency level
+            num_questions: Number of questions to generate
+            
+        Returns:
+            Generated test with questions
+        """
+        # Configure model with structured JSON response
+        model = genai.GenerativeModel(
+            settings.GEMINI_MODEL_TEST,
+            generation_config={
+                "response_mime_type": "application/json",
+                "response_schema": self._get_test_schema()
+            }
+        )
+        
+        # Build prompt
+        prompt = PromptTemplates.test_generation(
+            topic=topic,
+            topic_content=topic_content,
+            proficiency_level=proficiency_level,
+            num_questions=num_questions
+        )
+        
+        # Generate content
+        response = model.generate_content(prompt)
+        
+        # Parse structured response
+        try:
+            # The response is already structured, access it directly
+            test_data = json.loads(response.text)
+        except json.JSONDecodeError:
+            # Fallback: try to extract from response parts
+            test_data = response.candidates[0].content.parts[0].text
+            if isinstance(test_data, str):
+                test_data = json.loads(test_data)
+        
+        # Validate and return
+        if "questions" not in test_data:
+            raise ValueError("Invalid test format: missing 'questions' key")
+        
+        return {
+            "topic": topic,
+            "proficiency_level": proficiency_level,
+            "num_questions": len(test_data["questions"]),
+            "questions": test_data["questions"]
+        }
+    
+    def generate_course_report(
+        self,
+        course_name: str,
+        analytics_data: Dict[str, Any]
+    ) -> str:
+        """
+        Generate AI-powered course report.
+        
+        Args:
+            course_name: Name of the course
+            analytics_data: Prepared analytics data
+            
+        Returns:
+            Generated report text
+        """
+        # Configure model with structured JSON response
+        model = genai.GenerativeModel(
+            settings.GEMINI_MODEL,
+            generation_config={
+                "response_mime_type": "application/json",
+                "response_schema": {
+                    "type": "object",
+                    "properties": {
+                        "report": {
+                            "type": "string",
+                            "description": "Comprehensive course performance report"
+                        }
+                    },
+                    "required": ["report"]
+                }
+            }
+        )
+        
+        # Build prompt
+        prompt = PromptTemplates.course_report(
+            course_name=course_name,
+            total_enrolled=analytics_data["total_enrolled"],
+            students_with_tests=analytics_data["students_with_tests"],
+            participation_rate=analytics_data["participation_rate"],
+            class_average=analytics_data["class_average"],
+            proficiency_distribution=analytics_data["proficiency_distribution"],
+            topic_summary=analytics_data["topic_summary"]
+        )
+        
+        # Generate content
+        response = model.generate_content(prompt)
+        try:
+            response_data = json.loads(response.text)
+        except json.JSONDecodeError:
+            # Fallback: access structured response directly
+            response_data = response.candidates[0].content.parts[0].text
+            if isinstance(response_data, str):
+                response_data = json.loads(response_data)
+        
+        return response_data.get('report', response.text)
+    
+    def map_materials_to_topics(
+        self,
+        topic_paths: List[str],
+        materials: List[Dict[str, str]]
+    ) -> Dict[str, List[str]]:
+        """
+        Map course materials to topics using AI.
+        
+        Args:
+            topic_paths: List of topic paths from course outline
+            materials: List of materials with filename and content
+            
+        Returns:
+            Mapping of topics to material filenames
+        """
+        # Create material summaries (limit content for LLM)
+        material_summaries = [
+            {
+                'filename': mat['filename'],
+                'preview': mat['content'][:2000]
+            }
+            for mat in materials
+        ]
+        
+        # Configure model
+        model = genai.GenerativeModel(
+            settings.GEMINI_MODEL,
+            generation_config={
+                "response_mime_type": "application/json",
+                "response_schema": {
+                    "type": "object",
+                    "description": "Mapping of course topics to material filenames",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {"type": "string"}
+                    }
+                }
+            }
+        )
+        
+        # Build prompt
+        prompt = PromptTemplates.material_mapping(
+            topic_paths=topic_paths,
+            material_summaries=material_summaries
+        )
+        
+        # Generate content
+        response = model.generate_content(prompt)
+        try:
+            mapping = json.loads(response.text)
+        except json.JSONDecodeError:
+            # Fallback: access structured response directly
+            mapping = response.candidates[0].content.parts[0].text
+            if isinstance(mapping, str):
+                mapping = json.loads(mapping)
+        
+        # Validate mapping
+        return self._validate_material_mapping(
+            mapping,
+            topic_paths,
+            [m['filename'] for m in materials]
+        )
+    
+    def generate_flashcards(
+        self,
+        course_name: str,
+        course_content: str,
+        num_cards: int,
+        style: str,
+        answer_format: str
+    ) -> List[Dict[str, str]]:
+        """
+        Generate flashcards using AI.
+        
+        Args:
+            course_name: Name of the course
+            course_content: Course content
+            num_cards: Number of flashcards to generate
+            style: Flashcard style (concise/detailed)
+            answer_format: Answer format (short/detailed)
+            
+        Returns:
+            List of flashcards with question and answer
+        """
+        # Configure model
+        model = genai.GenerativeModel(
+            settings.GEMINI_MODEL,
+            generation_config={
+                "response_mime_type": "application/json",
+                "response_schema": {
+                    "type": "object",
+                    "properties": {
+                        "cards": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "question": {"type": "string"},
+                                    "answer": {"type": "string"}
+                                },
+                                "required": ["question", "answer"]
+                            }
+                        }
+                    },
+                    "required": ["cards"]
+                }
+            }
+        )
+        
+        # Build prompt
+        prompt = PromptTemplates.flashcard_generation(
+            course_name=course_name,
+            course_content=course_content,
+            num_cards=num_cards,
+            style=style,
+            answer_format=answer_format
+        )
+        
+        # Generate content
+        response = model.generate_content(prompt)
+        try:
+            flashcard_data = json.loads(response.text)
+        except json.JSONDecodeError:
+            # Fallback: access structured response directly
+            flashcard_data = response.candidates[0].content.parts[0].text
+            if isinstance(flashcard_data, str):
+                flashcard_data = json.loads(flashcard_data)
+        
+        return flashcard_data.get("cards", [])
+    
+    @staticmethod
+    def _get_test_schema() -> Dict[str, Any]:
+        """Get JSON schema for test generation."""
+        return {
+            "type": "object",
+            "properties": {
+                "questions": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "question_number": {"type": "integer"},
+                            "question_text": {"type": "string"},
+                            "options": {
+                                "type": "object",
+                                "properties": {
+                                    "A": {"type": "string"},
+                                    "B": {"type": "string"},
+                                    "C": {"type": "string"},
+                                    "D": {"type": "string"}
+                                },
+                                "required": ["A", "B", "C", "D"]
+                            },
+                            "correct_answer": {"type": "string"},
+                            "explanation": {"type": "string"}
+                        },
+                        "required": ["question_number", "question_text", "options", "correct_answer"]
+                    }
+                }
+            },
+            "required": ["questions"]
+        }
+    
+    @staticmethod
+    def _validate_material_mapping(
+        mapping: Dict[str, List[str]],
+        valid_topics: List[str],
+        valid_filenames: List[str]
+    ) -> Dict[str, List[str]]:
+        """Validate and clean material mapping."""
+        validated_mapping = {}
+        
+        for topic, filenames in mapping.items():
+            # Only include topics that exist in the course outline
+            if topic in valid_topics:
+                # Only include filenames that exist in materials
+                valid_files = [f for f in filenames if f in valid_filenames]
+                if valid_files:
+                    validated_mapping[topic] = valid_files
+        
+        return validated_mapping

@@ -421,22 +421,38 @@ const Student = () => {
     try {
       setIsSubmitting(true);
       const token = localStorage.getItem('token');
+      
+      const payload = {
+        course_id: selectedCourseForTest!._id,
+        topic: selectedTopic,
+        questions: questions,
+        answers: studentAnswers
+      };
+      
+      console.log('=== SUBMIT TEST DEBUG ===');
+      console.log('Payload:', JSON.stringify(payload, null, 2));
+      console.log('Course ID:', selectedCourseForTest!._id);
+      console.log('Topic:', selectedTopic);
+      console.log('Questions count:', questions.length);
+      console.log('Answers:', studentAnswers);
+      console.log('Answers type:', typeof studentAnswers);
+      console.log('Answers keys:', Object.keys(studentAnswers));
+      
       const response = await fetch('http://localhost:8000/student/submit-test', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          course_id: selectedCourseForTest!._id,
-          topic: selectedTopic,
-          questions: questions,
-          student_answers: studentAnswers
-        })
+        body: JSON.stringify(payload)
       });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
 
       if (!response.ok) {
         const error = await response.json();
+        console.error('Error response:', error);
         throw new Error(error.detail || 'Failed to submit test');
       }
 
