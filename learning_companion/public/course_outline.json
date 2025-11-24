@@ -1,0 +1,308 @@
+[
+    {
+      "moduleId": "module-1-foundations",
+      "moduleName": "Module 1: Foundations and Asymptotic Analysis",
+      "topics": [
+        {
+          "topicId": "topic-1-1-intro-to-data-structures",
+          "topicName": "Introduction to Data Structures",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-1-1-1-defining-adts",
+              "subtopicName": "Defining Abstract Data Types (ADTs)"
+            },
+            {
+              "subtopicId": "subtopic-1-1-2-course-goals",
+              "subtopicName": "Course Goals: ADTs and Algorithm Efficiency"
+            }
+          ]
+        },
+        {
+          "topicId": "topic-1-2-recursion",
+          "topicName": "Recursion",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-1-2-1-defining-recursion",
+              "subtopicName": "Defining Recursive Methods"
+            },
+            {
+              "subtopicId": "subtopic-1-2-2-visualizing-with-stacks",
+              "subtopicName": "Visualizing Recursion with the Call Stack"
+            },
+            {
+              "subtopicId": "subtopic-1-2-3-rules-of-recursion",
+              "subtopicName": "Core Rules: Base Case and Making Progress"
+            },
+            {
+              "subtopicId": "subtopic-1-2-4-example-factorial",
+              "subtopicName": "Example: Computing Factorials"
+            },
+            {
+              "subtopicId": "subtopic-1-2-5-recursion-pros-cons",
+              "subtopicName": "Pros and Cons of Recursion"
+            },
+            {
+              "subtopicId": "subtopic-1-2-6-tail-recursion",
+              "subtopicName": "Tail Recursion Optimization"
+            },
+            {
+              "subtopicId": "subtopic-1-2-7-example-fibonacci",
+              "subtopicName": "Example: The Fibonacci Sequence"
+            }
+          ]
+        },
+        {
+          "topicId": "topic-1-3-asymptotic-analysis",
+          "topicName": "Asymptotic Analysis",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-1-3-1-analyzing-complexity",
+              "subtopicName": "Analyzing Time and Space Complexity"
+            },
+            {
+              "subtopicId": "subtopic-1-3-2-big-o-notation",
+              "subtopicName": "Big O Notation: Defining the Upper Bound"
+            },
+            {
+              "subtopicId": "subtopic-1-3-3-common-growth-rates",
+              "subtopicName": "Common Growth Rates"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "moduleId": "module-2-linear-structures",
+      "moduleName": "Module 2: Linear Data Structures",
+      "topics": [
+        {
+          "topicId": "topic-2-1-linked-lists",
+          "topicName": "Linked Lists",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-2-1-1-list-adt",
+              "subtopicName": "The List ADT"
+            },
+            {
+              "subtopicId": "subtopic-2-1-2-array-vs-linked-lists",
+              "subtopicName": "Array Lists vs. Linked Lists"
+            },
+            {
+              "subtopicId": "subtopic-2-1-3-singly-linked-lists",
+              "subtopicName": "Singly Linked Lists"
+            },
+            {
+              "subtopicId": "subtopic-2-1-4-doubly-linked-lists",
+              "subtopicName": "Doubly Linked Lists"
+            }
+          ]
+        },
+        {
+          "topicId": "topic-2-2-generics",
+          "topicName": "Java Generics",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-2-2-1-generic-types",
+              "subtopicName": "Using Generic Types for Type Safety"
+            },
+            {
+              "subtopicId": "subtopic-2-2-2-writing-generic-classes",
+              "subtopicName": "Implementing a Generic Class"
+            }
+          ]
+        },
+        {
+          "topicId": "topic-2-3-stacks",
+          "topicName": "Stacks",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-2-3-1-stack-adt",
+              "subtopicName": "The Stack ADT (LIFO)"
+            },
+            {
+              "subtopicId": "subtopic-2-3-2-array-stack",
+              "subtopicName": "Array-Based Stack Implementation"
+            },
+            {
+              "subtopicId": "subtopic-2-3-3-linked-stack",
+              "subtopicName": "Linked List-Based Stack Implementation"
+            }
+          ]
+        },
+        {
+          "topicId": "topic-2-4-queues",
+          "topicName": "Queues",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-2-4-1-queue-adt",
+              "subtopicName": "The Queue ADT (FIFO)"
+            },
+            {
+              "subtopicId": "subtopic-2-4-2-array-queue",
+              "subtopicName": "Array-Based Queue Implementation"
+            },
+            {
+              "subtopicId": "subtopic-2-4-3-linked-queue",
+              "subtopicName": "Linked List-Based Queue Implementation"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "moduleId": "module-3-trees",
+      "moduleName": "Module 3: Trees",
+      "topics": [
+        {
+          "topicId": "topic-3-1-tree-fundamentals",
+          "topicName": "Tree Fundamentals",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-3-1-1-tree-terminology",
+              "subtopicName": "Tree Terminology: Root, Child, Parent, Leaf"
+            },
+            {
+              "subtopicId": "subtopic-3-1-2-path-depth-height",
+              "subtopicName": "Path, Depth, and Height"
+            },
+            {
+              "subtopicId": "subtopic-3-1-3-binary-trees",
+              "subtopicName": "Introduction to Binary Trees"
+            }
+          ]
+        },
+        {
+          "topicId": "topic-3-2-tree-traversal",
+          "topicName": "Tree Traversal",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-3-2-1-preorder-traversal",
+              "subtopicName": "Pre-order Traversal"
+            },
+            {
+              "subtopicId": "subtopic-3-2-2-inorder-traversal",
+              "subtopicName": "In-order Traversal"
+            },
+            {
+              "subtopicId": "subtopic-3-2-3-postorder-traversal",
+              "subtopicName": "Post-order Traversal"
+            },
+            {
+              "subtopicId": "subtopic-3-2-4-application-expression-trees",
+              "subtopicName": "Application: Expression Trees"
+            }
+          ]
+        },
+        {
+          "topicId": "topic-3-3-binary-search-trees",
+          "topicName": "Binary Search Trees (BST)",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-3-3-1-bst-property",
+              "subtopicName": "The Binary Search Tree Property"
+            },
+            {
+              "subtopicId": "subtopic-3-3-2-searching-a-bst",
+              "subtopicName": "Searching a BST"
+            },
+            {
+              "subtopicId": "subtopic-3-3-3-inserting-into-a-bst",
+              "subtopicName": "Insertion into a BST"
+            },
+            {
+              "subtopicId": "subtopic-3-3-4-deleting-from-a-bst",
+              "subtopicName": "Deletion from a BST"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "moduleId": "module-4-specialized-data-structures",
+      "moduleName": "Module 4: Specialized Data Structures",
+      "topics": [
+        {
+          "topicId": "topic-4-1-positional-lists",
+          "topicName": "Positional Lists",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-4-1-1-position-interface",
+              "subtopicName": "The Position Interface"
+            },
+            {
+              "subtopicId": "subtopic-4-1-2-linked-positional-list",
+              "subtopicName": "Implementing a Linked Positional List"
+            }
+          ]
+        },
+        {
+          "topicId": "topic-4-2-priority-queues-and-heaps",
+          "topicName": "Priority Queues and Heaps",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-4-2-1-priority-queue-adt",
+              "subtopicName": "The Priority Queue ADT"
+            },
+            {
+              "subtopicId": "subtopic-4-2-2-heap-properties",
+              "subtopicName": "Heap Properties: Shape and Order"
+            },
+            {
+              "subtopicId": "subtopic-4-2-3-heap-operations",
+              "subtopicName": "Heap Operations: Insert and DeleteMin"
+            },
+            {
+              "subtopicId": "subtopic-4-2-4-array-based-heap",
+              "subtopicName": "Array-Based Heap Implementation"
+            }
+          ]
+        },
+        {
+          "topicId": "topic-4-3-avl-trees",
+          "topicName": "AVL Trees",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-4-3-1-bst-imbalance",
+              "subtopicName": "The Problem of BST Imbalance"
+            },
+            {
+              "subtopicId": "subtopic-4-3-2-avl-balance-property",
+              "subtopicName": "The Height-Balance Property of AVL Trees"
+            },
+            {
+              "subtopicId": "subtopic-4-3-3-tree-rotations",
+              "subtopicName": "Restructuring with Single and Double Rotations"
+            },
+            {
+              "subtopicId": "subtopic-4-3-4-avl-insertion",
+              "subtopicName": "AVL Tree Insertion"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "moduleId": "module-5-sorting",
+      "moduleName": "Module 5: Sorting",
+      "topics": [
+        {
+          "topicId": "topic-5-1-simple-sorts",
+          "topicName": "Simple Sorting Algorithms",
+          "subtopics": [
+            {
+              "subtopicId": "subtopic-5-1-1-bubble-sort",
+              "subtopicName": "Bubble Sort"
+            },
+            {
+              "subtopicId": "subtopic-5-1-2-selection-sort",
+              "subtopicName": "Selection Sort"
+            },
+            {
+              "subtopicId": "subtopic-5-1-3-insertion-sort",
+              "subtopicName": "Insertion Sort"
+            }
+          ]
+        }
+      ]
+    }
+  ]

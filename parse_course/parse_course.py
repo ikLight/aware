@@ -6,7 +6,7 @@ import google.generativeai as genai
 # --- Configuration ---
 # Set up your API key via the GOOGLE_API_KEY environment variable.
 try:
-    genai.configure(api_key="AIzaSyBWl60BJK0n3EbOPCJQB4gvYL95cEkfaeU")#os.environ["GOOGLE_API_KEY"])
+    genai.configure(api_key="AIzaSyAEZnQnG2a0pG768mUaZybJQzMFBKPpY4A")#os.environ["GOOGLE_API_KEY"])
 except KeyError:
     print("Error: GOOGLE_API_KEY environment variable not set.")
     exit()
@@ -19,8 +19,8 @@ OUTLINE_OUTPUT_HTML = "parse_course/outline.html"
 GENERATE_GRAPH = False
 
 # Set the model based on current documentation for complex, multi-document tasks.
-# 'gemini-2.5-pro-latest' is the most powerful reasoning model.
-# 'gemini-2.5-flash-latest' is a balanced option with a large context window.
+# 'gemini-2.5-pro' is the most powerful reasoning model.
+# 'gemini-2.5-flash' is a balanced option with a large context window.
 MODEL_NAME = "models/gemini-2.5-flash"
 
 PROMPT = """
@@ -35,26 +35,49 @@ Ensure that the 'source' and 'target' concepts in the 'edges' list are present i
 """
 
 OUTLINE_PROMPT = """
-You are an expert instructional designer extracting the EXACT course outline from the attached course materials.
+### ROLE & GOAL ###
+You are an expert curriculum designer and Data Structures specialist. Your task is to analyze a collection of raw course materials (lecture slides, assignments, PDFs) for a university Data Structures course and generate a single, comprehensive, and **logically structured** JSON outline.
 
-Selection policy for the canonical outline source:
-1) Prefer a single file if its name contains any of: syllabus, course outline, table of contents, overview, course description (case-insensitive).
-2) If none found, derive the outline from lecture notes (filenames or headings containing lecture, week, module), preserving their order and nesting strictly as written.
+### PRIMARY DIRECTIVE: CONTENT & SEQUENCING ###
+This is the most important part of your job. You must balance two sources of information:
 
-STRICT requirements:
-- Copy headings/titles exactly as written: same wording, casing, numbering (e.g., "1.", "Week 2:").
-- Do NOT paraphrase, summarize, or invent topics. Only include items present in the materials.
-- Preserve the hierarchy: topics → subtopics → sub-subtopics, as indicated by numbering, indentation, heading levels, or document structure.
-- If combining from lecture notes, treat each lecture/module/week as a top-level item and nest subheadings beneath it, preserving exact text.
+1.  **Sequence Source (The "When"):** The overall sequence of Modules, Topics, and Subtopics **MUST** follow the chronological order of the lectures. Use file names (e.g., "Lec 01", "Lec 02") as the primary source of truth for this ordering.
+2.  **Content Source (The "What"):** The *substance* of the outline (the names, the groupings) **MUST** be derived from the **content within the files** (e.g., slide text, PDF headings, assignment concepts).
+3.  **Logical, Not Literal (The "How"):** The resulting outline should be a **sensible and meaningful curriculum**, not just a literal copy of lecture titles. You are an expert; group related ideas from the lecture content into logical Topics and Subtopics, but ensure they remain in the correct overall lecture sequence.
 
-Return ONLY a JSON object with this schema:
-{
-  "course_title": string or empty if unknown,
-  "source_file": the chosen filename used for the outline, or a brief note like "derived from lecture notes",
-  "outline": [
-    { "label": exact heading text, "children": [ ... recursively same shape ... ] }
-  ]
-}
+### HIERARCHY & PRINCIPLES ###
+You must follow the "Scaffolding" principle. The goal is to break down massive topics into the smallest possible, atomic concepts. The hierarchy is:
+1.  **Module**: A major unit or "act" of the course (e.g., "Core Data Structures").
+2.  **Topic**: A single, complete concept within that unit (e.g., "Hash Tables").
+3.  **Subtopic**: The atomic "building block." This should be a single, focused lesson that can be taught in one go (e.g., "Collision Handling with Chaining" or "Base Cases in Recursion").
+
+### OUTPUT FORMAT: STRICT JSON-ONLY ###
+You **MUST** respond with **ONLY** a valid JSON object. Do not include any explanatory text, apologies, or conversational "fluff". The output must be a single JSON array, adhering to this exact schema:
+
+[
+  {
+    "moduleId": "string (kebab-case)",
+    "moduleName": "string",
+    "topics": [
+      {
+        "topicId": "string (kebab-case)",
+        "topicName": "string",
+        "subtopics": [
+          {
+            "subtopicId": "string (kebab-case)",
+            "subtopicName": "string"
+          }
+        ]
+      }
+    ]
+  }
+]
+
+### CONSTRAINTS & RULES ###
+1.  **Academic Content Only:** Your outline must *only* include academic course content. EXCLUDE all administrative content like "Syllabus," "Grading," "Midterm Logistics," or "Office Hours."
+2.  **Logical Naming:** `moduleName`, `topicName`, and `subtopicName` must be concise, logical, and descriptive, **reflecting a deep understanding of the content, not just copying slide titles.**
+3.  **Unique IDs:** All `moduleId`, `topicId`, and `subtopicId` fields must be unique, machine-readable `kebab-case-strings` (e.g., "hash-table-collisions").
+4.  **Atomic Subtopics:** Ensure every subtopic is truly atomic and focused on a single concept, as this is the level our "Learning Playlist" will be built on.
 """
 
 def main():
