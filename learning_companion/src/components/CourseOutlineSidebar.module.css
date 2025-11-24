@@ -1,0 +1,221 @@
+/* Sidebar Container */
+/* Note: width and positioning are controlled by App.css based on browse/focus mode */
+.sidebar {
+  background-color: #f8f9fa;
+  border-right: 1px solid #dee2e6;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+/* Sidebar Header */
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid #dee2e6;
+  background-color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Sidebar Title */
+.sidebarTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #212529;
+  margin: 0;
+  /* Padding is handled by the parent header container now */
+}
+
+/* Close Button */
+.closeButton {
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  color: #dc3545;
+  background-color: #f8d7da;
+}
+
+/* Outline Container */
+.outlineContainer {
+  padding: 0.5rem 0;
+}
+
+/* Loading State */
+.loading {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+/* Error State */
+.error {
+  padding: 1.5rem 1rem;
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c2c7;
+  border-radius: 0.375rem;
+  margin: 1rem;
+  font-size: 0.9rem;
+}
+
+.error p {
+  margin: 0.25rem 0;
+}
+
+/* Module Styles */
+.module {
+  margin: 0.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.moduleSummary {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #495057;
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  background-color: #fff;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.moduleSummary::-webkit-details-marker {
+  display: none;
+}
+
+.moduleSummary::before {
+  content: '▶';
+  display: inline-block;
+  margin-right: 0.75rem;
+  transition: transform 0.2s ease;
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.module[open] > .moduleSummary::before {
+  transform: rotate(90deg);
+}
+
+.moduleSummary:hover {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+  border-left-color: #0d6efd;
+}
+
+.moduleContent {
+  padding: 0.25rem 0 0.75rem 0;
+  background-color: #f8f9fa;
+}
+
+/* Topic Styles */
+.topic {
+  margin: 0.25rem 0;
+}
+
+.topicSummary {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #495057;
+  padding: 0.625rem 1rem 0.625rem 2rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.topicSummary::-webkit-details-marker {
+  display: none;
+}
+
+.topicSummary::before {
+  content: '▶';
+  display: inline-block;
+  margin-right: 0.625rem;
+  transition: transform 0.2s ease;
+  font-size: 0.65rem;
+  color: #6c757d;
+}
+
+.topic[open] > .topicSummary::before {
+  transform: rotate(90deg);
+}
+
+.topicSummary:hover {
+  background-color: #d4edda;
+  color: #198754;
+  border-left-color: #198754;
+}
+
+.topicContent {
+  padding: 0.25rem 0;
+}
+
+/* Subtopic Styles */
+.subtopic {
+  font-size: 0.85rem;
+  color: #495057;
+  padding: 0.5rem 1rem 0.5rem 3.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+  border-left: 3px solid transparent;
+  line-height: 1.5;
+}
+
+.subtopic:hover {
+  background-color: #fff3cd;
+  color: #664d03;
+  border-left-color: #ffc107;
+  padding-left: 3.5rem;
+}
+
+.subtopic.active {
+  background-color: #0d6efd;
+  color: #ffffff;
+  border-left-color: #0a58ca;
+  font-weight: 600;
+}
+
+.subtopic.active:hover {
+  background-color: #0b5ed7;
+  color: #ffffff;
+  border-left-color: #084298;
+}
+
+/* Scrollbar Styling (Webkit Browsers) */
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: #f1f3f5;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #adb5bd;
+  border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #868e96;
+}

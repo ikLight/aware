@@ -1,0 +1,133 @@
+[
+    {
+      "stepType": "Lesson",
+      "content": {
+        "title": "Post-order Traversal",
+        "blocks": [
+          {
+            "type": "subtitle",
+            "text": "Post-order: Left, Right, Root"
+          },
+          {
+            "type": "text",
+            "content": "The final standard traversal is **post-order traversal**. Its pattern is:\n\n1.  Recursively traverse the **left** subtree.\n2.  Recursively traverse the **right** subtree.\n3.  Visit the **root** node.\n\nHere, the root is visited *last*, after both of its subtrees have been fully explored."
+          },
+          {
+            "type": "diagram",
+            "content": "For post-order, the flag is on the right side of the node. Tracing the tree's exterior, the collection order is D -> E -> B -> F -> G -> C -> A."
+          }
+        ]
+      }
+    },
+    {
+      "stepType": "Lesson",
+      "content": {
+        "title": "Implementing Post-order Traversal",
+        "blocks": [
+          {
+            "type": "text",
+            "content": "The code for post-order traversal follows the 'Left, Right, Root' definition."
+          },
+          {
+            "type": "code",
+            "content": "/**\n * A post-order traversal to print tree elements.\n */\nprivate void postfix(Node t) {\n    if(t != null) {\n        postfix(t.left);    // 1. Traverse the left subtree\n        postfix(t.right);   // 2. Traverse the right subtree\n        System.out.print(t);  // 3. Visit the root\n    }\n}"
+          },
+          {
+            "type": "text",
+            "content": "This traversal is particularly useful for tasks where you need to process a node's children before the node itself. A classic example is evaluating an expression tree, which we'll see next!"
+          }
+        ]
+      }
+    },
+    {
+      "stepType": "OpenQuestion",
+      "content": {
+        "question": "Consider evaluating the mathematical expression `(3 * 4) + 5`. To get the final result of the addition, what must you calculate first? How does this 'do children first' idea relate to post-order traversal?",
+        "hint": "You can't add 5 to `(3 * 4)` until you know that `3 * 4` is 12. Think about which operation happens last."
+      }
+    },
+    {
+      "stepType": "CodingQuestion",
+      "content": {
+        "prompt": "Complete the `postOrder` method so that it visits nodes Left-Right-Root and records the traversal for the provided sample tree.",
+        "language": "java",
+        "displayCode": "private static void postOrder(TreeNode node) {\n    // Traverse left subtree, then right subtree, then visit the current node\n}\n",
+        "wrapperPrefix": "import java.util.*;\n\npublic class Main {\n    static class TreeNode {\n        String value;\n        TreeNode left;\n        TreeNode right;\n        TreeNode(String value) { this.value = value; }\n    }\n\n    static List<String> traversal = new ArrayList<>();\n\n    public static void main(String[] args) {\n        TreeNode root = buildSampleTree();\n        postOrder(root);\n        System.out.println(String.join(\" \", traversal));\n    }\n\n    private static TreeNode buildSampleTree() {\n        TreeNode a = new TreeNode(\"A\");\n        TreeNode b = new TreeNode(\"B\");\n        TreeNode c = new TreeNode(\"C\");\n        TreeNode d = new TreeNode(\"D\");\n        TreeNode e = new TreeNode(\"E\");\n        TreeNode f = new TreeNode(\"F\");\n        a.left = b; a.right = c;\n        b.left = d; b.right = e;\n        c.left = f;\n        return a;\n    }\n\n    // ==== student code starts ====\n",
+        "wrapperSuffix": "    // ==== student code ends ====\n\n    private static void visit(TreeNode node) {\n        traversal.add(node.value);\n    }\n}\n",
+        "expectedOutput": "D E B F C A",
+        "solution": "private static void postOrder(TreeNode node) {\n    if (node == null) {\n        return;\n    }\n    postOrder(node.left);\n    postOrder(node.right);\n    visit(node);\n}\n"
+      }
+    }
+  ],
+  "application-expression-trees": [
+    {
+      "stepType": "Lesson",
+      "content": {
+        "title": "Application: Expression Trees",
+        "blocks": [
+          {
+            "type": "text",
+            "content": "Tree traversals are fundamental to solving many problems. A great example is the **Arithmetic Expression Tree**, which represents a mathematical expression."
+          },
+          {
+            "type": "diagram",
+            "content": "An expression tree for ((2 * (5 - 1)) + (3 * 2)). The internal nodes are operators, and the leaf nodes are operands."
+          },
+          {
+            "type": "text",
+            "content": "By traversing this tree in different orders, we can produce different notations for the same expression:\n\n*   **In-order Traversal** (with added parentheses) gives the standard `infix` notation: `((2 * (5 - 1)) + (3 * 2))`\n*   **Post-order Traversal** gives the `postfix` notation (also known as Reverse Polish Notation): `2 5 1 - * 3 2 * +`\n*   **Pre-order Traversal** gives the `prefix` notation: `+ * 2 - 5 1 * 3 2`"
+          }
+        ]
+      }
+    },
+    {
+      "stepType": "Lesson",
+      "content": {
+        "title": "Evaluating an Expression Tree",
+        "blocks": [
+          {
+            "type": "text",
+            "content": "To evaluate the expression, we need to compute the results of the subtrees before applying the operator at the root. This is a perfect match for **post-order traversal**.\n\nThe algorithm is:\n1. Recursively evaluate the left subtree.\n2. Recursively evaluate the right subtree.\n3. Apply the operator at the root to the results from its children."
+          },
+          {
+            "type": "code",
+            "content": "private int evaluate(Node t) {\n    // Base Case: If the node is a leaf, it's an operand (a number).\n    if(t.left == null) {\n        return (((Character)t.element).charValue()) - '0';\n    }\n    // Recursive Step: Evaluate children, then apply the operator.\n    else {\n        int left = evaluate (t.left);\n        int right = evaluate (t.right);\n        switch (((Character)t.element).charValue()) {\n            case '+': return left + right; \n            case '-': return left - right; \n            case '*': return left * right; \n            case '/': return left / right; \n        }\n    }\n    return 0; // Should not be reached\n}"
+          }
+        ]
+      }
+    },
+    {
+      "stepType": "MCQ",
+      "content": {
+        "question": "Using the expression tree from the lesson for `((2 * (5 - 1)) + (3 * 2))`, what is the final evaluated result?",
+        "options": [
+          {
+            "id": "A",
+            "text": "12"
+          },
+          {
+            "id": "B",
+            "text": "14"
+          },
+          {
+            "id": "C",
+            "text": "16"
+          }
+        ],
+        "correctOptionId": "B",
+        "explanation": "Correct. The post-order evaluation would be: calculate (5 - 1) = 4. Then calculate (2 * 4) = 8. Next, calculate (3 * 2) = 6. Finally, calculate (8 + 6) = 14."
+      }
+    },
+    {
+      "stepType": "CodingQuestion",
+      "content": {
+        "prompt": "Implement the `evaluate` method that returns the integer value of an expression tree. Leaf nodes store digits, and internal nodes store the operators +, -, *, or /. A sample expression tree for `((2 * (5 - 1)) + (3 * 2))` is provided in the wrapper.",
+        "language": "java",
+        "displayCode": "private static int evaluate(Node node) {\n    // Recursively evaluate the tree rooted at node\n}\n",
+        "wrapperPrefix": "public class Main {\n    static class Node {\n        String value;\n        Node left;\n        Node right;\n        Node(String value) { this.value = value; }\n    }\n\n    public static void main(String[] args) {\n        Node root = buildExpressionTree();\n        System.out.println(evaluate(root));\n    }\n\n    private static Node buildExpressionTree() {\n        Node plus = new Node(\"+\");\n        Node multLeft = new Node(\"*\");\n        Node multRight = new Node(\"*\");\n        Node two = new Node(\"2\");\n        Node five = new Node(\"5\");\n        Node one = new Node(\"1\");\n        Node three = new Node(\"3\");\n        Node twoB = new Node(\"2\");\n        Node sub = new Node(\"-\");\n        sub.left = five;\n        sub.right = one;\n        multLeft.left = two;\n        multLeft.right = sub;\n        multRight.left = three;\n        multRight.right = twoB;\n        plus.left = multLeft;\n        plus.right = multRight;\n        return plus;\n    }\n\n    // ==== student code starts ====\n",
+        "wrapperSuffix": "    // ==== student code ends ====\n}\n",
+        "expectedOutput": "14",
+        "solution": "private static int evaluate(Node node) {\n    if (node.left == null && node.right == null) {\n        return Integer.parseInt(node.value);\n    }\n    int leftValue = evaluate(node.left);\n    int rightValue = evaluate(node.right);\n    switch (node.value.charAt(0)) {\n        case '+':\n            return leftValue + rightValue;\n        case '-':\n            return leftValue - rightValue;\n        case '*':\n            return leftValue * rightValue;\n        case '/':\n            return leftValue / rightValue;\n        default:\n            throw new IllegalArgumentException(\"Unknown operator: \" + node.value);\n    }\n}\n"
+      }
+    }
+]

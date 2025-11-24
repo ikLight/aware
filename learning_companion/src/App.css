@@ -1,0 +1,220 @@
+/* ================================
+   BASE CONTAINER
+   ================================ */
+.app-container {
+  display: flex;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* ================================
+   HAMBURGER BUTTON
+   ================================ */
+.hamburger-btn {
+  /* Removed fixed positioning for header integration */
+  /* Lower z-index so it sits behind the sidebar (z-index: 100) */
+  z-index: 10;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  /* Ensure it doesn't shrink in flex container */
+  flex-shrink: 0;
+}
+
+.hamburger-btn:hover {
+  background-color: #0b5ed7;
+  transform: scale(1.05);
+}
+
+.hamburger-btn:active {
+  transform: scale(0.98);
+}
+
+/* ================================
+   BROWSE MODE LAYOUT (25% / 75%)
+   ================================ */
+.app-container.browse-mode {
+  /* Sidebar takes fixed width */
+}
+
+.app-container.browse-mode .sidebar {
+  position: static;
+  width: 25%;
+  min-width: 320px;
+  max-width: 400px;
+  height: 100vh;
+  transform: translateX(0);
+}
+
+.app-container.browse-mode .main-content {
+  width: 75%;
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  background-color: #ffffff;
+}
+
+.app-container.browse-mode .hamburger-btn {
+  display: none;
+}
+
+/* ================================
+   FOCUS MODE LAYOUT (Sidebar overlay + 75% / 25% split)
+   ================================ */
+.app-container.focus-mode {
+  /* Sidebar becomes absolute positioned overlay */
+}
+
+.app-container.focus-mode .sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 100vh;
+  z-index: 100;
+  background-color: #ffffff;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease;
+}
+
+/* Closed state - slide off screen */
+.app-container.focus-mode .sidebar.closed {
+  transform: translateX(-100%);
+}
+
+/* Open state - slide in */
+.app-container.focus-mode .sidebar.open {
+  transform: translateX(0);
+}
+
+.app-container.focus-mode .main-content {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+.app-container.focus-mode .playlist-container {
+  width: 75%;
+  height: 100vh;
+  overflow-y: auto;
+  background-color: #ffffff;
+  border-right: 1px solid #dee2e6;
+}
+
+.app-container.focus-mode .chat-pod-placeholder {
+  width: 25%;
+  height: 100vh;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+}
+
+/* ================================
+   BROWSE MODE CONTENT STYLES
+   ================================ */
+.browse-placeholder {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+.browse-placeholder h1 {
+  font-size: 2.5rem;
+  color: #212529;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.browse-placeholder > p {
+  font-size: 1.25rem;
+  color: #6c757d;
+  margin-bottom: 2rem;
+}
+
+/* Placeholder Message */
+.placeholder-message {
+  margin-top: 3rem;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+  border: 2px dashed #dee2e6;
+  text-align: center;
+}
+
+.placeholder-message p {
+  color: #6c757d;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* ================================
+   FOCUS MODE CHAT PLACEHOLDER
+   ================================ */
+.chat-placeholder-content {
+  padding: 2rem;
+  text-align: center;
+}
+
+.chat-placeholder-content h3 {
+  font-size: 1.5rem;
+  color: #495057;
+  margin-bottom: 1rem;
+}
+
+.chat-placeholder-content p {
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+@media (max-width: 768px) {
+  /* Browse Mode - Stack vertically */
+  .app-container.browse-mode {
+    flex-direction: column;
+  }
+
+  .app-container.browse-mode .sidebar {
+    width: 100%;
+    max-width: 100%;
+    height: 40vh;
+  }
+
+  .app-container.browse-mode .main-content {
+    width: 100%;
+    height: 60vh;
+  }
+
+  /* Focus Mode - Adjust split */
+  .app-container.focus-mode .playlist-container {
+    width: 100%;
+  }
+
+  .app-container.focus-mode .chat-pod-placeholder {
+    display: none; /* Hide chat on mobile in focus mode */
+  }
+
+  .browse-placeholder {
+    padding: 2rem 1rem;
+  }
+
+  .browse-placeholder h1 {
+    font-size: 2rem;
+  }
+
+  .browse-placeholder > p {
+    font-size: 1.1rem;
+  }
+}
