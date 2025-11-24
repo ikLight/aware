@@ -3,12 +3,16 @@ import json
 import pathlib
 import google.generativeai as genai
 from typing import List, Dict, Any
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Set up gemini configuration
-try:
-    genai.configure(api_key="AIzaSyBWl60BJK0n3EbOPCJQB4gvYL95cEkfaeU")#os.environ["GOOGLE_API_KEY"])
-except KeyError:
-    print("Error: GOOGLE_API_KEY environment variable not set.")
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise RuntimeError("GEMINI_API_KEY environment variable not set.")
+
+genai.configure(api_key=api_key)
 
 MODEL_NAME = "models/gemini-2.5-flash"
 

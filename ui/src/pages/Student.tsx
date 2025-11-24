@@ -96,7 +96,7 @@ const Student = () => {
   const { toast } = useToast();
 
   // Main view state
-  const [view, setView] = useState<'dashboard' | 'browse-courses' | 'test-taking' | 'test-results'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'browse-courses' | 'test-taking' | 'test-results' | 'review'>('dashboard');
   
   // Course state
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
@@ -106,9 +106,6 @@ const Student = () => {
   
   // Enrollment state
   const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
-  
-  // Proficiency state
-  const [updatingProficiency, setUpdatingProficiency] = useState<string | null>(null);
   
   // Test workflow state
   const [selectedCourseForTest, setSelectedCourseForTest] = useState<EnrolledCourse | null>(null);
@@ -135,6 +132,17 @@ const Student = () => {
   const [testHistory, setTestHistory] = useState<TestResult[]>([]);
   const [selectedCourseForHistory, setSelectedCourseForHistory] = useState<EnrolledCourse | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  // Flashcard/Review state
+  const [selectedCourseForReview, setSelectedCourseForReview] = useState<EnrolledCourse | null>(null);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [reviewNumCards, setReviewNumCards] = useState<string>('10');
+  const [reviewStyle, setReviewStyle] = useState<string>('concise');
+  const [reviewAnswerFormat, setReviewAnswerFormat] = useState<string>('short');
+  const [isGeneratingFlashcards, setIsGeneratingFlashcards] = useState(false);
+  const [flashcards, setFlashcards] = useState<Array<{question: string; answer: string}>>([]);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
 
   useEffect(() => {
     fetchEnrolledCourses();
@@ -197,8 +205,7 @@ const Student = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          course_id: courseId,
-          proficiency_level: proficiencyLevel
+          course_id: courseId
         })
       });
 
@@ -210,7 +217,7 @@ const Student = () => {
       const data = await response.json();
       toast({
         title: "Enrolled!",
-        description: `Successfully enrolled in ${data.course_name}`
+        description: data.message || `Successfully enrolled in ${data.course_name}`
       });
 
       // Refresh courses
@@ -228,43 +235,6 @@ const Student = () => {
     }
   };
 
-  const handleUpdateProficiency = async (courseId: string, proficiencyLevel: string) => {
-    try {
-      setUpdatingProficiency(courseId);
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/student/update-proficiency', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          course_id: courseId,
-          proficiency_level: proficiencyLevel
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to update proficiency');
-      }
-
-      toast({
-        title: "Updated!",
-        description: "Proficiency level updated successfully"
-      });
-
-      fetchEnrolledCourses();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update proficiency",
-        variant: "destructive"
-      });
-    } finally {
-      setUpdatingProficiency(null);
-    }
-  };
 
   const fetchCourseTopics = async (courseId: string) => {
     try {
@@ -319,6 +289,53 @@ const Student = () => {
       setTestHistory([]);
     } finally {
       setIsLoadingHistory(false);
+    }
+  };
+
+  const handleGenerateReview = async () => {
+    if (!selectedCourseForReview) return;
+
+    try {
+      setIsGeneratingFlashcards(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8000/student/course/${selectedCourseForReview._id}/generate-flashcards`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          course_id: selectedCourseForReview._id,
+          num_cards: parseInt(reviewNumCards),
+          style: reviewStyle,
+          answer_format: reviewAnswerFormat
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to generate flashcards');
+      }
+
+      const data = await response.json();
+      setFlashcards(data.cards || []);
+      setCurrentCardIndex(0);
+      setShowAnswer(false);
+      setShowReviewDialog(false);
+      setView('review');
+      
+      toast({
+        title: "Flashcards Generated!",
+        description: `${data.num_cards} flashcards ready for review`
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate flashcards",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingFlashcards(false);
     }
   };
 
@@ -520,7 +537,7 @@ const Student = () => {
                   <div>
                     <CardTitle className="text-3xl">My Enrolled Courses</CardTitle>
                     <CardDescription className="text-base">
-                      Manage your courses, set proficiency levels, and take personalized tests
+                      Manage your courses and take personalized tests
                     </CardDescription>
                   </div>
                 </div>
@@ -579,23 +596,6 @@ const Student = () => {
                                 <Award className="w-4 h-4" />
                                 <span>Professor: {course.professor_username}</span>
                               </div>
-                              <div className="mt-3 flex items-center gap-3">
-                                <Label className="text-sm font-medium text-gray-700">Proficiency Level:</Label>
-                                <select
-                                  value={course.proficiency_level}
-                                  onChange={(e) => handleUpdateProficiency(course._id, e.target.value)}
-                                  disabled={updatingProficiency === course._id}
-                                  className={`px-4 py-2 rounded-lg border-2 font-medium transition-all ${
-                                    course.proficiency_level === 'advanced' ? 'border-purple-300 bg-purple-50 text-purple-700' :
-                                    course.proficiency_level === 'intermediate' ? 'border-blue-300 bg-blue-50 text-blue-700' :
-                                    'border-green-300 bg-green-50 text-green-700'
-                                  } ${updatingProficiency === course._id ? 'opacity-50' : 'hover:scale-105 cursor-pointer'}`}
-                                >
-                                  <option value="beginner">🌱 Beginner</option>
-                                  <option value="intermediate">⚡ Intermediate</option>
-                                  <option value="advanced">🚀 Advanced</option>
-                                </select>
-                              </div>
                             </div>
                           </div>
                           <div className="flex flex-col gap-3">
@@ -629,6 +629,16 @@ const Student = () => {
                             >
                               <BarChart3 className="w-5 h-5 mr-2" />
                               View Scores
+                            </Button>
+                            <Button 
+                              size="lg"
+                              variant="secondary"
+                              onClick={() => { setSelectedCourseForReview(course); setShowReviewDialog(true); }}
+                              disabled={!course.has_course_plan}
+                              className="hover:scale-105 transition-all border-2"
+                            >
+                              <BookOpen className="w-5 h-5 mr-2" />
+                              Review
                             </Button>
                           </div>
                         </div>
@@ -703,15 +713,6 @@ const Student = () => {
                             <Target className="w-5 h-5 text-primary" />
                             <span className="font-bold text-lg text-gray-800">{result.topic}</span>
                           </div>
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              result.proficiency_level === 'advanced' ? 'bg-purple-100 text-purple-700' :
-                              result.proficiency_level === 'intermediate' ? 'bg-blue-100 text-blue-700' :
-                              'bg-green-100 text-green-700'
-                            }`}>
-                              {result.proficiency_level.toUpperCase()}
-                            </span>
-                          </div>
                         </div>
                         <div className="text-right">
                           <div className="text-sm text-gray-600 mb-1">Score</div>
@@ -740,6 +741,74 @@ const Student = () => {
                   ))}
                 </div>
               )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Review Options Dialog */}
+          <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+            <DialogContent className="max-w-md bg-white/95 backdrop-blur">
+              <DialogHeader>
+                <div className="flex items-center gap-3">
+                  <BookOpen className="w-8 h-8 text-primary" />
+                  <div>
+                    <DialogTitle className="text-2xl">Review Options</DialogTitle>
+                    <DialogDescription className="text-base">
+                      {selectedCourseForReview?.course_name} - Generate flashcards
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="num-cards">Number of Cards:</Label>
+                  <Select value={reviewNumCards} onValueChange={setReviewNumCards}>
+                    <SelectTrigger className="w-full mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5 cards</SelectItem>
+                      <SelectItem value="10">10 cards</SelectItem>
+                      <SelectItem value="15">15 cards</SelectItem>
+                      <SelectItem value="20">20 cards</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="style">Style:</Label>
+                  <Select value={reviewStyle} onValueChange={setReviewStyle}>
+                    <SelectTrigger className="w-full mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="concise">Concise</SelectItem>
+                      <SelectItem value="detailed">Detailed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="answer-format">Answer Format:</Label>
+                  <Select value={reviewAnswerFormat} onValueChange={setReviewAnswerFormat}>
+                    <SelectTrigger className="w-full mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="short">Short</SelectItem>
+                      <SelectItem value="detailed">Detailed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button 
+                  className="w-full" 
+                  onClick={handleGenerateReview}
+                  disabled={isGeneratingFlashcards}
+                >
+                  {isGeneratingFlashcards ? 'Generating...' : 'Generate Flashcards'}
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
@@ -797,27 +866,13 @@ const Student = () => {
                           {course.is_enrolled ? (
                             <Button size="sm" variant="outline" disabled>Already Enrolled</Button>
                           ) : (
-                            <div className="flex items-center gap-2">
-                              <select
-                                id={`proficiency-${course._id}`}
-                                className="px-3 py-1 rounded border text-sm"
-                                defaultValue="intermediate"
-                              >
-                                <option value="beginner">Beginner</option>
-                                <option value="intermediate">Intermediate</option>
-                                <option value="advanced">Advanced</option>
-                              </select>
-                              <Button 
-                                size="sm"
-                                onClick={() => {
-                                  const select = document.getElementById(`proficiency-${course._id}`) as HTMLSelectElement;
-                                  handleEnrollCourse(course._id, select.value);
-                                }}
-                                disabled={enrollingCourseId === course._id}
-                              >
-                                {enrollingCourseId === course._id ? 'Enrolling...' : 'Enroll'}
-                              </Button>
-                            </div>
+                            <Button 
+                              size="sm"
+                              onClick={() => handleEnrollCourse(course._id, '')}
+                              disabled={enrollingCourseId === course._id}
+                            >
+                              {enrollingCourseId === course._id ? 'Enrolling...' : 'Enroll'}
+                            </Button>
                           )}
                         </TableCell>
                       </TableRow>
@@ -852,10 +907,6 @@ const Student = () => {
                 <CardDescription>Select a topic to generate your personalized test</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div>
-                  <Label>Proficiency Level: <span className="font-semibold">{selectedCourseForTest?.proficiency_level}</span></Label>
-                </div>
-
                 <div>
                   <Label htmlFor="topic">Select Topic:</Label>
                   {isLoadingTopics ? (
@@ -896,28 +947,28 @@ const Student = () => {
 
     // Question answering phase
     const currentQuestion = questions[currentQuestionIndex];
-    const currentAnswer = studentAnswers[currentQuestion.question_number];
+    const currentAnswer = studentAnswers[currentQuestion.question_number] || '';
     const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
     return (
-      <div className="min-h-screen p-6">
+      <div className="min-h-screen p-6 bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
-            <div className="flex justify-between text-sm mb-2">
+            <div className="flex justify-between text-sm mb-2 text-foreground">
               <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
               <span>{Object.keys(studentAnswers).length} answered</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div 
-                className="bg-blue-600 h-2 rounded-full transition-all"
+                className="bg-primary h-2 rounded-full transition-all"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
 
-          <Card>
+          <Card className="bg-card/80 backdrop-blur-xl border border-border">
             <CardHeader>
-              <CardTitle>Question {currentQuestion.question_number}</CardTitle>
+              <CardTitle className="text-foreground">Question {currentQuestion.question_number}</CardTitle>
               <CardDescription className="text-base mt-4">
                 {currentQuestion.question_text}
               </CardDescription>
@@ -925,9 +976,12 @@ const Student = () => {
             <CardContent>
               <RadioGroup value={currentAnswer} onValueChange={handleAnswerSelect}>
                 {Object.entries(currentQuestion.options).map(([key, value]) => (
-                  <div key={key} className="flex items-center space-x-2 p-3 border rounded hover:bg-gray-50">
+                  <div 
+                    key={key} 
+                    className="flex items-center space-x-2 p-3 border border-border rounded-lg hover:bg-primary/10 hover:border-primary/50 transition-all cursor-pointer"
+                  >
                     <RadioGroupItem value={key} id={`option-${key}`} />
-                    <Label htmlFor={`option-${key}`} className="flex-1 cursor-pointer">
+                    <Label htmlFor={`option-${key}`} className="flex-1 cursor-pointer text-foreground">
                       <span className="font-semibold">{key}.</span> {value}
                     </Label>
                   </div>
@@ -963,23 +1017,23 @@ const Student = () => {
   // Test Results View
   if (view === 'test-results' && testResults) {
     const getScoreColor = () => {
-      if (testResults.percentage >= 80) return 'text-green-600';
-      if (testResults.percentage >= 60) return 'text-yellow-600';
-      return 'text-red-600';
+      if (testResults.percentage >= 80) return 'text-green-500';
+      if (testResults.percentage >= 60) return 'text-yellow-500';
+      return 'text-red-500';
     };
 
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800">
+        <Card className="w-full max-w-md bg-card/80 backdrop-blur-xl border border-border">
           <CardHeader>
-            <CardTitle className="text-center">Test Results</CardTitle>
+            <CardTitle className="text-center text-foreground">Test Results</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="text-center">
               <div className={`text-6xl font-bold ${getScoreColor()}`}>
                 {testResults.percentage}%
               </div>
-              <div className="text-2xl mt-4">
+              <div className="text-2xl mt-4 text-foreground">
                 {testResults.score} / {testResults.total_questions}
               </div>
               <div className="text-muted-foreground mt-2">
@@ -992,6 +1046,121 @@ const Student = () => {
             </Button>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  // Review View - Flashcards
+  if (view === 'review') {
+    const currentCard = flashcards[currentCardIndex];
+
+    return (
+      <div className="min-h-screen p-6 bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-foreground">Review - {selectedCourseForReview?.course_name}</h1>
+            <Button variant="outline" onClick={handleBackToDashboard}>
+              Back to Dashboard
+            </Button>
+          </div>
+
+          {flashcards.length === 0 ? (
+            <Card className="bg-card/80 backdrop-blur-xl border border-border">
+              <CardContent className="p-12 text-center">
+                <p className="text-muted-foreground">No flashcards available.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="mb-6">
+                <div className="flex justify-between text-sm mb-2 text-foreground">
+                  <span>Card {currentCardIndex + 1} of {flashcards.length}</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all"
+                    style={{ width: `${((currentCardIndex + 1) / flashcards.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              <motion.div
+                key={currentCardIndex}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="bg-card/80 backdrop-blur-xl border border-border min-h-[400px] flex flex-col">
+                  <CardHeader>
+                    <CardTitle className="text-foreground text-2xl">
+                      {showAnswer ? 'Answer' : 'Question'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-1 flex items-center justify-center">
+                    <AnimatePresence mode="wait">
+                      {!showAnswer ? (
+                        <motion.div
+                          key="question"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="text-center"
+                        >
+                          <p className="text-2xl text-foreground">{currentCard.question}</p>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="answer"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="text-center"
+                        >
+                          <p className="text-2xl text-foreground">{currentCard.answer}</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <div className="flex justify-between mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (currentCardIndex > 0) {
+                      setCurrentCardIndex(prev => prev - 1);
+                      setShowAnswer(false);
+                    }
+                  }}
+                  disabled={currentCardIndex === 0}
+                >
+                  Previous Card
+                </Button>
+
+                <Button
+                  onClick={() => setShowAnswer(!showAnswer)}
+                  className="bg-primary"
+                >
+                  {showAnswer ? 'Show Question' : 'Show Answer'}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (currentCardIndex < flashcards.length - 1) {
+                      setCurrentCardIndex(prev => prev + 1);
+                      setShowAnswer(false);
+                    }
+                  }}
+                  disabled={currentCardIndex === flashcards.length - 1}
+                >
+                  Next Card
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   }

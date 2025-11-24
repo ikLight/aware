@@ -2,14 +2,18 @@ import os
 import json
 import pathlib
 import google.generativeai as genai
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- Configuration ---
-# Set up your API key via the GOOGLE_API_KEY environment variable.
-try:
-    genai.configure(api_key="AIzaSyAEZnQnG2a0pG768mUaZybJQzMFBKPpY4A")#os.environ["GOOGLE_API_KEY"])
-except KeyError:
-    print("Error: GOOGLE_API_KEY environment variable not set.")
+# Set up your API key via the GEMINI_API_KEY environment variable.
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    print("Error: GEMINI_API_KEY environment variable not set.")
     exit()
+
+genai.configure(api_key=api_key)
 
 # Define the input folder and output file.
 INPUT_DIR = "parse_course/course_materials"
