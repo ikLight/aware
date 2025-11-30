@@ -62,6 +62,75 @@ Return a JSON object with this structure:
 
 Generate the test now."""
     
+    @staticmethod
+    def personalized_test_generation(
+        topic: str,
+        material_content: str,
+        proficiency_level: str,
+        weak_topics: list = None,
+        num_questions: int = 10
+    ) -> str:
+        """Generate prompt for personalized MCQ test generation from materials."""
+        difficulty_instructions = {
+            "beginner": "Focus on basic concepts, definitions, and simple applications from the materials",
+            "intermediate": "Include application problems, analysis, and connections between concepts from the materials",
+            "advanced": "Include complex scenarios, critical thinking, and synthesis of multiple concepts from the materials"
+        }
+        
+        instruction = difficulty_instructions.get(proficiency_level, difficulty_instructions["intermediate"])
+        
+        # Add personalization context
+        personalization = ""
+        if weak_topics and len(weak_topics) > 0:
+            weak_list = ", ".join([f"{t['topic']} (avg: {t['avg_score']:.1f}%)" for t in weak_topics[:3]])
+            personalization = f"""
+**Personalization Context**:
+The student has shown difficulty with the following topics: {weak_list}
+Include 2-3 questions that reinforce foundational concepts related to these weak areas, helping the student build confidence and understanding.
+"""
+        
+        return f"""You are an expert educational assessment creator. Generate a personalized multiple-choice test based on the uploaded course materials.
+
+**Topic**: {topic}
+**Student Proficiency Level**: {proficiency_level}
+**Number of Questions**: {num_questions}
+{personalization}
+
+**Course Materials Content**:
+{material_content[:8000]}  
+
+**Instructions**:
+1. Generate exactly {num_questions} multiple-choice questions DIRECTLY based on the course materials provided above.
+2. Questions should test comprehension, application, and analysis of the specific content in the materials.
+3. Tailor the difficulty to the student's proficiency level:
+   - {instruction}
+4. Each question must have exactly 4 options (A, B, C, D).
+5. Clearly indicate the correct answer for each question.
+6. Ensure questions cover different sections/aspects of the materials.
+7. Make questions specific to the actual content - reference examples, concepts, or details from the materials.
+8. If personalization context is provided, strategically include questions that address weak areas while maintaining appropriate difficulty.
+
+**Output Format**:
+Return a JSON object with this structure:
+{{
+  "questions": [
+    {{
+      "question_number": 1,
+      "question_text": "Based on the materials, what is...",
+      "options": {{
+        "A": "First option",
+        "B": "Second option",
+        "C": "Third option",
+        "D": "Fourth option"
+      }},
+      "correct_answer": "A",
+      "explanation": "Brief explanation referencing the materials"
+    }}
+  ]
+}}
+
+Generate the personalized test now."""
+    
     # ========================================================================
     # Course Report Prompts
     # ========================================================================

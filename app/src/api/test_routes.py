@@ -5,6 +5,7 @@ from typing import Dict, Any, List
 
 from src.models.schemas import (
     GenerateTestRequest,
+    GeneratePersonalizedTestRequest,
     SubmitTestRequest,
     GenerateFlashcardsRequest,
     MessageResponse
@@ -12,6 +13,7 @@ from src.models.schemas import (
 from src.services.test_service import TestService
 from src.services.student_service import StudentService
 from src.services.course_service import CourseService
+from src.services.material_service import MaterialService
 from src.services.ai_service import AIService
 from src.auth import get_current_user
 
@@ -22,6 +24,7 @@ router = APIRouter(prefix="/test", tags=["tests"])
 test_service = TestService()
 student_service = StudentService()
 course_service = CourseService()
+material_service = MaterialService()
 ai_service = AIService()
 
 
@@ -78,6 +81,131 @@ def generate_test(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generating test: {str(e)}")
+
+
+@router.post("/generate-personalized")
+def generate_personalized_test(
+    payload: GeneratePersonalizedTestRequest,
+    user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Generate personalized test from uploaded course materials."""
+    if user.get("role") != "student":
+        raise HTTPException(status_code=403, detail="Only students can generate tests")
+    
+    # Verify enrollment
+    course_service.verify_student_enrollment(payload.course_id, user["username"])
+    
+    # Get course
+    course = course_service.get_course_by_id(payload.course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    # Check if course has materials
+    if not course.get("course_materials"):
+        raise HTTPException(
+            status_code=400,
+            detail="No course materials available. Professor needs to upload materials first."
+        )
+    
+    # Get student proficiency
+    proficiency = student_service.get_proficiency(user["username"], payload.course_id)
+    
+    # Get student's performance history for personalization
+    performance_history = test_service.get_student_proficiency_history(
+        user["username"],
+        payload.course_id
+    )
+    
+    try:
+        # Extract material content for the topic
+        if payload.topic:
+            material_content = material_service.get_material_content_for_topic(
+                payload.course_id,
+                course,
+                payload.topic
+            )
+            
+            if not material_content:
+                # Fallback to course plan if no materials mapped to this topic
+                if not course.get("course_plan"):
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"No materials found for topic '{payload.topic}'"
+                    )
+                
+                # Use course plan content as fallback
+                topic_content = test_service.extract_topic_content(
+                    course["course_plan"],
+                    payload.topic
+                )
+                
+                if not topic_content:
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Topic '{payload.topic}' not found"
+                    )
+                
+                # Generate test from course plan
+                test_data = ai_service.generate_test(
+                    topic=payload.topic,
+                    topic_content=topic_content,
+                    proficiency_level=proficiency,
+                    num_questions=payload.num_questions
+                )
+                test_data["based_on_materials"] = False
+                test_data["note"] = "Generated from course plan (no materials available for this topic)"
+            else:
+                # Generate personalized test from materials
+                test_data = ai_service.generate_personalized_test_from_materials(
+                    topic=payload.topic,
+                    material_content=material_content,
+                    proficiency_level=proficiency,
+                    weak_topics=performance_history.get("weak_topics", [])[:3],
+                    num_questions=payload.num_questions
+                )
+        else:
+            # No specific topic - use all materials
+            material_content = material_service.get_all_material_content(
+                payload.course_id,
+                course
+            )
+            
+            if not material_content:
+                raise HTTPException(
+                    status_code=400,
+                    detail="No course materials available"
+                )
+            
+            test_data = ai_service.generate_personalized_test_from_materials(
+                topic="General Course Content",
+                material_content=material_content,
+                proficiency_level=proficiency,
+                weak_topics=performance_history.get("weak_topics", [])[:3],
+                num_questions=payload.num_questions
+            )
+        
+        return {
+            "message": "Personalized test generated successfully",
+            "topic": payload.topic or "General Course Content",
+            "proficiency_level": proficiency,
+            "personalization": {
+                "based_on_history": performance_history.get("has_history", False),
+                "weak_topics_addressed": len(performance_history.get("weak_topics", [])[:3]),
+                "total_past_tests": performance_history.get("total_tests", 0)
+            },
+            "test": test_data
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error generating personalized test: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating personalized test: {str(e)}"
+        )
 
 
 @router.post("/submit")

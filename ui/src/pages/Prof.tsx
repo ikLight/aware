@@ -269,8 +269,8 @@ const Prof = () => {
         throw new Error(error.detail || 'Failed to upload course plan');
       }
 
-      toast({ title: "Success", description: "Course plan uploaded. Moving to next step..." });
-      setCurrentStep(4); // Skip step 3 (materials upload) - temporarily disabled
+      toast({ title: "Success", description: "Course plan uploaded. Moving to materials upload..." });
+      setCurrentStep(3);
     } catch (error) {
       toast({
         title: "Error",
@@ -398,6 +398,8 @@ const Prof = () => {
       // Reset the form
       setCourseName("");
       setDefaultProficiency("intermediate");
+      setMaterialsZipFile(null);
+      setMaterialsMapping(null);
       setCoursePlanFile(null);
       setMaterialsZipFile(null);
       setMaterialsMapping(null);
@@ -1052,8 +1054,71 @@ const Prof = () => {
                 </div>
               )}
 
-              {/* Step 3: Course Materials (ZIP) - TEMPORARILY DISABLED */}
-              {/* Materials upload feature disabled - will be re-enabled later */}
+              {/* Step 3: Course Materials (ZIP) */}
+              {currentStep === 3 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-foreground">Upload Course Materials (ZIP)</label>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Upload a ZIP file containing PDFs, PPTXs, or DOCX files. These materials will be used to generate personalized tests.
+                    </p>
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center bg-card/50">
+                      <input
+                        type="file"
+                        accept=".zip"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) {
+                            setMaterialsZipFile(e.target.files[0]);
+                          }
+                        }}
+                        style={{ display: 'none' }}
+                        id="materials-zip-file"
+                        disabled={isProcessingStep}
+                      />
+                      <label htmlFor="materials-zip-file" className="cursor-pointer">
+                        <UploadIcon className="mx-auto mb-2 w-8 h-8 text-primary" />
+                        {materialsZipFile ? (
+                          <span className="block font-medium text-foreground">{materialsZipFile.name}</span>
+                        ) : (
+                          <>
+                            <span className="block font-medium text-foreground">Click to upload materials ZIP</span>
+                            <span className="block text-sm text-muted-foreground">ZIP containing PDF, PPTX, or DOCX files</span>
+                          </>
+                        )}
+                      </label>
+                    </div>
+                    {materialsMapping && Object.keys(materialsMapping).length > 0 && (
+                      <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">Materials mapped to topics:</p>
+                        <ul className="text-xs text-green-700 dark:text-green-300 space-y-1">
+                          {Object.entries(materialsMapping).map(([topic, files]) => (
+                            <li key={topic}>
+                              <strong>{topic}:</strong> {(files as string[]).join(', ')}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline"
+                      className="flex-1" 
+                      onClick={() => setCurrentStep(2)}
+                      disabled={isProcessingStep}
+                    >
+                      Back
+                    </Button>
+                    <Button 
+                      className="flex-1" 
+                      onClick={handleStep3}
+                      disabled={isProcessingStep}
+                    >
+                      {isProcessingStep ? 'Uploading Materials...' : 'Next'}
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {/* Step 4: Course Objectives */}
               {currentStep === 4 && (
@@ -1073,7 +1138,7 @@ const Prof = () => {
                     <Button 
                       variant="outline"
                       className="flex-1" 
-                      onClick={() => setCurrentStep(2)}
+                      onClick={() => setCurrentStep(3)}
                       disabled={isProcessingStep}
                     >
                       Back

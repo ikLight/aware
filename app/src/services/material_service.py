@@ -18,7 +18,7 @@ class MaterialService:
     def __init__(self):
         self.ai_service = AIService()
     
-    def process_materials_upload(
+    async def process_materials_upload(
         self,
         course_id: str,
         course_plan: Dict[str, Any],
@@ -86,7 +86,7 @@ class MaterialService:
         
         # Find and process supported files
         materials = []
-        supported_extensions = ['.pdf', '.pptx', '.ppt']
+        supported_extensions = ['.pdf', '.pptx', '.ppt', '.docx']
         
         for file_path in extract_dir.rglob('*'):
             if file_path.is_file() and file_path.suffix.lower() in supported_extensions:
@@ -115,7 +115,12 @@ class MaterialService:
                 with open(file_path, 'rb') as f:
                     pdf_reader = PyPDF2.PdfReader(f)
                     for page in pdf_reader.pages:
-                        content += page.extract_text() + "\\n"
+                        content += page.extract_text() + "\n"
+            elif file_path.suffix.lower() == '.docx':
+                # Use python-docx extraction
+                import docx
+                doc = docx.Document(str(file_path))
+                content = "\n".join([paragraph.text for paragraph in doc.paragraphs])
         except Exception as e:
             print(f"Error extracting content from {file_path}: {e}")
             content = f"Content from {file_path.name}"
@@ -213,3 +218,94 @@ class MaterialService:
             "topic_mapping": topic_mapping,
             "filtered_topic": topic
         }
+    
+    def get_material_content_for_topic(
+        self,
+        course_id: str,
+        course: Dict[str, Any],
+        topic: str
+    ) -> str:
+        """
+        Extract and combine content from all materials related to a specific topic.
+        
+        Args:
+            course_id: Course identifier
+            course: Course document
+            topic: Topic to get materials for
+            
+        Returns:
+            Combined text content from all relevant materials
+        """
+        materials = course.get("course_materials", [])
+        topic_mapping = course.get("material_topic_mapping", {})
+        
+        # Get files mapped to this topic
+        topic_files = topic_mapping.get(topic, [])
+        
+        if not topic_files:
+            return ""
+        
+        # Extract content from each file
+        combined_content = []
+        course_materials_dir = settings.UPLOAD_DIR / f"course_{course_id}_materials"
+        
+        for material in materials:
+            if material['filename'] in topic_files:
+                file_path = Path(material.get('file_path', ''))
+                
+                # If file_path doesn't exist, try constructing it
+                if not file_path.exists():
+                    file_path = course_materials_dir / material['filename']
+                
+                if file_path.exists():
+                    try:
+                        content = self._extract_content(file_path)
+                        if content:
+                            combined_content.append(f"--- {material['filename']} ---\n{content}")
+                    except Exception as e:
+                        print(f"Error extracting content from {file_path}: {e}")
+                        continue
+        
+        return "\n\n".join(combined_content) if combined_content else ""
+    
+    def get_all_material_content(
+        self,
+        course_id: str,
+        course: Dict[str, Any]
+    ) -> str:
+        """
+        Extract and combine content from all course materials.
+        
+        Args:
+            course_id: Course identifier
+            course: Course document
+            
+        Returns:
+            Combined text content from all materials
+        """
+        materials = course.get("course_materials", [])
+        
+        if not materials:
+            return ""
+        
+        # Extract content from each file
+        combined_content = []
+        course_materials_dir = settings.UPLOAD_DIR / f"course_{course_id}_materials"
+        
+        for material in materials:
+            file_path = Path(material.get('file_path', ''))
+            
+            # If file_path doesn't exist, try constructing it
+            if not file_path.exists():
+                file_path = course_materials_dir / material['filename']
+            
+            if file_path.exists():
+                try:
+                    content = self._extract_content(file_path)
+                    if content:
+                        combined_content.append(f"--- {material['filename']} ---\n{content}")
+                except Exception as e:
+                    print(f"Error extracting content from {file_path}: {e}")
+                    continue
+        
+        return "\n\n".join(combined_content) if combined_content else ""
