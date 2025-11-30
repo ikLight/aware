@@ -124,8 +124,17 @@ const Prof = () => {
   
   // Course Report state
   const [courseReport, setCourseReport] = useState<string | null>(null);
+  const [reportMeta, setReportMeta] = useState<{
+    generated_at: string;
+    course_name: string;
+    statistics: any;
+  } | null>(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  
+  // Enrolled students state
+  const [enrolledStudents, setEnrolledStudents] = useState<any[]>([]);
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   
   // Proficiency management state
   const [settingProficiency, setSettingProficiency] = useState<string | null>(null);
@@ -261,7 +270,7 @@ const Prof = () => {
       }
 
       toast({ title: "Success", description: "Course plan uploaded. Moving to next step..." });
-      setCurrentStep(3);
+      setCurrentStep(4); // Skip step 3 (materials upload) - temporarily disabled
     } catch (error) {
       toast({
         title: "Error",
@@ -447,16 +456,28 @@ const Prof = () => {
     try {
       setIsLoadingAnalytics(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8000/course/${courseId}/analytics`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      
+      // Fetch analytics and enrolled students in parallel
+      const [analyticsRes, studentsRes] = await Promise.all([
+        fetch(`http://localhost:8000/course/${courseId}/analytics`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        fetch(`http://localhost:8000/course/${courseId}/enrolled-students`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        })
+      ]);
 
-      if (!response.ok) {
+      if (!analyticsRes.ok) {
         throw new Error('Failed to fetch analytics');
       }
 
-      const data = await response.json();
+      const data = await analyticsRes.json();
       setAnalyticsData(data);
+      
+      if (studentsRes.ok) {
+        const studentsData = await studentsRes.json();
+        setEnrolledStudents(studentsData.students || []);
+      }
     } catch (error) {
       toast({ 
         title: "Error", 
@@ -497,6 +518,11 @@ const Prof = () => {
       }
       
       setCourseReport(data.report);
+      setReportMeta({
+        generated_at: data.generated_at,
+        course_name: data.course_name,
+        statistics: data.statistics
+      });
       setShowReport(true);
       toast({
         title: "Report Generated!",
@@ -1026,68 +1052,8 @@ const Prof = () => {
                 </div>
               )}
 
-              {/* Step 3: Course Materials (ZIP) */}
-              {currentStep === 3 && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-foreground">
-                      Upload Course Materials (ZIP)
-                    </label>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Upload a ZIP file containing PDF or PowerPoint files. AI will automatically map them to course topics.
-                    </p>
-                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center bg-card/50">
-                      <input
-                        type="file"
-                        accept=".zip"
-                        onChange={(e) => {
-                          if (e.target.files?.[0]) {
-                            setMaterialsZipFile(e.target.files[0]);
-                          }
-                        }}
-                        style={{ display: 'none' }}
-                        id="materials-zip-file"
-                        disabled={isProcessingStep}
-                      />
-                      <label htmlFor="materials-zip-file" className="cursor-pointer">
-                        <UploadIcon className="mx-auto mb-2 w-8 h-8 text-primary" />
-                        {materialsZipFile ? (
-                          <span className="block font-medium text-foreground">{materialsZipFile.name}</span>
-                        ) : (
-                          <>
-                            <span className="block font-medium text-foreground">Click to upload materials ZIP</span>
-                            <span className="block text-sm text-muted-foreground">Supported: PDF, PPTX files</span>
-                          </>
-                        )}
-                      </label>
-                    </div>
-                    {materialsMapping && Object.keys(materialsMapping).length > 0 && (
-                      <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                        <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-                          ✓ {Object.keys(materialsMapping).length} topics mapped with materials
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline"
-                      className="flex-1" 
-                      onClick={() => setCurrentStep(2)}
-                      disabled={isProcessingStep}
-                    >
-                      Back
-                    </Button>
-                    <Button 
-                      className="flex-1" 
-                      onClick={handleStep3}
-                      disabled={isProcessingStep}
-                    >
-                      {isProcessingStep ? 'Processing...' : 'Next'}
-                    </Button>
-                  </div>
-                </div>
-              )}
+              {/* Step 3: Course Materials (ZIP) - TEMPORARILY DISABLED */}
+              {/* Materials upload feature disabled - will be re-enabled later */}
 
               {/* Step 4: Course Objectives */}
               {currentStep === 4 && (
@@ -1107,7 +1073,7 @@ const Prof = () => {
                     <Button 
                       variant="outline"
                       className="flex-1" 
-                      onClick={() => setCurrentStep(3)}
+                      onClick={() => setCurrentStep(2)}
                       disabled={isProcessingStep}
                     >
                       Back
@@ -1304,6 +1270,78 @@ const Prof = () => {
                     </motion.div>
                   </div>
 
+                  {/* Enrolled Students Section */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.45 }}
+                    className="bg-card/80 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-border"
+                  >
+                    <div className="flex items-center gap-3 mb-6">
+                      <Users className="w-8 h-8 text-primary" />
+                      <div>
+                        <h2 className="text-2xl font-bold text-foreground">Enrolled Students</h2>
+                        <p className="text-sm text-muted-foreground">
+                          {enrolledStudents.length} student{enrolledStudents.length !== 1 ? 's' : ''} enrolled in this course
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {enrolledStudents.length > 0 ? (
+                      <div className="border border-border rounded-xl overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-muted/50 border-b border-border">
+                              <TableHead className="font-bold text-foreground">Username</TableHead>
+                              <TableHead className="font-bold text-foreground">Email</TableHead>
+                              <TableHead className="font-bold text-foreground">Proficiency Level</TableHead>
+                              <TableHead className="font-bold text-foreground">Enrolled Date</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {enrolledStudents.map((student, idx) => (
+                              <motion.tr
+                                key={student.username}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className="hover:bg-muted/30 transition-colors border-b border-border/50"
+                              >
+                                <TableCell className="font-semibold text-foreground">
+                                  {student.username}
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">
+                                  {student.email || 'N/A'}
+                                </TableCell>
+                                <TableCell>
+                                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                    student.proficiency_level === 'advanced' 
+                                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                      : student.proficiency_level === 'intermediate'
+                                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                  }`}>
+                                    {student.proficiency_level}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">
+                                  {student.enrolled_at 
+                                    ? new Date(student.enrolled_at).toLocaleDateString()
+                                    : 'N/A'}
+                                </TableCell>
+                              </motion.tr>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p>No students enrolled yet</p>
+                      </div>
+                    )}
+                  </motion.div>
+
                   {/* AI Course Report Section */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -1358,25 +1396,92 @@ const Prof = () => {
                           transition={{ duration: 0.4 }}
                           className="mt-6"
                         >
-                          <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-inner border border-indigo-100 dark:border-indigo-900">
-                            <div className="flex items-center justify-between mb-4">
-                              <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                                <BarChart3 className="w-5 h-5 text-indigo-600" />
-                                Analysis Report
-                              </h3>
+                          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-indigo-100 dark:border-indigo-900 overflow-hidden">
+                            {/* Report Header */}
+                            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 text-white">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h3 className="text-xl font-bold flex items-center gap-2">
+                                    <BarChart3 className="w-5 h-5" />
+                                    Course Performance Report
+                                  </h3>
+                                  <p className="text-indigo-100 text-sm mt-1">
+                                    {reportMeta?.course_name}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-indigo-200">Generated on</p>
+                                  <p className="text-sm font-medium">
+                                    {reportMeta?.generated_at 
+                                      ? new Date(reportMeta.generated_at).toLocaleDateString('en-US', {
+                                          weekday: 'long',
+                                          year: 'numeric',
+                                          month: 'long',
+                                          day: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        })
+                                      : 'N/A'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Report Content */}
+                            <div className="p-6">
+                              <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-indigo-700 dark:prose-headings:text-indigo-400 prose-h2:text-lg prose-h2:font-bold prose-h2:border-b prose-h2:border-indigo-200 dark:prose-h2:border-indigo-800 prose-h2:pb-2 prose-h2:mb-3 prose-ul:my-2 prose-li:my-0.5">
+                                {courseReport.split('\n').map((line, idx) => {
+                                  // Handle headers
+                                  if (line.startsWith('## ')) {
+                                    return (
+                                      <h2 key={idx} className="text-lg font-bold text-indigo-700 dark:text-indigo-400 border-b border-indigo-200 dark:border-indigo-800 pb-2 mb-3 mt-6 first:mt-0">
+                                        {line.replace('## ', '')}
+                                      </h2>
+                                    );
+                                  }
+                                  // Handle bullet points
+                                  if (line.startsWith('- ')) {
+                                    return (
+                                      <div key={idx} className="flex items-start gap-2 my-1 text-foreground">
+                                        <span className="text-indigo-500 mt-1">•</span>
+                                        <span>{line.replace('- ', '')}</span>
+                                      </div>
+                                    );
+                                  }
+                                  // Handle bold text
+                                  if (line.startsWith('**') && line.endsWith('**')) {
+                                    return (
+                                      <p key={idx} className="font-semibold text-foreground my-2">
+                                        {line.replace(/\*\*/g, '')}
+                                      </p>
+                                    );
+                                  }
+                                  // Regular text
+                                  if (line.trim()) {
+                                    return (
+                                      <p key={idx} className="text-foreground my-2 leading-relaxed">
+                                        {line}
+                                      </p>
+                                    );
+                                  }
+                                  return null;
+                                })}
+                              </div>
+                            </div>
+                            
+                            {/* Report Footer */}
+                            <div className="bg-gray-50 dark:bg-gray-800 px-6 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                              <p className="text-xs text-muted-foreground">
+                                AI-generated report based on student test performance data
+                              </p>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setShowReport(false)}
                                 className="text-muted-foreground hover:text-foreground"
                               >
-                                Close
+                                Close Report
                               </Button>
-                            </div>
-                            <div className="prose prose-sm max-w-none dark:prose-invert">
-                              <div className="whitespace-pre-wrap text-foreground leading-relaxed">
-                                {courseReport}
-                              </div>
                             </div>
                           </div>
                         </motion.div>

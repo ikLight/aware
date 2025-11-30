@@ -45,7 +45,8 @@ import {
   Trophy,
   Sparkles,
   Brain,
-  Rocket
+  Rocket,
+  User
 } from "lucide-react";
 
 interface Course {
@@ -92,7 +93,7 @@ interface TestResult {
 
 const Student = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, username } = useAuth();
   const { toast } = useToast();
 
   // Main view state
@@ -511,7 +512,14 @@ const Student = () => {
                 <p className="text-sm text-muted-foreground">Your personalized learning journey</p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
+              {/* User Profile */}
+              <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                  <User className="w-4 h-4 text-primary" />
+                </div>
+                <span className="text-sm font-medium text-foreground">{username || 'Student'}</span>
+              </div>
               <Button 
                 variant="outline"
                 onClick={() => {

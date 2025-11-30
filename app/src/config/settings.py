@@ -19,6 +19,9 @@ class Settings:
     GEMINI_MODEL: str = "gemini-2.0-flash-exp"
     GEMINI_MODEL_TEST: str = "models/gemini-2.5-flash"
     
+    # OpenAI Configuration
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    
     # Database Configuration
     MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb://localhost:27017/")
     DATABASE_NAME: str = os.getenv("DATABASE_NAME", "course_db")

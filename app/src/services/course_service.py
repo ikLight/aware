@@ -210,6 +210,32 @@ class CourseService:
         
         return course
     
+    def get_enrolled_students(self, course_id: str) -> List[Dict[str, Any]]:
+        """
+        Get all students enrolled in a course with their info.
+        
+        Args:
+            course_id: Course identifier
+            
+        Returns:
+            List of enrolled students with their details
+        """
+        enrollments = self.query_db.find_enrollments_by_course(course_id)
+        
+        students = []
+        for enrollment in enrollments:
+            # Get user info
+            user = self.query_db.find_user(enrollment.get("student_username"))
+            
+            students.append({
+                "username": enrollment.get("student_username"),
+                "email": user.get("email") if user else None,
+                "proficiency_level": enrollment.get("proficiency_level", "intermediate"),
+                "enrolled_at": enrollment.get("enrolled_at").isoformat() if enrollment.get("enrolled_at") else None
+            })
+        
+        return students
+    
     def verify_student_enrollment(
         self,
         course_id: str,

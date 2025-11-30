@@ -1,6 +1,7 @@
 """Test and assessment service layer."""
 
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
+from bson import ObjectId
 from src.database.operations import AtomicDB, QueryDB
 
 
@@ -192,19 +193,19 @@ class TestService:
             course_id: Course identifier
             
         Returns:
-            List of test results
+            List of test results with summary information
         """
         test_results = self.query_db.find_test_results_by_student(
             student_username,
             course_id
         )
         
-        # Format results
+        # Format results for summary view
         formatted_results = []
         for result in test_results:
             formatted_results.append({
                 "_id": str(result["_id"]),
-                "date": result.get("created_at"),
+                "submitted_at": result.get("submitted_at"),
                 "topic": result.get("topic"),
                 "score": result.get("score"),
                 "total_questions": result.get("total_questions"),
@@ -214,3 +215,60 @@ class TestService:
             })
         
         return formatted_results
+    
+    def get_test_result_details(
+        self,
+        test_id: str,
+        student_username: str
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get detailed test result including questions and answers for review.
+        
+        Args:
+            test_id: Test result identifier
+            student_username: Student's username (for verification)
+            
+        Returns:
+            Detailed test result or None if not found
+        """
+        try:
+            result = self.query_db.db.test_results.find_one({
+                "_id": ObjectId(test_id),
+                "student_username": student_username
+            })
+            
+            if not result:
+                return None
+            
+            # Build detailed review with question-by-question analysis
+            questions_review = []
+            for question in result.get("questions", []):
+                q_num = str(question.get("question_number"))
+                student_answer = result.get("student_answers", {}).get(q_num)
+                correct_answer = result.get("correct_answers", {}).get(q_num)
+                
+                questions_review.append({
+                    "question_number": question.get("question_number"),
+                    "question": question.get("question"),
+                    "options": question.get("options", {}),
+                    "student_answer": student_answer,
+                    "correct_answer": correct_answer,
+                    "is_correct": student_answer == correct_answer,
+                    "explanation": question.get("explanation", "")
+                })
+            
+            return {
+                "_id": str(result["_id"]),
+                "course_name": result.get("course_name"),
+                "topic": result.get("topic"),
+                "submitted_at": result.get("submitted_at"),
+                "proficiency_level": result.get("proficiency_level"),
+                "score": result.get("score"),
+                "total_questions": result.get("total_questions"),
+                "percentage": result.get("percentage"),
+                "questions_review": questions_review
+            }
+            
+        except Exception as e:
+            print(f"Error fetching test details: {e}")
+            return None

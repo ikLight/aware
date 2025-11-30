@@ -2,6 +2,7 @@
 
 import json
 import google.generativeai as genai
+from openai import OpenAI
 from typing import Dict, List, Any
 
 from src.config.settings import settings
@@ -12,11 +13,17 @@ class AIService:
     """Business logic for AI/LLM operations."""
     
     def __init__(self):
-        """Initialize Gemini API."""
+        """Initialize Gemini and OpenAI APIs."""
         if not settings.GEMINI_API_KEY:
             raise RuntimeError("GEMINI_API_KEY not configured")
         
         genai.configure(api_key=settings.GEMINI_API_KEY)
+        
+        # Initialize OpenAI client for course reports
+        if settings.OPENAI_API_KEY:
+            self.openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        else:
+            self.openai_client = None
     
     def generate_test(
         self,
@@ -84,7 +91,7 @@ class AIService:
         analytics_data: Dict[str, Any]
     ) -> str:
         """
-        Generate AI-powered course report.
+        Generate AI-powered course report using OpenAI.
         
         Args:
             course_name: Name of the course
@@ -93,23 +100,8 @@ class AIService:
         Returns:
             Generated report text
         """
-        # Configure model with structured JSON response
-        model = genai.GenerativeModel(
-            settings.GEMINI_MODEL,
-            generation_config={
-                "response_mime_type": "application/json",
-                "response_schema": {
-                    "type": "object",
-                    "properties": {
-                        "report": {
-                            "type": "string",
-                            "description": "Comprehensive course performance report"
-                        }
-                    },
-                    "required": ["report"]
-                }
-            }
-        )
+        if not self.openai_client:
+            raise RuntimeError("OPENAI_API_KEY not configured")
         
         # Build prompt
         prompt = PromptTemplates.course_report(
@@ -122,17 +114,24 @@ class AIService:
             topic_summary=analytics_data["topic_summary"]
         )
         
-        # Generate content
-        response = model.generate_content(prompt)
-        try:
-            response_data = json.loads(response.text)
-        except json.JSONDecodeError:
-            # Fallback: access structured response directly
-            response_data = response.candidates[0].content.parts[0].text
-            if isinstance(response_data, str):
-                response_data = json.loads(response_data)
+        # Generate content using OpenAI
+        response = self.openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an educational analytics expert. Generate comprehensive, insightful course performance reports."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.7,
+            max_tokens=2000
+        )
         
-        return response_data.get('report', response.text)
+        return response.choices[0].message.content
     
     def map_materials_to_topics(
         self,
@@ -158,27 +157,20 @@ class AIService:
             for mat in materials
         ]
         
-        # Configure model
+        # Configure model without structured schema (causing issues)
         model = genai.GenerativeModel(
             settings.GEMINI_MODEL,
             generation_config={
-                "response_mime_type": "application/json",
-                "response_schema": {
-                    "type": "object",
-                    "description": "Mapping of course topics to material filenames",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {"type": "string"}
-                    }
-                }
+                "response_mime_type": "application/json"
             }
         )
         
-        # Build prompt
+        # Build prompt with clear JSON format instructions
         prompt = PromptTemplates.material_mapping(
             topic_paths=topic_paths,
             material_summaries=material_summaries
         )
+        prompt += "\n\nReturn your response as a JSON object where keys are topic names and values are arrays of relevant filenames."
         
         # Generate content
         response = model.generate_content(prompt)

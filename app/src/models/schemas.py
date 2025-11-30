@@ -14,6 +14,7 @@ class UserCreate(BaseModel):
     username: str
     password: str
     role: str = "student"
+    email: Optional[str] = None
 
 
 class LoginRequest(BaseModel):

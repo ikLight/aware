@@ -8,8 +8,10 @@ from .base import BaseDB
 class AtomicDB(BaseDB):
     """Atomic operations that modify the database."""
 
-    def insert_user(self, user_doc: dict) -> None:
-        self.db.users.insert_one(user_doc)
+    def insert_user(self, user_doc: dict) -> str:
+        """Insert a user document and return the inserted ID."""
+        result = self.db.users.insert_one(user_doc)
+        return str(result.inserted_id)
 
     def insert_token(self, token_doc: dict) -> None:
         """Insert a token document into the tokens collection."""
@@ -53,17 +55,22 @@ class AtomicDB(BaseDB):
         {
             "student_username": str,
             "course_id": str,
+            "course_name": str,
             "topic": str,
-            "questions": list,  # The actual questions asked
+            "proficiency_level": str,
+            "questions": list,  # Full question objects with all options
             "student_answers": dict,  # {question_number: selected_answer}
             "correct_answers": dict,  # {question_number: correct_answer}
             "score": int,  # Number of correct answers
             "total_questions": int,
             "percentage": float,
-            "created_at": datetime
+            "created_at": datetime,
+            "submitted_at": datetime
         }
         """
-        test_result_doc["created_at"] = datetime.utcnow()
+        now = datetime.utcnow()
+        test_result_doc["created_at"] = now
+        test_result_doc["submitted_at"] = now
         result = self.db.test_results.insert_one(test_result_doc)
         return str(result.inserted_id)
 
@@ -279,6 +286,13 @@ class QueryDB(BaseDB):
             "course_id": course_id
         })
         return enrollment.get("proficiency_level") if enrollment else None
+    
+    def find_enrollments_by_course(self, course_id: str) -> list[dict]:
+        """
+        Find all students enrolled in a specific course.
+        Returns list of enrollment records with student info.
+        """
+        return list(self.db.student_enrollments.find({"course_id": course_id}))
     
     def find_enrollment(self, student_username: str, course_id: str) -> Optional[dict]:
         """

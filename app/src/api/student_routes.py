@@ -219,10 +219,32 @@ def get_test_history(
     for test_record in history:
         if "_id" in test_record:
             test_record["_id"] = str(test_record["_id"])
-        if "submitted_at" in test_record:
+        if "submitted_at" in test_record and test_record["submitted_at"]:
             test_record["submitted_at"] = test_record["submitted_at"].isoformat()
     
     return {"test_history": history}
+
+
+@router.get("/test-result/{test_id}")
+def get_test_result_details(
+    test_id: str,
+    user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get detailed test result for review."""
+    if user.get("role") != "student":
+        raise HTTPException(status_code=403, detail="Only students can view test results")
+    
+    # Get detailed test result
+    result = test_service.get_test_result_details(test_id, user["username"])
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="Test result not found")
+    
+    # Serialize datetime
+    if "submitted_at" in result and result["submitted_at"]:
+        result["submitted_at"] = result["submitted_at"].isoformat()
+    
+    return result
 
 
 @router.post("/course/{course_id}/generate-flashcards")
@@ -358,6 +380,9 @@ def submit_test(
             questions=payload.questions,
             student_answers=payload.answers
         )
+        
+        # Add message for frontend
+        result["message"] = f"Test submitted! Score: {result['score']}/{result['total_questions']}"
         
         return result
         

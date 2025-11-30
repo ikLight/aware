@@ -77,7 +77,7 @@ Generate the test now."""
         topic_summary: list
     ) -> str:
         """Generate prompt for AI course report."""
-        prompt = f"""You are an expert educational analyst. Generate a comprehensive course performance report based on the following data:
+        prompt = f"""You are an expert educational analyst. Generate a concise course performance overview based on the following data:
 
 COURSE: {course_name}
 TOTAL ENROLLED STUDENTS: {total_enrolled}
@@ -89,7 +89,7 @@ PROFICIENCY DISTRIBUTION:
 - Intermediate: {proficiency_distribution['intermediate']} students
 - Advanced: {proficiency_distribution['advanced']} students
 
-TOPIC PERFORMANCE (sorted by difficulty):
+TOPIC PERFORMANCE:
 """
         
         for topic in topic_summary:
@@ -101,34 +101,23 @@ TOPIC PERFORMANCE (sorted by difficulty):
         
         prompt += """
 
-Please provide a detailed report that includes:
+Generate a CONCISE report with EXACTLY these three sections. Keep it brief - this is an overview only. The professor can dive deeper into individual student performance separately.
 
-1. OVERALL CLASS PERFORMANCE SUMMARY
-   - General assessment of how the class is performing
-   - Participation and engagement levels
-   - Overall trends in student performance
+## Overall Class Performance
+- Brief summary of class participation and engagement
+- Class average score and what it indicates
+- Proficiency level distribution overview (are students progressing?)
 
-2. TOPIC-SPECIFIC ANALYSIS
-   - Identify topics where students are excelling
-   - Identify topics where students are struggling
-   - Provide insights into why certain topics might be challenging
+## Topic-wise Analysis
+- Topics where students are excelling (highest scores)
+- Topics where students are struggling (lowest scores)
+- One or two key insights about topic performance patterns
 
-3. PROFICIENCY INSIGHTS
-   - Analysis of the proficiency distribution
-   - Whether students are progressing appropriately
-   - Recommendations for proficiency-based interventions
+## Conclusion
+- 2-3 key takeaways for the professor
+- Brief actionable next steps
 
-4. ACTIONABLE RECOMMENDATIONS
-   - Specific teaching strategies to address struggling topics
-   - Suggestions for additional resources or review sessions
-   - Ideas for differentiated instruction based on proficiency levels
-   - Recommendations for students who haven't participated yet
-
-5. STRENGTHS AND OPPORTUNITIES
-   - Highlight what's working well in the course
-   - Identify opportunities for improvement
-
-Format the report in a professional, clear manner with proper sections and bullet points. Be specific and data-driven in your analysis. The report should be comprehensive but concise (aim for 500-800 words).
+Keep the entire report under 300 words. Be data-driven but concise. Use bullet points for clarity.
 """
         return prompt
     

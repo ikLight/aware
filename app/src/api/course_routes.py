@@ -323,6 +323,28 @@ def get_knowledge_graph(
     }
 
 
+@router.get("/{course_id}/enrolled-students")
+def get_enrolled_students(
+    course_id: str,
+    user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get all students enrolled in a course."""
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can view enrolled students")
+    
+    # Verify ownership
+    course_service.verify_course_ownership(course_id, user["username"])
+    
+    # Get enrolled students
+    students = course_service.get_enrolled_students(course_id)
+    
+    return {
+        "course_id": course_id,
+        "students": students,
+        "total_count": len(students)
+    }
+
+
 @router.get("/{course_id}/analytics")
 def get_course_analytics(
     course_id: str,
@@ -351,6 +373,8 @@ def generate_course_report(
     user: dict = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Generate AI-powered course report."""
+    from datetime import datetime
+    
     if user.get("role") != "professor":
         raise HTTPException(status_code=403, detail="Only professors can generate reports")
     
@@ -376,6 +400,8 @@ def generate_course_report(
         return {
             "report": report_text,
             "has_data": True,
+            "generated_at": datetime.utcnow().isoformat(),
+            "course_name": course.get("course_name"),
             "statistics": {
                 "total_enrolled": report_data["total_enrolled"],
                 "students_with_tests": report_data["students_with_tests"],
