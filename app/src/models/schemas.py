@@ -84,6 +84,14 @@ class GenerateTestRequest(BaseModel):
     num_questions: int = 10
 
 
+class GeneratePersonalizedTestRequest(BaseModel):
+    """Personalized test generation request model from materials."""
+    course_id: str
+    topic: str
+    num_questions: int = 10
+    use_materials: bool = True  # Generate from uploaded materials
+
+
 class SubmitTestRequest(BaseModel):
     """Test submission model."""
     course_id: str

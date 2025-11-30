@@ -272,3 +272,75 @@ class TestService:
         except Exception as e:
             print(f"Error fetching test details: {e}")
             return None
+    
+    def get_student_proficiency_history(
+        self,
+        student_username: str,
+        course_id: str
+    ) -> Dict[str, Any]:
+        """
+        Get student's performance history to help personalize tests.
+        
+        Args:
+            student_username: Student's username
+            course_id: Course identifier
+            
+        Returns:
+            Performance metrics including weak topics
+        """
+        test_results = self.query_db.find_test_results_by_student(
+            student_username,
+            course_id
+        )
+        
+        if not test_results:
+            return {
+                "has_history": False,
+                "weak_topics": [],
+                "strong_topics": [],
+                "overall_performance": "intermediate"
+            }
+        
+        # Analyze performance by topic
+        topic_performance = {}
+        for result in test_results:
+            topic = result.get("topic")
+            percentage = result.get("percentage", 0)
+            
+            if topic not in topic_performance:
+                topic_performance[topic] = []
+            topic_performance[topic].append(percentage)
+        
+        # Calculate averages
+        weak_topics = []
+        strong_topics = []
+        
+        for topic, scores in topic_performance.items():
+            avg_score = sum(scores) / len(scores)
+            if avg_score < 60:
+                weak_topics.append({"topic": topic, "avg_score": round(avg_score, 2)})
+            elif avg_score >= 80:
+                strong_topics.append({"topic": topic, "avg_score": round(avg_score, 2)})
+        
+        # Sort by score
+        weak_topics.sort(key=lambda x: x["avg_score"])
+        strong_topics.sort(key=lambda x: x["avg_score"], reverse=True)
+        
+        # Overall performance
+        all_scores = [r.get("percentage", 0) for r in test_results]
+        overall_avg = sum(all_scores) / len(all_scores) if all_scores else 50
+        
+        if overall_avg < 60:
+            overall = "beginner"
+        elif overall_avg >= 80:
+            overall = "advanced"
+        else:
+            overall = "intermediate"
+        
+        return {
+            "has_history": True,
+            "weak_topics": weak_topics,
+            "strong_topics": strong_topics,
+            "overall_performance": overall,
+            "total_tests": len(test_results)
+        }

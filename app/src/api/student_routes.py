@@ -14,6 +14,7 @@ from src.models.schemas import (
 from src.services.student_service import StudentService
 from src.services.course_service import CourseService
 from src.services.test_service import TestService
+from src.services.material_service import MaterialService
 from src.services.ai_service import AIService
 from src.auth import get_current_user
 
@@ -24,6 +25,7 @@ router = APIRouter(prefix="/student", tags=["students"])
 student_service = StudentService()
 course_service = CourseService()
 test_service = TestService()
+material_service = MaterialService()
 ai_service = AIService()
 
 
@@ -303,7 +305,7 @@ def generate_test(
     payload: GenerateTestRequest,
     user: dict = Depends(get_current_user)
 ) -> Dict[str, Any]:
-    """Generate adaptive test for student."""
+    """Generate personalized test from uploaded course materials."""
     if user.get("role") != "student":
         raise HTTPException(status_code=403, detail="Only students can generate tests")
     
@@ -315,33 +317,50 @@ def generate_test(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     
-    if not course.get("course_plan"):
-        raise HTTPException(status_code=400, detail="Course plan not available")
-    
     # Get student proficiency
     proficiency = student_service.get_proficiency(user["username"], payload.course_id)
     
-    # Extract topic content
-    topic_content = test_service.extract_topic_content(
-        course["course_plan"],
-        payload.topic
+    # Get student's performance history for personalization
+    performance_history = test_service.get_student_proficiency_history(
+        user["username"],
+        payload.course_id
     )
     
-    if not topic_content:
-        raise HTTPException(status_code=404, detail=f"Topic '{payload.topic}' not found in course")
-    
     try:
-        # Generate test using AI service
-        test_data = ai_service.generate_test(
+        # Check if course has materials uploaded
+        if not course.get("course_materials"):
+            raise HTTPException(
+                status_code=400,
+                detail="No course materials available. Professor must upload course materials (PDF/PPTX files) before tests can be generated."
+            )
+        
+        # Get material content for the topic
+        material_content = material_service.get_material_content_for_topic(
+            payload.course_id,
+            course,
+            payload.topic
+        )
+        
+        # If no materials found for this specific topic, give clear error
+        if not material_content:
+            raise HTTPException(
+                status_code=400,
+                detail=f"No course materials found for topic '{payload.topic}'. Professor needs to upload materials for this topic or map existing materials to it."
+            )
+        
+        # Generate test from materials only
+        test_data = ai_service.generate_personalized_test_from_materials(
             topic=payload.topic,
-            topic_content=topic_content,
+            material_content=material_content,
             proficiency_level=proficiency,
+            weak_topics=performance_history.get("weak_topics", [])[:3],
             num_questions=payload.num_questions
         )
         
-        # Return test data directly (already contains topic, proficiency_level, num_questions, questions)
         return test_data
         
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error generating test: {e}")
         import traceback

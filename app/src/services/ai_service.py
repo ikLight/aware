@@ -85,6 +85,71 @@ class AIService:
             "questions": test_data["questions"]
         }
     
+    def generate_personalized_test_from_materials(
+        self,
+        topic: str,
+        material_content: str,
+        proficiency_level: str,
+        weak_topics: List[Dict[str, Any]] = None,
+        num_questions: int = 10
+    ) -> Dict[str, Any]:
+        """
+        Generate personalized MCQ test from course materials using Gemini AI.
+        Takes into account student's weak areas and performance history.
+        
+        Args:
+            topic: Topic name
+            material_content: Text content extracted from course materials
+            proficiency_level: Student proficiency level
+            weak_topics: List of topics student struggles with
+            num_questions: Number of questions to generate
+            
+        Returns:
+            Generated test with questions
+        """
+        # Configure model with structured JSON response
+        model = genai.GenerativeModel(
+            settings.GEMINI_MODEL_TEST,
+            generation_config={
+                "response_mime_type": "application/json",
+                "response_schema": self._get_test_schema()
+            }
+        )
+        
+        # Build personalized prompt
+        prompt = PromptTemplates.personalized_test_generation(
+            topic=topic,
+            material_content=material_content,
+            proficiency_level=proficiency_level,
+            weak_topics=weak_topics,
+            num_questions=num_questions
+        )
+        
+        # Generate content
+        response = model.generate_content(prompt)
+        
+        # Parse structured response
+        try:
+            test_data = json.loads(response.text)
+        except json.JSONDecodeError:
+            # Fallback: try to extract from response parts
+            test_data = response.candidates[0].content.parts[0].text
+            if isinstance(test_data, str):
+                test_data = json.loads(test_data)
+        
+        # Validate and return
+        if "questions" not in test_data:
+            raise ValueError("Invalid test format: missing 'questions' key")
+        
+        return {
+            "topic": topic,
+            "proficiency_level": proficiency_level,
+            "num_questions": len(test_data["questions"]),
+            "questions": test_data["questions"],
+            "personalized": True,
+            "based_on_materials": True
+        }
+    
     def generate_course_report(
         self,
         course_name: str,
