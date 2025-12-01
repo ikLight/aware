@@ -4,7 +4,7 @@ import { login as apiLogin, logout as apiLogout } from '@/services/api';
 interface AuthContextType {
   isAuthenticated: boolean;
   username: string | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<{ access_token: string; role?: string }>;
   logout: () => Promise<void>;
 }
 

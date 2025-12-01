@@ -82,7 +82,7 @@ interface Question {
 
 interface TestResult {
   _id: string;
-  date: string;
+  submitted_at: string;
   topic: string;
   score: number;
   total_questions: number;
@@ -724,13 +724,13 @@ const Student = () => {
                           <div className="flex items-center gap-3 mb-2">
                             <Clock className="w-5 h-5 text-gray-500" />
                             <span className="text-sm font-medium text-gray-600">
-                              {new Date(result.date).toLocaleDateString('en-US', {
+                              {result.submitted_at ? new Date(result.submitted_at).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit'
-                              })}
+                              }) : 'Date not available'}
                             </span>
                           </div>
                           <div className="flex items-center gap-3">

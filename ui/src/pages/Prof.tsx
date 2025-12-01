@@ -1856,7 +1856,7 @@ const Prof = () => {
                                                   {student.recent_tests.map((test: any, testIdx: number) => (
                                                     <TableRow key={testIdx} className="hover:bg-muted/30 border-b border-border/50">
                                                       <TableCell className="font-medium text-foreground">
-                                                        {new Date(test.date).toLocaleDateString()}
+                                                        {test.submitted_at ? new Date(test.submitted_at).toLocaleDateString() : (test.date ? new Date(test.date).toLocaleDateString() : 'N/A')}
                                                       </TableCell>
                                                       <TableCell className="text-foreground">{test.topic}</TableCell>
                                                       <TableCell>

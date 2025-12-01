@@ -129,7 +129,9 @@ class CourseService:
         self,
         course_id: str,
         materials: List[Dict[str, str]],
-        topic_mapping: Dict[str, List[str]]
+        topic_mapping: Dict[str, List[str]],
+        parsed_materials: Dict[str, str] = None,
+        topic_content_mapping: Dict[str, str] = None
     ) -> bool:
         """
         Save course materials and topic mapping.
@@ -138,17 +140,24 @@ class CourseService:
             course_id: Course identifier
             materials: List of material metadata
             topic_mapping: Mapping of topics to materials
+            parsed_materials: Mapping of filenames to extracted content
+            topic_content_mapping: Mapping of topics to their relevant content
             
         Returns:
             Success status
         """
-        return self.atomic_db.update_course(
-            course_id,
-            {
-                "course_materials": materials,
-                "material_topic_mapping": topic_mapping
-            }
-        )
+        update_data = {
+            "course_materials": materials,
+            "material_topic_mapping": topic_mapping
+        }
+        
+        if parsed_materials is not None:
+            update_data["parsed_materials"] = parsed_materials
+        
+        if topic_content_mapping is not None:
+            update_data["topic_content_mapping"] = topic_content_mapping
+        
+        return self.atomic_db.update_course(course_id, update_data)
     
     def get_course_by_id(self, course_id: str) -> Optional[Dict[str, Any]]:
         """Get course by ID."""

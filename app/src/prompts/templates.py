@@ -89,26 +89,27 @@ The student has shown difficulty with the following topics: {weak_list}
 Include 2-3 questions that reinforce foundational concepts related to these weak areas, helping the student build confidence and understanding.
 """
         
-        return f"""You are an expert educational assessment creator. Generate a personalized multiple-choice test based on the uploaded course materials.
+        return f"""You are an expert educational assessment creator. Generate a personalized multiple-choice test on the given topic.
 
 **Topic**: {topic}
 **Student Proficiency Level**: {proficiency_level}
 **Number of Questions**: {num_questions}
 {personalization}
 
-**Course Materials Content**:
+**Reference Content**:
 {material_content[:8000]}  
 
 **Instructions**:
-1. Generate exactly {num_questions} multiple-choice questions DIRECTLY based on the course materials provided above.
-2. Questions should test comprehension, application, and analysis of the specific content in the materials.
+1. Generate exactly {num_questions} multiple-choice questions based on the content provided.
+2. Questions should test comprehension, application, and analysis of the concepts.
 3. Tailor the difficulty to the student's proficiency level:
    - {instruction}
 4. Each question must have exactly 4 options (A, B, C, D).
 5. Clearly indicate the correct answer for each question.
-6. Ensure questions cover different sections/aspects of the materials.
-7. Make questions specific to the actual content - reference examples, concepts, or details from the materials.
-8. If personalization context is provided, strategically include questions that address weak areas while maintaining appropriate difficulty.
+6. Ensure questions cover different aspects of the topic.
+7. Write questions as standalone educational questions - DO NOT mention or reference "the materials", "the course materials", "according to the reading", "based on the materials" or similar phrases.
+8. Questions should feel like natural exam questions, not material-specific references.
+9. If personalization context is provided, strategically include questions that address weak areas while maintaining appropriate difficulty.
 
 **Output Format**:
 Return a JSON object with this structure:
@@ -116,7 +117,7 @@ Return a JSON object with this structure:
   "questions": [
     {{
       "question_number": 1,
-      "question_text": "Based on the materials, what is...",
+      "question_text": "What is...",
       "options": {{
         "A": "First option",
         "B": "Second option",
@@ -124,7 +125,7 @@ Return a JSON object with this structure:
         "D": "Fourth option"
       }},
       "correct_answer": "A",
-      "explanation": "Brief explanation referencing the materials"
+      "explanation": "Brief explanation of why this is correct"
     }}
   ]
 }}

@@ -23,7 +23,7 @@ class MaterialService:
         course_id: str,
         course_plan: Dict[str, Any],
         materials_zip: UploadFile
-    ) -> Tuple[List[Dict[str, str]], Dict[str, List[str]]]:
+    ) -> Tuple[List[Dict[str, str]], Dict[str, List[str]], Dict[str, str], Dict[str, str]]:
         """
         Process uploaded course materials ZIP file.
         
@@ -33,7 +33,7 @@ class MaterialService:
             materials_zip: Uploaded ZIP file
             
         Returns:
-            Tuple of (saved_materials, topic_mapping)
+            Tuple of (saved_materials, topic_mapping, parsed_materials, topic_content_mapping)
         """
         # Verify it's a zip file
         if not materials_zip.filename.endswith('.zip'):
@@ -51,11 +51,24 @@ class MaterialService:
                     detail="No PDF or PPTX files found in the zip archive"
                 )
             
-            # Map materials to topics using AI
+            # Store parsed content (filename -> content)
+            parsed_materials = {
+                m['filename']: m['content'] for m in materials
+            }
+            
+            # Map materials to topics using AI (for file-level mapping)
             topic_paths = self._extract_topic_paths(course_plan)
             topic_mapping = self.ai_service.map_materials_to_topics(
                 topic_paths=topic_paths,
                 materials=materials
+            )
+            
+            # Create topic-to-content mapping using AI
+            # This maps each topic to specific relevant content from materials
+            topic_content_mapping = self._create_topic_content_mapping(
+                topic_paths=topic_paths,
+                topic_mapping=topic_mapping,
+                parsed_materials=parsed_materials
             )
             
             # Save materials permanently
@@ -65,7 +78,7 @@ class MaterialService:
                 temp_dir_path / "extracted"
             )
             
-            return saved_materials, topic_mapping
+            return saved_materials, topic_mapping, parsed_materials, topic_content_mapping
     
     def _extract_materials(
         self,
@@ -162,6 +175,76 @@ class MaterialService:
         
         return topic_paths
     
+    def _create_topic_content_mapping(
+        self,
+        topic_paths: List[str],
+        topic_mapping: Dict[str, List[str]],
+        parsed_materials: Dict[str, str]
+    ) -> Dict[str, str]:
+        """
+        Create a mapping from each topic to its specific relevant content using AI.
+        
+        Uses AI to extract ONLY the sections relevant to each topic from the
+        full material content, rather than including entire files.
+        
+        Args:
+            topic_paths: List of all topic paths from course outline
+            topic_mapping: Mapping of topics to material filenames
+            parsed_materials: Mapping of filenames to their extracted text content
+            
+        Returns:
+            Mapping of topic paths to AI-extracted relevant content
+        """
+        topic_content_mapping = {}
+        
+        for topic_path in topic_paths:
+            # Get just the topic name (last part of path)
+            topic_name = topic_path.split("/")[-1] if "/" in topic_path else topic_path
+            
+            # Get files mapped to this topic
+            topic_files = topic_mapping.get(topic_path, [])
+            
+            if not topic_files:
+                # Try matching by topic name alone
+                for key, files in topic_mapping.items():
+                    if topic_name in key or key.endswith(topic_name):
+                        topic_files = files
+                        break
+            
+            if not topic_files:
+                # No specific mapping, topic will use outline content as fallback
+                topic_content_mapping[topic_path] = ""
+                continue
+            
+            # Combine full content from all mapped files
+            full_content_parts = []
+            for filename in topic_files:
+                if filename in parsed_materials:
+                    content = parsed_materials[filename]
+                    if content:
+                        full_content_parts.append(f"--- From {filename} ---\n{content}")
+            
+            full_content = "\n\n".join(full_content_parts) if full_content_parts else ""
+            
+            if not full_content:
+                topic_content_mapping[topic_path] = ""
+                continue
+            
+            # Use AI to extract only the relevant sections for this topic
+            try:
+                extracted_content = self.ai_service.extract_topic_content(
+                    topic=topic_name,
+                    full_content=full_content
+                )
+                topic_content_mapping[topic_path] = extracted_content
+                print(f"Extracted {len(extracted_content)} chars for topic: {topic_name}")
+            except Exception as e:
+                print(f"Error extracting content for topic {topic_name}: {e}")
+                # Fallback to full content if AI extraction fails
+                topic_content_mapping[topic_path] = full_content
+        
+        return topic_content_mapping
+    
     def _save_materials(
         self,
         course_id: str,
@@ -226,7 +309,8 @@ class MaterialService:
         topic: str
     ) -> str:
         """
-        Extract and combine content from all materials related to a specific topic.
+        Get content for a specific topic from stored topic_content_mapping.
+        Falls back to re-extracting from files if mapping not available.
         
         Args:
             course_id: Course identifier
@@ -236,16 +320,46 @@ class MaterialService:
         Returns:
             Combined text content from all relevant materials
         """
-        materials = course.get("course_materials", [])
+        # First, try to get from stored topic_content_mapping (new approach)
+        topic_content_mapping = course.get("topic_content_mapping", {})
+        
+        if topic in topic_content_mapping and topic_content_mapping[topic]:
+            return topic_content_mapping[topic]
+        
+        # Try matching by topic name (last part of path)
+        topic_name = topic.split("/")[-1] if "/" in topic else topic
+        for path, content in topic_content_mapping.items():
+            if path.endswith(topic_name) or topic_name in path:
+                if content:
+                    return content
+        
+        # Fallback: Use parsed_materials if available
+        parsed_materials = course.get("parsed_materials", {})
         topic_mapping = course.get("material_topic_mapping", {})
         
-        # Get files mapped to this topic
         topic_files = topic_mapping.get(topic, [])
-        
         if not topic_files:
+            # Try matching by topic name
+            for path, files in topic_mapping.items():
+                if path.endswith(topic_name) or topic_name in path:
+                    topic_files = files
+                    break
+        
+        if topic_files and parsed_materials:
+            combined_content = []
+            for filename in topic_files:
+                if filename in parsed_materials:
+                    content = parsed_materials[filename]
+                    if content:
+                        combined_content.append(f"--- From {filename} ---\n{content}")
+            if combined_content:
+                return "\n\n".join(combined_content)
+        
+        # Final fallback: Re-extract from files (legacy behavior)
+        materials = course.get("course_materials", [])
+        if not topic_files or not materials:
             return ""
         
-        # Extract content from each file
         combined_content = []
         course_materials_dir = settings.UPLOAD_DIR / f"course_{course_id}_materials"
         
@@ -253,7 +367,6 @@ class MaterialService:
             if material['filename'] in topic_files:
                 file_path = Path(material.get('file_path', ''))
                 
-                # If file_path doesn't exist, try constructing it
                 if not file_path.exists():
                     file_path = course_materials_dir / material['filename']
                 

@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, GraduationCap, Sparkles, Lock, User } from "lucide-react";
+import { ArrowLeft, Infinity, Sparkles, Lock, User } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -22,22 +21,24 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const { access_token } = await login(
+      const response = await login(
         formData.username,
         formData.password
       );
+      
+      // The login function already stores token and returns role
+      const role = (response as any).role || localStorage.getItem("userRole");
+      
       toast({
         title: "Login successful",
-        description: "Welcome back!",
+        description: "Welcome back to Loop!",
       });
-      localStorage.setItem("token", access_token);
-      // Fetch user info to get role
-      const res = await fetch("http://localhost:8000/auth/me", {
-        headers: { Authorization: `Bearer ${access_token}` },
-      });
-      const data = await res.json();
-      const role = data.role;
-      localStorage.setItem("userRole", role);
+      
+      if (role) {
+        localStorage.setItem("userRole", role);
+      }
+      
+      // Navigate based on role
       if (role === "professor") {
         navigate("/prof");
       } else {
@@ -55,95 +56,57 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 180, 360],
-          }}
-          transition={{ duration: 20, repeat: Infinity }}
-          className="absolute top-20 left-20 w-72 h-72 bg-primary/20 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1.2, 1, 1.2],
-            rotate: [360, 180, 0],
-          }}
-          transition={{ duration: 15, repeat: Infinity }}
-          className="absolute bottom-20 right-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl"
-        />
+        <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-br from-violet-600/30 to-fuchsia-600/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-br from-cyan-600/25 to-blue-600/20 rounded-full blur-3xl animate-pulse" />
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px]" />
       </div>
 
       {/* Back Button */}
-      <motion.div 
-        initial={{ x: -20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        className="p-6 relative z-10"
-      >
+      <div className="p-6 relative z-10">
         <Button
           variant="ghost"
           onClick={() => navigate("/")}
-          className="rounded-full hover:scale-105 transition-transform backdrop-blur-sm bg-card/70 border border-border"
+          className="rounded-full hover:scale-105 transition-transform backdrop-blur-md bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
-      </motion.div>
+      </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
-        <motion.div 
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-md w-full space-y-8"
-        >
+        <div className="max-w-md w-full space-y-8">
           {/* Logo & Title */}
           <div className="text-center space-y-6">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-              className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-3xl shadow-2xl border border-primary/20"
-            >
-              <GraduationCap className="w-14 h-14 text-white drop-shadow-lg" />
-            </motion.div>
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-violet-600 via-fuchsia-500 to-cyan-500 rounded-3xl shadow-2xl border border-white/20">
+              <Infinity className="w-14 h-14 text-white drop-shadow-lg" strokeWidth={2.5} />
+            </div>
             
             <div>
-              <motion.h1 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-5xl font-bold gradient-text mb-2"
-              >
-                Welcome Back
-              </motion.h1>
-              <motion.p 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="text-lg text-muted-foreground flex items-center justify-center gap-2"
-              >
-                <Sparkles className="w-5 h-5" />
+              <h1 className="text-5xl font-black mb-2">
+                <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
+                  Welcome Back
+                </span>
+              </h1>
+              <p className="text-lg text-slate-400 flex items-center justify-center gap-2">
+                <Sparkles className="w-5 h-5 text-fuchsia-400" />
                 Continue your learning journey
-              </motion.p>
+              </p>
             </div>
           </div>
 
           {/* Login Form */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <form onSubmit={handleSubmit} className="space-y-6 bg-card/80 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-border glow-border">
+          <div>
+            <form onSubmit={handleSubmit} className="space-y-6 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/10">
               <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-foreground mb-2">Username</label>
+                  <label className="block text-sm font-semibold text-slate-300 mb-2">Username</label>
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                     <Input
                       type="text"
                       placeholder="Enter your username"
@@ -155,14 +118,14 @@ const Login = () => {
                         }))
                       }
                       required
-                      className="pl-12 h-12 text-base border-2 focus:border-primary transition-all"
+                      className="pl-12 h-12 text-base bg-white/5 border-white/10 focus:border-fuchsia-500/50 text-white placeholder:text-slate-500 transition-all"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-foreground mb-2">Password</label>
+                  <label className="block text-sm font-semibold text-slate-300 mb-2">Password</label>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                     <Input
                       type="password"
                       placeholder="Enter your password"
@@ -174,7 +137,7 @@ const Login = () => {
                         }))
                       }
                       required
-                      className="pl-12 h-12 text-base border border-border focus:border-primary transition-all"
+                      className="pl-12 h-12 text-base bg-white/5 border-white/10 focus:border-fuchsia-500/50 text-white placeholder:text-slate-500 transition-all"
                     />
                   </div>
                 </div>
@@ -182,15 +145,11 @@ const Login = () => {
 
               <Button
                 type="submit"
-                className="w-full h-12 text-base bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all shadow-lg hover:shadow-xl hover:scale-105 glow-border"
+                className="w-full h-12 text-base bg-gradient-to-r from-violet-600 via-fuchsia-500 to-cyan-500 hover:opacity-90 transition-all shadow-lg shadow-violet-500/25 hover:shadow-fuchsia-500/30 hover:scale-[1.02] border-0 text-white font-semibold"
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                  />
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5 mr-2" />
@@ -199,19 +158,19 @@ const Login = () => {
                 )}
               </Button>
 
-              <div className="text-center text-sm text-muted-foreground">
+              <div className="text-center text-sm text-slate-400">
                 Don't have an account?{" "}
                 <Button
                   variant="link"
-                  className="p-0 h-auto font-semibold text-primary hover:text-purple-600"
+                  className="p-0 h-auto font-semibold text-fuchsia-400 hover:text-fuchsia-300"
                   onClick={() => navigate("/register")}
                 >
                   Register here
                 </Button>
               </div>
             </form>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </div>
   );

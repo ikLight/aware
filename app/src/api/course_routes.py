@@ -98,18 +98,20 @@ async def upload_course_materials(
         raise HTTPException(status_code=400, detail="Please upload course plan before materials")
     
     try:
-        # Process materials
-        saved_materials, topic_mapping = await material_service.process_materials_upload(
+        # Process materials - now returns 4 values
+        saved_materials, topic_mapping, parsed_materials, topic_content_mapping = await material_service.process_materials_upload(
             course_id=course_id,
             course_plan=course["course_plan"],
             materials_zip=materials_zip
         )
         
-        # Save to database
+        # Save to database with all mappings
         success = course_service.save_course_materials(
             course_id=course_id,
             materials=saved_materials,
-            topic_mapping=topic_mapping
+            topic_mapping=topic_mapping,
+            parsed_materials=parsed_materials,
+            topic_content_mapping=topic_content_mapping
         )
         
         if not success:
@@ -119,7 +121,8 @@ async def upload_course_materials(
             "message": "Course materials uploaded and mapped successfully",
             "course_id": course_id,
             "materials_count": len(saved_materials),
-            "topic_mapping": topic_mapping
+            "topic_mapping": topic_mapping,
+            "topics_with_content": len([t for t, c in topic_content_mapping.items() if c])
         }
         
     except HTTPException:
@@ -157,6 +160,95 @@ def get_course_materials(
         raise HTTPException(status_code=403, detail="Invalid user role")
     
     return material_service.get_course_materials(course_id, course, topic)
+
+
+@router.get("/{course_id}/material-mappings")
+def get_material_mappings(
+    course_id: str,
+    user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Get stored material mappings for debugging/analysis.
+    Returns parsed_materials, topic_mapping, and topic_content_mapping.
+    """
+    course = course_service.get_course_by_id(course_id)
+    
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    # Only professors can view this
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can view material mappings")
+    
+    if course.get("professor_username") != user["username"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    parsed_materials = course.get("parsed_materials", {})
+    topic_mapping = course.get("material_topic_mapping", {})
+    topic_content_mapping = course.get("topic_content_mapping", {})
+    
+    # Create summary for each
+    parsed_summary = {
+        filename: f"{len(content)} chars" if content else "empty"
+        for filename, content in parsed_materials.items()
+    }
+    
+    topic_content_summary = {
+        topic: f"{len(content)} chars" if content else "empty"
+        for topic, content in topic_content_mapping.items()
+    }
+    
+    return {
+        "course_id": course_id,
+        "course_name": course.get("course_name"),
+        "parsed_materials_summary": parsed_summary,
+        "topic_mapping": topic_mapping,
+        "topic_content_summary": topic_content_summary,
+        "has_parsed_materials": bool(parsed_materials),
+        "has_topic_content_mapping": bool(topic_content_mapping),
+        "total_topics": len(topic_content_mapping),
+        "topics_with_content": len([c for c in topic_content_mapping.values() if c])
+    }
+
+
+@router.get("/{course_id}/topic-content/{topic_path:path}")
+def get_topic_content(
+    course_id: str,
+    topic_path: str,
+    user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get the actual content stored for a specific topic."""
+    course = course_service.get_course_by_id(course_id)
+    
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    # Only professors can view this
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can view topic content")
+    
+    if course.get("professor_username") != user["username"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    topic_content_mapping = course.get("topic_content_mapping", {})
+    content = topic_content_mapping.get(topic_path, "")
+    
+    # If not found by exact path, try to find by topic name
+    if not content:
+        topic_name = topic_path.split("/")[-1] if "/" in topic_path else topic_path
+        for path, c in topic_content_mapping.items():
+            if path.endswith(topic_name) or topic_name in path:
+                content = c
+                topic_path = path
+                break
+    
+    return {
+        "course_id": course_id,
+        "topic_path": topic_path,
+        "content": content,
+        "content_length": len(content) if content else 0,
+        "has_content": bool(content)
+    }
 
 
 @router.post("/{course_id}/set-objectives")

@@ -372,3 +372,67 @@ class AIService:
                     validated_mapping[topic] = valid_files
         
         return validated_mapping
+
+    def extract_topic_content(
+        self,
+        topic: str,
+        full_content: str,
+        max_content_length: int = 50000
+    ) -> str:
+        """
+        Use AI to extract only the sections relevant to a specific topic from full content.
+        
+        Args:
+            topic: The topic to extract content for
+            full_content: The full text content from course materials
+            max_content_length: Maximum length of content to process
+            
+        Returns:
+            Extracted content relevant to the topic
+        """
+        # Truncate content if too long
+        if len(full_content) > max_content_length:
+            full_content = full_content[:max_content_length] + "\n... [content truncated]"
+        
+        # Configure model
+        model = genai.GenerativeModel(
+            settings.GEMINI_MODEL,
+            generation_config={
+                "response_mime_type": "application/json"
+            }
+        )
+        
+        prompt = f"""You are an expert at extracting relevant educational content.
+
+Given the following course material content and a topic, extract ONLY the sections that are directly relevant to the topic. Include:
+- Definitions and explanations of the topic
+- Examples and code snippets related to the topic
+- Key concepts, algorithms, or formulas
+- Any practice problems or exercises about the topic
+
+TOPIC: {topic}
+
+FULL CONTENT:
+{full_content}
+
+Return your response as a JSON object with this structure:
+{{
+    "extracted_content": "The relevant content sections combined together...",
+    "key_concepts": ["concept1", "concept2", ...],
+    "has_relevant_content": true/false
+}}
+
+If there is no content relevant to the topic, set has_relevant_content to false and extracted_content to empty string.
+Extract the actual text - do not summarize or paraphrase. Include enough context for the content to be useful for generating quiz questions."""
+
+        try:
+            response = model.generate_content(prompt)
+            result = json.loads(response.text)
+            
+            if result.get("has_relevant_content", False):
+                return result.get("extracted_content", "")
+            return ""
+        except Exception as e:
+            print(f"Error extracting topic content: {e}")
+            # Fallback: return empty string if extraction fails
+            return ""
