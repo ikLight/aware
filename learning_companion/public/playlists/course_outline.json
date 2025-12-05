@@ -1,0 +1,305 @@
+[
+  {
+    "moduleId": "module-1-foundations-of-computation",
+    "moduleName": "Module 1: Foundations, Complexity, and Object-Oriented Design",
+    "topics": [
+      {
+        "topicId": "abstract-data-types-and-oop",
+        "topicName": "Abstract Data Types & OOP Principles",
+        "learningObjectives": [
+          "Define Abstract Data Type (ADT) and list examples (Stack, Queue, Tree)",
+          "Design classes using Inheritance, Abstract Classes, and Interfaces",
+          "Implement the Principle of Least Privilege and Encapsulation"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "adt-foundations",
+            "subtopicName": "ADT Concepts and Examples"
+          },
+          {
+            "subtopicId": "oop-implementation",
+            "subtopicName": "Interface Implementation & Abstract Methods"
+          }
+        ]
+      },
+      {
+        "topicId": "recursion-and-memory",
+        "topicName": "Recursive Thinking & Visualization",
+        "learningObjectives": [
+          "Define a recursive method and identify the Base Case",
+          "Visualize recursion using Stack Frames and Activation Records",
+          "Analyze the causes of StackOverflowError and Infinite Recursion",
+          "Transform Tail Recursion into Iterative loops"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "recursion-mechanics",
+            "subtopicName": "The Call Stack Mechanism"
+          },
+          {
+            "subtopicId": "recursive-design-rules",
+            "subtopicName": "Base Case & Making Progress Rules"
+          },
+          {
+            "subtopicId": "common-recursive-problems",
+            "subtopicName": "Factorials & Fibonacci Analysis"
+          }
+        ]
+      },
+      {
+        "topicId": "asymptotic-analysis-lists",
+        "topicName": "Asymptotic Analysis & List Structures",
+        "learningObjectives": [
+          "Define Big O notation as an upper bound on complexity",
+          "Compare growth rates of common functions (Linear, Logarithmic, Quadratic)",
+          "Analyze Time vs. Space complexity trade-offs",
+          "Contrast Array-based Lists vs. Linked Lists"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "big-o-notation",
+            "subtopicName": "Big O Notation & Growth Rates"
+          },
+          {
+            "subtopicId": "list-implementations",
+            "subtopicName": "Array vs. Linked List Performance"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "moduleId": "module-2-trees-and-hierarchies",
+    "moduleName": "Module 2: Tree Structures and Expression Parsing",
+    "topics": [
+      {
+        "topicId": "tree-fundamentals",
+        "topicName": "Tree Terminology & Traversals",
+        "learningObjectives": [
+          "Define tree components: Root, Leaf, Internal Node, Height, Depth",
+          "Implement recursive Tree Traversals: Preorder, Inorder, Postorder",
+          "Construct and Evaluate Arithmetic Expression Trees"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "tree-definitions",
+            "subtopicName": "Recursive Definition of Trees"
+          },
+          {
+            "subtopicId": "traversal-algorithms",
+            "subtopicName": "Preorder, Inorder, and Postorder Algorithms"
+          }
+        ]
+      },
+      {
+        "topicId": "expression-tree-application",
+        "topicName": "Applied: Expression Tree Converter",
+        "learningObjectives": [
+          "Construct an Expression Tree from a Postfix expression",
+          "Generate Prefix, Infix, and Postfix strings via tree traversal",
+          "Represent mathematical operators and operands as Node objects"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "tree-construction-stack",
+            "subtopicName": "Stack-based Tree Construction"
+          },
+          {
+            "subtopicId": "recursive-printing",
+            "subtopicName": "Recursive Equation Printing"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "moduleId": "module-3-generics-and-linear-structures",
+    "moduleName": "Module 3: Generics, Stacks, and Queues",
+    "topics": [
+      {
+        "topicId": "generics-stacks",
+        "topicName": "Generics & The Stack ADT",
+        "learningObjectives": [
+          "Implement a custom Generic Class with Type Parameters",
+          "Define the Stack ADT operations: Push and Pop",
+          "Convert Infix expressions to Postfix using a Stack",
+          "Evaluate Postfix expressions utilizing a Stack"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "java-generics",
+            "subtopicName": "Type Erasure & Generic Implementation"
+          },
+          {
+            "subtopicId": "infix-to-postfix",
+            "subtopicName": "Shunting-yard Logic & Operator Precedence"
+          },
+          {
+            "subtopicId": "postfix-evaluation",
+            "subtopicName": "RPN Evaluation Algorithm"
+          }
+        ]
+      },
+      {
+        "topicId": "queues-applications",
+        "topicName": "Queues & Algorithmic Filtering",
+        "learningObjectives": [
+          "Define the Queue ADT operations: Enqueue and Dequeue",
+          "Implement the Sieve of Eratosthenes using Queues",
+          "Manage dynamic data flow with FIFO logic"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "queue-adt",
+            "subtopicName": "Queue Operations"
+          },
+          {
+            "subtopicId": "prime-sieve",
+            "subtopicName": "Algorithmic Number Filtering"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "moduleId": "module-4-heaps-and-compression",
+    "moduleName": "Module 4: Priority Queues and Data Compression",
+    "topics": [
+      {
+        "topicId": "binary-heaps",
+        "topicName": "Binary Heaps & Priority Queues",
+        "learningObjectives": [
+          "Define the Heap Order Property (Min-Heap)",
+          "Implement Heap operations: Insert (Percolate Up) and DeleteMin (Percolate Down)",
+          "Map a Complete Binary Tree to an Array implementation",
+          "Analyze the O(log n) complexity of Heap operations"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "heap-structure",
+            "subtopicName": "Array Representation of Trees"
+          },
+          {
+            "subtopicId": "percolation-logic",
+            "subtopicName": "Percolate Up & Percolate Down Procedures"
+          }
+        ]
+      },
+      {
+        "topicId": "huffman-coding",
+        "topicName": "Applied: Huffman Data Compression",
+        "learningObjectives": [
+          "Construct a Huffman Tree based on character frequency",
+          "Generate binary encodings by traversing a Huffman Tree",
+          "Implement Encode and Decode methods for text compression"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "frequency-analysis",
+            "subtopicName": "Frequency Counting & Heap Creation"
+          },
+          {
+            "subtopicId": "huffman-tree-build",
+            "subtopicName": "Building the Optimal Prefix Tree"
+          },
+          {
+            "subtopicId": "bit-encoding",
+            "subtopicName": "Encoding & Decoding Traversal Logic"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "moduleId": "module-5-advanced-trees",
+    "moduleName": "Module 5: Advanced Search Trees",
+    "topics": [
+      {
+        "topicId": "binary-search-trees",
+        "topicName": "Binary Search Trees (BST)",
+        "learningObjectives": [
+          "Define the BST property for ordering elements",
+          "Implement the Remove Node algorithm for all cases (Leaf, 1 Child, 2 Children)"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "bst-structure",
+            "subtopicName": "BST Property & Logic"
+          },
+          {
+            "subtopicId": "bst-removal",
+            "subtopicName": "Node Removal & Successor Replacement"
+          }
+        ]
+      },
+      {
+        "topicId": "avl-trees",
+        "topicName": "AVL Trees & Self-Balancing",
+        "learningObjectives": [
+          "Identify the AVL Balance Condition (Height difference <= 1)",
+          "Detect imbalance types: Left-left, Left-right, Right-right, Right-left",
+          "Perform Single Rotations to fix outer imbalances",
+          "Perform Double Rotations to fix inner imbalances"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "avl-balance",
+            "subtopicName": "Height Calculations & Imbalance Detection"
+          },
+          {
+            "subtopicId": "tree-rotations",
+            "subtopicName": "Single and Double Rotation Logic"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "moduleId": "module-6-algorithms",
+    "moduleName": "Module 6: Sorting and Search Algorithms",
+    "topics": [
+      {
+        "topicId": "sorting-algorithms",
+        "topicName": "Sorting Algorithms",
+        "learningObjectives": [
+          "Implement quadratic sorts: Selection, Bubble, Insertion",
+          "Analyze the O(n log n) efficiency of Heap Sort",
+          "Master Quicksort: Partitioning, Pivot Selection, and Median of Three"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "elementary-sorts",
+            "subtopicName": "Selection, Bubble, & Insertion Sort"
+          },
+          {
+            "subtopicId": "efficient-sorts",
+            "subtopicName": "Heap Sort & Quicksort Mechanics"
+          },
+          {
+            "subtopicId": "quicksort-optimization",
+            "subtopicName": "Pivot Selection & Median of Three"
+          }
+        ]
+      },
+      {
+        "topicId": "tree-searches",
+        "topicName": "Tree Search Strategies",
+        "learningObjectives": [
+          "Compare Depth-First Search (DFS) and Breadth-First Search (BFS)",
+          "Implement Depth-Limited Search",
+          "Analyze the time/space trade-offs of Iterative Deepening"
+        ],
+        "subtopics": [
+          {
+            "subtopicId": "blind-search",
+            "subtopicName": "DFS vs. BFS Implementation"
+          },
+          {
+            "subtopicId": "iterative-deepening",
+            "subtopicName": "Depth-Limited & Iterative Deepening"
+          }
+        ]
+      }
+    ]
+  }
+]

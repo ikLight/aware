@@ -58,8 +58,9 @@ const ChatPod = ({
   currentStep,
   currentStepIndex,
   totalSteps,
+  messages,
+  setMessages,
 }) => {
-  const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -212,5 +213,3 @@ const ChatPod = ({
 };
 
 export default ChatPod;
-
-

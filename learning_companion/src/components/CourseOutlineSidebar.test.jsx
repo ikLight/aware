@@ -129,7 +129,7 @@ describe('CourseOutlineSidebar', () => {
     render(<CourseOutlineSidebar />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/course_outline.json');
+      expect(global.fetch).toHaveBeenCalledWith('/playlists/course_outline.json');
     });
   });
 

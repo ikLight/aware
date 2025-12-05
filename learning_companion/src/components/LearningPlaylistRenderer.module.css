@@ -99,6 +99,64 @@
   line-height: 1.8;
 }
 
+/* Markdown elements within text blocks */
+.textBlock h3 {
+  font-size: 1.25rem;
+  color: #212529;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.textBlock h4 {
+  font-size: 1.1rem;
+  color: #212529;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.textBlock p {
+  margin-bottom: 1rem;
+}
+
+.textBlock ul,
+.textBlock ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.textBlock li {
+  margin-bottom: 0.5rem;
+}
+
+.textBlock code {
+  background-color: #f1f3f5;
+  color: #c92a2a;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.textBlock pre {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.textBlock pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+}
+
 .subtitle {
   font-size: 1.25rem;
   color: #212529;
@@ -137,6 +195,34 @@
   line-height: 1.6;
 }
 
+.mermaidBlock {
+  background-color: #f0f4f8;
+  border: 2px solid #c3dafe;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.mermaidDiagram {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.mermaidDiagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ================================
+   WORKED EXAMPLE STEP STYLES
+   ================================ */
+.workedExampleStep {
+  max-width: 100%;
+}
+
 /* ================================
    MCQ STEP STYLES
    ================================ */
@@ -149,6 +235,42 @@
   color: #212529;
   margin-bottom: 2rem;
   line-height: 1.6;
+}
+
+/* Markdown elements within question text */
+.questionText p {
+  margin-bottom: 1rem;
+}
+
+.questionText p:last-child {
+  margin-bottom: 0;
+}
+
+.questionText ul,
+.questionText ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.questionText li {
+  margin-bottom: 0.5rem;
+}
+
+.questionText code {
+  background-color: #f1f3f5;
+  color: #c92a2a;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.questionText strong {
+  font-weight: 600;
+}
+
+.questionText em {
+  font-style: italic;
 }
 
 .optionsContainer {
@@ -234,6 +356,10 @@
   padding: 1.25rem;
   border-radius: 0.5rem;
   border-left: 4px solid;
+  /* Default styling for open questions (neutral/info style) */
+  background-color: #e7f1ff;
+  border-color: #0d6efd;
+  color: #084298;
 }
 
 .feedbackCorrect {

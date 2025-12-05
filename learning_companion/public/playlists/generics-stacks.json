@@ -1,0 +1,170 @@
+{
+    "java-generics": [
+      {
+        "stepType": "openQuestion",
+        "content": {
+          "question": "In older versions of Java, collections like `ArrayList` just stored `Object`. When you retrieved an item, you had to cast it (e.g., `(String) list.get(0)`). Why is this dangerous for a programmer?",
+          "placeholder": "Think about what happens if you accidentally put an Integer in a list expected to hold Strings..."
+        }
+      },
+      {
+        "stepType": "lesson",
+        "content": {
+          "title": "Generics: Type Safety & Reusability",
+          "blocks": [
+            {
+              "type": "text",
+              "content": "### The \"Magic\" Variable `<E>`\nImagine writing a class, but you don't know what data type it will hold yet. It might hold `String`, `Integer`, or `Student`. Instead of writing three different classes, we use a **Generic Type Parameter**.\n\nConventionally, we use single uppercase letters:\n*   `E` - Element (used extensively by the Java Collections Framework)\n*   `T` - Type\n*   `K` - Key, `V` - Value"
+            },
+            {
+              "type": "code",
+              "language": "java",
+              "content": "// Defining a generic class\npublic class Box<T> {\n    private T content;\n    \n    public void set(T content) { \n        this.content = content; \n    }\n    \n    public T get() { \n        return content; \n    }\n}"
+            },
+            {
+              "type": "text",
+              "content": "### The Stack ADT\nThe course materials define a Stack using an internal `ArrayList` to hold the data. This is a classic **Adapter Pattern**—we are wrapping the List and restricting access so users can only `push` and `pop`."
+            },
+            {
+              "type": "mermaid",
+              "content": "classDiagram\n    class Stack~E~ {\n        -ArrayList~E~ contents\n        +push(E element)\n        +pop() E\n    }\n    class ArrayList~E~ {\n        +add(E)\n        +remove(int)\n        +get(int)\n    }\n    Stack ..> ArrayList : Uses internally"
+            }
+          ]
+        }
+      },
+      {
+        "stepType": "codingQuestion",
+        "content": {
+          "title": "Implement a Generic Stack",
+          "markdown": "Your task is to implement the `Stack<E>` class as described in the lecture slides.\n\n**Requirements:**\n1. Use a `private ArrayList<E> contents` to store elements.\n2. Implement `push(E element)`: Adds element to the end of the list.\n3. Implement `pop()`: Removes and returns the element at the **end** of the list (the top of the stack).\n4. Implement `isEmpty()`: Returns true if the stack is empty.\n\n*Note: The import for `java.util.ArrayList` is provided.*",
+          "language": "java",
+          "starterCode": "import java.util.ArrayList;\nimport java.util.Scanner;\n\n// 1. Make this class Generic using <E>\nclass Stack {\n    // 2. Initialize the internal storage\n    private ArrayList<E> contents = new ArrayList<>();\n\n    public void push(E element) {\n        // TODO: Add to contents\n    }\n\n    public E pop() {\n        // TODO: Remove and return the last element\n        // Tip: Use contents.size() - 1 to get the index\n        return null;\n    }\n\n    public boolean isEmpty() {\n        return contents.isEmpty();\n    }\n}\n\npublic class Driver {\n    public static void main(String[] args) {\n        Stack<String> stack = new Stack<>();\n        Scanner s = new Scanner(System.in);\n        while(s.hasNext()) {\n            String cmd = s.next();\n            if(cmd.equals(\"push\")) stack.push(s.next());\n            else if(cmd.equals(\"pop\")) System.out.println(stack.pop());\n        }\n    }\n}",
+          "solutionCode": "import java.util.ArrayList;\nimport java.util.Scanner;\n\nclass Stack<E> {\n    private ArrayList<E> contents = new ArrayList<>();\n\n    public void push(E element) {\n        contents.add(element);\n    }\n\n    public E pop() {\n        if (contents.isEmpty()) return null;\n        int topIndex = contents.size() - 1;\n        E result = contents.get(topIndex);\n        contents.remove(topIndex);\n        return result;\n    }\n\n    public boolean isEmpty() {\n        return contents.isEmpty();\n    }\n}\n\npublic class Driver {\n    public static void main(String[] args) {\n        Stack<String> stack = new Stack<>();\n        Scanner s = new Scanner(System.in);\n        while(s.hasNext()) {\n            String cmd = s.next();\n            if(cmd.equals(\"push\")) stack.push(s.next());\n            else if(cmd.equals(\"pop\")) System.out.println(stack.pop());\n        }\n    }\n}",
+          "testCases": [
+            {
+              "input": "push Hello push World pop pop",
+              "expectedOutput": "World\nHello\n",
+              "isHidden": false
+            },
+            {
+              "input": "push A push B push C pop pop pop",
+              "expectedOutput": "C\nB\nA\n",
+              "isHidden": true
+            }
+          ]
+        }
+      }
+    ],
+    "infix-to-postfix": [
+      {
+        "stepType": "lesson",
+        "content": {
+          "title": "Why Postfix (RPN)?",
+          "blocks": [
+            {
+              "type": "text",
+              "content": "**Infix Notation** is what humans use: `3 + 4`.\n**Postfix Notation** (Reverse Polish Notation) is what computers prefer: `3 4 +`.\n\nWhy?\n1. **No Parentheses Needed:** The order of operations is strictly defined by position.\n2. **Easy Stack Evaluation:** We can process the string from left to right in a single pass.\n\n**The Conversion Rules (Shunting-yard Algorithm):**\n*   **Operands (Numbers):** Print immediately to output.\n*   **Open `(`:** Push to stack.\n*   **Close `)`:** Pop from stack to output until `(` is found.\n*   **Operators (`+`, `*`, etc.):** Check the stack! If the stack top has **higher or equal precedence**, pop it first. Then push the new operator."
+            }
+          ]
+        }
+      },
+      {
+        "stepType": "workedExample",
+        "content": {
+          "title": "Tracing Infix to Postfix",
+          "blocks": [
+            {
+              "type": "text",
+              "content": "Let's convert `A + B * C` to Postfix. \n\n**Precedence:** `*` > `+`"
+            },
+            {
+              "type": "mermaid",
+              "content": "graph TD\n    Step1[Input: A] -->|Is Operand| Out1[Output: A]\n    Step2[Input: +] -->|Stack Empty| Stack2[Stack: +]\n    Step3[Input: B] -->|Is Operand| Out2[Output: A B]\n    Step4[Input: *] -->|* > +| Stack3[Stack: +, *]\n    Step5[Input: C] -->|Is Operand| Out3[Output: A B C]\n    Step6[End of String] -->|Pop All| Out4[Final Output: A B C * +]"
+            },
+            {
+              "type": "text",
+              "content": "Notice how `*` was popped before `+` at the end? This ensures multiplication happens before addition."
+            }
+          ]
+        }
+      },
+      {
+        "stepType": "codingQuestion",
+        "content": {
+          "title": "Logic Check: Operator Precedence",
+          "markdown": "A critical part of the conversion algorithm is knowing which operator is \"stronger\".\n\n**Task:** Implement the `getPrecedence` method.\n*   `^` returns 3\n*   `*` and `/` return 2\n*   `+` and `-` return 1\n*   Anything else (like `(` ) returns 0",
+          "language": "java",
+          "starterCode": "public class PrecedenceCheck {\n    public static int getPrecedence(char op) {\n        // TODO: Return correct integer based on operator\n        return -1;\n    }\n\n    public static void main(String[] args) {\n        // Test boilerplate\n        System.out.println(getPrecedence('+'));\n        System.out.println(getPrecedence('*'));\n        System.out.println(getPrecedence('^'));\n        System.out.println(getPrecedence('('));\n    }\n}",
+          "solutionCode": "public class PrecedenceCheck {\n    public static int getPrecedence(char op) {\n        switch (op) {\n            case '^': return 3;\n            case '*': \n            case '/': return 2;\n            case '+': \n            case '-': return 1;\n            default: return 0;\n        }\n    }\n\n    public static void main(String[] args) {\n        System.out.println(getPrecedence('+'));\n        System.out.println(getPrecedence('*'));\n        System.out.println(getPrecedence('^'));\n        System.out.println(getPrecedence('('));\n    }\n}",
+          "testCases": [
+            {
+              "input": "",
+              "expectedOutput": "1\n2\n3\n0\n",
+              "isHidden": false
+            }
+          ]
+        }
+      }
+    ],
+    "postfix-evaluation": [
+      {
+        "stepType": "lesson",
+        "content": {
+          "title": "The Evaluation Algorithm",
+          "blocks": [
+            {
+              "type": "text",
+              "content": "Once we have a Postfix string, calculating the result is purely mechanical using a Stack.\n\n**Algorithm:**\n1. Scan the string left to right.\n2. If you see a **Number**: Push it onto the stack.\n3. If you see an **Operator**: \n    *   Pop the top number (call it `val2`).\n    *   Pop the next number (call it `val1`).\n    *   Compute `val1 [operator] val2`.\n    *   Push the result back onto the stack.\n4. When finished, the stack should have exactly one number: the answer."
+            },
+            {
+              "type": "text",
+              "content": "**Important:** Note the order of operands. The *first* pop is the *right* operand. The *second* pop is the *left* operand. \n\n`val2 = pop()`\n`val1 = pop()`\n`result = val1 - val2`"
+            }
+          ]
+        }
+      },
+      {
+        "stepType": "workedExample",
+        "content": {
+          "title": "Tracing Evaluation: 3 4 5 * +",
+          "blocks": [
+            {
+              "type": "text",
+              "content": "Expression: `3 4 5 * +`"
+            },
+            {
+              "type": "mermaid",
+              "content": "graph TD\n    T1[Read 3] --> S1[Stack: 3]\n    T2[Read 4] --> S2[Stack: 3, 4]\n    T3[Read 5] --> S3[Stack: 3, 4, 5]\n    T4[Read *] --> OP1[Pop 5, Pop 4 <br/> Calc 4 * 5 = 20 <br/> Push 20]\n    OP1 --> S4[Stack: 3, 20]\n    T5[Read +] --> OP2[Pop 20, Pop 3 <br/> Calc 3 + 20 = 23 <br/> Push 23]\n    OP2 --> S5[Stack: 23]"
+            }
+          ]
+        }
+      },
+      {
+        "stepType": "codingQuestion",
+        "content": {
+          "title": "Implement Postfix Calculator",
+          "markdown": "Complete the `evaluatePostfix` method.\n\n**Input:** A string of space-separated tokens (e.g., `\"3 4 +\"`).\n**Output:** The double result.\n\n**Instructions:**\n1. Split the string into tokens.\n2. Iterate through tokens.\n3. If token is a number, parse and push.\n4. If token is an operator (`+`, `-`, `*`, `/`, `^`), pop twice, calculate, and push.\n5. Use `Math.pow(a, b)` for exponents.",
+          "language": "java",
+          "starterCode": "import java.util.Stack;\nimport java.util.Scanner;\n\npublic class PostfixCalc {\n    public static double evaluate(String postfix) {\n        Stack<Double> stack = new Stack<>();\n        String[] tokens = postfix.split(\" \");\n\n        for (String token : tokens) {\n            // Check if token is an operator\n            if (token.equals(\"+\") || token.equals(\"-\") || token.equals(\"*\") || \n                token.equals(\"/\") || token.equals(\"^\")) {\n                \n                // TODO: Pop two values\n                // TODO: Apply operator (watch the order for - and /)\n                // TODO: Push result\n            } else {\n                // Must be a number\n                stack.push(Double.parseDouble(token));\n            }\n        }\n        return stack.pop();\n    }\n\n    public static void main(String[] args) {\n        Scanner s = new Scanner(System.in);\n        if(s.hasNextLine()) {\n            System.out.printf(\"%.2f\", evaluate(s.nextLine()));\n        }\n    }\n}",
+          "solutionCode": "import java.util.Stack;\nimport java.util.Scanner;\n\npublic class PostfixCalc {\n    public static double evaluate(String postfix) {\n        Stack<Double> stack = new Stack<>();\n        String[] tokens = postfix.split(\" \");\n\n        for (String token : tokens) {\n            if (token.equals(\"+\") || token.equals(\"-\") || token.equals(\"*\") || \n                token.equals(\"/\") || token.equals(\"^\")) {\n                \n                double val2 = stack.pop();\n                double val1 = stack.pop();\n                double result = 0;\n\n                switch (token) {\n                    case \"+\": result = val1 + val2; break;\n                    case \"-\": result = val1 - val2; break;\n                    case \"*\": result = val1 * val2; break;\n                    case \"/\": result = val1 / val2; break;\n                    case \"^\": result = Math.pow(val1, val2); break;\n                }\n                stack.push(result);\n            } else {\n                stack.push(Double.parseDouble(token));\n            }\n        }\n        return stack.pop();\n    }\n\n    public static void main(String[] args) {\n        Scanner s = new Scanner(System.in);\n        if(s.hasNextLine()) {\n            System.out.printf(\"%.2f\", evaluate(s.nextLine()));\n        }\n    }\n}",
+          "testCases": [
+            {
+              "input": "3 4 + 5 * 6 /",
+              "expectedOutput": "5.83",
+              "isHidden": false
+            },
+            {
+              "input": "2 3 ^",
+              "expectedOutput": "8.00",
+              "isHidden": false
+            },
+            {
+              "input": "10 2 8 * + 3 -",
+              "expectedOutput": "23.00",
+              "isHidden": true
+            }
+          ]
+        }
+      }
+    ]
+  }

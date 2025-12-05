@@ -23,9 +23,10 @@ router.post('/', async (req, res, next) => {
     const {
       code,
       language = 'java',
-      stdin = '',
+      stdin: rawStdin = '',
       wrapperPrefix = '',
       wrapperSuffix = '',
+      testCases = [],
     } = req.body || {};
 
     if (!code || typeof code !== 'string') {
@@ -41,6 +42,16 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({
         error: `Unsupported language "${language}".`,
       });
+    }
+
+    // Support both old schema (stdin) and new schema (testCases array)
+    // For new schema, use the first test case's input as stdin
+    let stdin = rawStdin;
+    if (Array.isArray(testCases) && testCases.length > 0) {
+      const firstTestCase = testCases[0];
+      if (firstTestCase.input !== undefined) {
+        stdin = firstTestCase.input;
+      }
     }
 
     const sourceCode = buildSource({ code, wrapperPrefix, wrapperSuffix });

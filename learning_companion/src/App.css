@@ -106,18 +106,35 @@
 }
 
 .app-container.focus-mode .playlist-container {
-  width: 75%;
+  flex: 1;
+  min-width: 0;
   height: 100vh;
   overflow-y: auto;
   background-color: #ffffff;
-  border-right: 1px solid #dee2e6;
 }
 
 .app-container.focus-mode .chat-pod-placeholder {
-  width: 25%;
+  flex: none;
   height: 100vh;
   overflow-y: auto;
   background-color: #f8f9fa;
+}
+
+/* ================================
+   RESIZE HANDLE
+   ================================ */
+.resize-handle {
+  width: 5px;
+  height: 100vh;
+  cursor: col-resize;
+  background-color: #dee2e6;
+  flex-shrink: 0;
+  z-index: 10;
+  transition: background-color 0.15s ease;
+}
+
+.resize-handle:hover {
+  background-color: #0d6efd;
 }
 
 /* ================================
@@ -200,6 +217,10 @@
   /* Focus Mode - Adjust split */
   .app-container.focus-mode .playlist-container {
     width: 100%;
+  }
+
+  .app-container.focus-mode .resize-handle {
+    display: none; /* Hide resize handle on mobile */
   }
 
   .app-container.focus-mode .chat-pod-placeholder {

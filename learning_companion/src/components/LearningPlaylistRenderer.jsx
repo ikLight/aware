@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { java } from '@codemirror/lang-java';
 import { oneDark } from '@codemirror/theme-one-dark';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import MermaidDiagram from './MermaidDiagram';
 import styles from './LearningPlaylistRenderer.module.css';
 
 const DEFAULT_OPEN_STATE = {
@@ -27,6 +30,8 @@ const LearningPlaylistRenderer = ({
   topicName,
   subtitle,
   renderMenuButton,
+  onPlaylistComplete,
+  nextSubtopicInfo,
 }) => {
   // State management
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -101,7 +106,7 @@ const LearningPlaylistRenderer = ({
   };
 
   useEffect(() => {
-    if (currentStep?.stepType === 'OpenQuestion') {
+    if (currentStep?.stepType === 'OpenQuestion' || currentStep?.stepType === 'openQuestion') {
       setOpenQuestionState((prev) => {
         if (prev[currentStepIndex]) {
           return prev;
@@ -115,12 +120,13 @@ const LearningPlaylistRenderer = ({
   }, [currentStep, currentStepIndex]);
 
   useEffect(() => {
-    if (currentStep?.stepType === 'CodingQuestion') {
+    if (currentStep?.stepType === 'CodingQuestion' || currentStep?.stepType === 'codingQuestion') {
       setCodingState((prev) => {
         if (prev[currentStepIndex]) {
           return prev;
         }
-        const initialCode = currentStep.content?.displayCode || '';
+        // Support both old schema (displayCode) and new schema (starterCode)
+        const initialCode = currentStep.content?.starterCode || currentStep.content?.displayCode || '';
         return {
           ...prev,
           [currentStepIndex]: createDefaultCodingState(initialCode),
@@ -154,25 +160,16 @@ const LearningPlaylistRenderer = ({
     return data;
   };
 
-  // Helper function to render text with bold markdown
-  const renderTextWithMarkdown = (text) => {
-    const parts = text.split(/(\*\*.*?\*\*)/g);
-    return parts.map((part, index) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index}>{part.slice(2, -2)}</strong>;
-      }
-      return <span key={index}>{part}</span>;
-    });
-  };
-
-  // Block renderer for Lesson steps
+  // Block renderer for Lesson and WorkedExample steps
   const renderBlock = (block, index) => {
     switch (block.type) {
       case 'text':
         return (
-          <p key={index} className={styles.textBlock}>
-            {renderTextWithMarkdown(block.content)}
-          </p>
+          <div key={index} className={styles.textBlock}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {block.content}
+            </ReactMarkdown>
+          </div>
         );
       case 'subtitle':
         return (
@@ -190,6 +187,12 @@ const LearningPlaylistRenderer = ({
         return (
           <div key={index} className={styles.diagramBlock}>
             {block.content}
+          </div>
+        );
+      case 'mermaid':
+        return (
+          <div key={index} className={styles.mermaidBlock}>
+            <MermaidDiagram content={block.content} className={styles.mermaidDiagram} />
           </div>
         );
       default:
@@ -211,6 +214,20 @@ const LearningPlaylistRenderer = ({
     );
   };
 
+  // WorkedExample step renderer (similar structure to Lesson)
+  const renderWorkedExample = (step) => {
+    return (
+      <div className={styles.workedExampleStep}>
+        {step.content.title && (
+          <h2 className={styles.stepTitle}>{step.content.title}</h2>
+        )}
+        <div className={styles.lessonContent}>
+          {step.content.blocks.map((block, index) => renderBlock(block, index))}
+        </div>
+      </div>
+    );
+  };
+
   // MCQ step renderer
   const renderMCQ = (step) => {
     const { question, options, correctOptionId, explanation } = step.content;
@@ -222,11 +239,17 @@ const LearningPlaylistRenderer = ({
     };
 
     const isCorrect = selectedAnswer === correctOptionId;
+    
+    // Get feedback for selected option (new schema has per-option feedback)
+    const selectedOption = options.find(opt => opt.id === selectedAnswer);
+    const feedbackText = selectedOption?.feedback || explanation || '';
 
     return (
       <div className={styles.mcqStep}>
         <h2 className={styles.stepTitle}>Question</h2>
-        <p className={styles.questionText}>{question}</p>
+        <div className={styles.questionText}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{question}</ReactMarkdown>
+        </div>
 
         <div className={styles.optionsContainer}>
           {options.map((option) => {
@@ -277,7 +300,7 @@ const LearningPlaylistRenderer = ({
             }`}
           >
             <strong>{isCorrect ? '✓ Correct!' : '✗ Incorrect'}</strong>
-            <p>{explanation}</p>
+            <p>{feedbackText}</p>
           </div>
         )}
       </div>
@@ -327,15 +350,20 @@ const LearningPlaylistRenderer = ({
   };
 
   const renderOpenQuestion = (step, stepIndex) => {
-    const { question, hint } = step.content;
+    const { question, hint, placeholder } = step.content;
     const state = openQuestionState[stepIndex] || DEFAULT_OPEN_STATE;
+    
+    // Support both old schema (hint) and new schema (placeholder)
+    const hintText = hint || placeholder;
 
     return (
       <div className={styles.openQuestionStep}>
         <h2 className={styles.stepTitle}>Question</h2>
-        <p className={styles.questionText}>{question}</p>
+        <div className={styles.questionText}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{question}</ReactMarkdown>
+        </div>
 
-        {hint && <p className={styles.hintText}>💡 Hint: {hint}</p>}
+        {hintText && <p className={styles.hintText}>💡 Hint: {hintText}</p>}
 
         <textarea
           className={styles.answerTextarea}
@@ -371,7 +399,8 @@ const LearningPlaylistRenderer = ({
   };
 
   const handleRunCode = async (step, stepIndex) => {
-    const initialCode = step.content?.displayCode || '';
+    // Support both old schema (displayCode) and new schema (starterCode)
+    const initialCode = step.content?.starterCode || step.content?.displayCode || '';
     const state = codingState[stepIndex] || createDefaultCodingState(initialCode);
     const code = (state.code || '').trim();
 
@@ -393,10 +422,14 @@ const LearningPlaylistRenderer = ({
       const payload = {
         code: state.code,
         language: step.content?.language || 'java',
-        prompt: step.content?.prompt,
-        solution: step.content?.solution,
+        // Support both old (prompt) and new (markdown) field names
+        prompt: step.content?.markdown || step.content?.prompt,
+        // Support both old (solution) and new (solutionCode) field names
+        solution: step.content?.solutionCode || step.content?.solution,
         wrapperPrefix: step.content?.wrapperPrefix || '',
         wrapperSuffix: step.content?.wrapperSuffix || '',
+        // Include testCases for new schema
+        testCases: step.content?.testCases || [],
         stepIndex,
         playlistTitle: playlistMeta.playlistTitle,
       };
@@ -427,7 +460,8 @@ const LearningPlaylistRenderer = ({
   };
 
   const handleSubmitCode = async (step, stepIndex) => {
-    const initialCode = step.content?.displayCode || '';
+    // Support both old schema (displayCode) and new schema (starterCode)
+    const initialCode = step.content?.starterCode || step.content?.displayCode || '';
     const state = codingState[stepIndex] || createDefaultCodingState(initialCode);
     const code = (state.code || '').trim();
 
@@ -449,11 +483,15 @@ const LearningPlaylistRenderer = ({
       const payload = {
         code: state.code,
         language: step.content?.language || 'java',
-        prompt: step.content?.prompt,
-        solution: step.content?.solution,
+        // Support both old (prompt) and new (markdown) field names
+        prompt: step.content?.markdown || step.content?.prompt,
+        // Support both old (solution) and new (solutionCode) field names
+        solution: step.content?.solutionCode || step.content?.solution,
         wrapperPrefix: step.content?.wrapperPrefix || '',
         wrapperSuffix: step.content?.wrapperSuffix || '',
+        // Support both old (expectedOutput) and new (testCases) schemas
         expectedOutput: step.content?.expectedOutput,
+        testCases: step.content?.testCases || [],
         stepIndex,
         playlistTitle: playlistMeta.playlistTitle,
       };
@@ -485,7 +523,8 @@ const LearningPlaylistRenderer = ({
   };
 
   const handleResetCode = (step, stepIndex) => {
-    const initialCode = step.content?.displayCode || '';
+    // Support both old schema (displayCode) and new schema (starterCode)
+    const initialCode = step.content?.starterCode || step.content?.displayCode || '';
     updateCodingState(
       stepIndex,
       () => createDefaultCodingState(initialCode),
@@ -494,15 +533,22 @@ const LearningPlaylistRenderer = ({
   };
 
   const renderCodingQuestion = (step, stepIndex) => {
-    const starterCode = step.content?.displayCode || '';
+    // Support both old schema (displayCode) and new schema (starterCode)
+    const starterCode = step.content?.starterCode || step.content?.displayCode || '';
     const state =
       codingState[stepIndex] || createDefaultCodingState(starterCode);
     const { code, runResult, submitResult, isRunning, isSubmitting, error } = state;
+    
+    // Support both old (prompt) and new (title + markdown) field names
+    const title = step.content?.title || 'Coding Exercise';
+    const instructions = step.content?.markdown || step.content?.prompt || '';
 
     return (
       <div className={styles.codingQuestionStep}>
-        <h2 className={styles.stepTitle}>Coding Exercise</h2>
-        <p className={styles.questionText}>{step.content.prompt}</p>
+        <h2 className={styles.stepTitle}>{title}</h2>
+        <div className={styles.questionText}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{instructions}</ReactMarkdown>
+        </div>
 
         <CodeMirror
           value={code}
@@ -600,15 +646,21 @@ const LearningPlaylistRenderer = ({
 
     switch (currentStep.stepType) {
       case 'Lesson':
+      case 'lesson':
         return renderLesson(currentStep);
       case 'MCQ':
+      case 'mcq':
         return renderMCQ(currentStep);
       case 'OpenQuestion':
+      case 'openQuestion':
         return renderOpenQuestion(currentStep, currentStepIndex);
       case 'CodingQuestion':
+      case 'codingQuestion':
         return renderCodingQuestion(currentStep, currentStepIndex);
+      case 'workedExample':
+        return renderWorkedExample(currentStep);
       default:
-        return <p className={styles.placeholder}>Unknown step type.</p>;
+        return <p className={styles.placeholder}>Unknown step type: {currentStep.stepType}</p>;
     }
   };
 
@@ -643,13 +695,25 @@ const LearningPlaylistRenderer = ({
         >
           ← Back
         </button>
-        <button
-          onClick={handleNext}
-          disabled={currentStepIndex === steps.length - 1}
-          className={styles.navButton}
-        >
-          Continue →
-        </button>
+        {currentStepIndex < steps.length - 1 ? (
+          <button
+            onClick={handleNext}
+            className={styles.navButton}
+          >
+            Continue →
+          </button>
+        ) : (
+          <button
+            onClick={onPlaylistComplete}
+            className={styles.navButton}
+          >
+            {nextSubtopicInfo
+              ? nextSubtopicInfo.isSameTopic
+                ? 'Next Subtopic →'
+                : 'Next Topic →'
+              : 'Return to Course →'}
+          </button>
+        )}
       </div>
     </div>
   );
