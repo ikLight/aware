@@ -5,6 +5,13 @@ import docx
 import PyPDF2
 from pathlib import Path
 
+try:
+    from pptx import Presentation
+    PPTX_AVAILABLE = True
+except ImportError:
+    PPTX_AVAILABLE = False
+    print("Warning: python-pptx not installed. PPTX files will be skipped.")
+
 def extract_text_from_pdf(file_path: str) -> str:
     with open(file_path, 'rb') as file:
         pdf_reader = PyPDF2.PdfReader(file)
@@ -12,6 +19,22 @@ def extract_text_from_pdf(file_path: str) -> str:
         for page in pdf_reader.pages:
             text += page.extract_text()
         return text
+
+def extract_text_from_pptx(file_path: str) -> str:
+    """Extract text from PowerPoint files."""
+    if not PPTX_AVAILABLE:
+        raise ImportError("python-pptx library not installed")
+    
+    prs = Presentation(file_path)
+    text = ""
+    
+    for slide_num, slide in enumerate(prs.slides, 1):
+        text += f"\n--- Slide {slide_num} ---\n"
+        for shape in slide.shapes:
+            if hasattr(shape, "text"):
+                text += shape.text + "\n"
+    
+    return text
 
 def extract_text_from_docx(file_path: str) -> str:
     doc = docx.Document(file_path)
@@ -33,6 +56,8 @@ def process_uploaded_files(file_paths: List[str]) -> dict:
         try:
             if ext == '.pdf':
                 text = extract_text_from_pdf(file_path)
+            elif ext in ['.ppt', '.pptx']:
+                text = extract_text_from_pptx(file_path)
             elif ext == '.docx':
                 text = extract_text_from_docx(file_path)
             elif ext == '.txt':

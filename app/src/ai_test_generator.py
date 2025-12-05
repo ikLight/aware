@@ -7,9 +7,13 @@ import os
 import json
 import google.generativeai as genai
 from typing import List, Dict, Any
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Configure Gemini API
-api_key = "AIzaSyBWl60BJK0n3EbOPCJQB4gvYL95cEkfaeU"
+api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
     raise RuntimeError("GEMINI_API_KEY environment variable not set.")
 

@@ -1,0 +1,59 @@
+{
+    "course_title": "Data Structures",
+    "source_file": "Data Structures Course Outline",
+    "outline": [
+        {
+            "label": "Recursion",
+            "children": []
+        },
+        {
+            "label": "Asymptotic Analysis of Algorithms",
+            "children": [
+                {
+                    "label": "Efficiency of structures and algorithms",
+                    "children": []
+                }
+            ]
+        },
+        {
+            "label": "Lists",
+            "children": []
+        },
+        {
+            "label": "Stacks",
+            "children": []
+        },
+        {
+            "label": "Queues",
+            "children": []
+        },
+        {
+            "label": "Trees",
+            "children": []
+        },
+        {
+            "label": "Heaps",
+            "children": []
+        },
+        {
+            "label": "Sorting & Searching",
+            "children": []
+        },
+        {
+            "label": "Hashing",
+            "children": []
+        },
+        {
+            "label": "Priority Queues",
+            "children": []
+        },
+        {
+            "label": "Graphs",
+            "children": []
+        },
+        {
+            "label": "Huffman Codes",
+            "children": []
+        }
+    ]
+}

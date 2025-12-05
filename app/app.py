@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from src.database.operations import AtomicDB, QueryDB
 atomic_db = AtomicDB()
 query_db = QueryDB()
@@ -83,6 +86,7 @@ async def upload_files(files: list[UploadFile] = File(...), user: dict = Depends
 
 class CourseInit(BaseModel):
     course_name: str
+    default_proficiency: str = "intermediate"  # Default proficiency for new students
 
 class CourseObjectives(BaseModel):
     objectives: str
@@ -106,6 +110,7 @@ async def init_course(
         course_doc = {
             "course_name": payload.course_name,
             "professor_username": user["username"],
+            "default_proficiency": payload.default_proficiency,
             "course_plan": None,
             "course_objectives": None,
             "roster": [],
@@ -277,6 +282,193 @@ async def upload_course_roster(
     except Exception as e:
         print(f"Error uploading roster: {e}")
         raise HTTPException(status_code=500, detail=f"Error uploading roster: {str(e)}")
+
+##-----------------------------------------------------------##
+
+@app.post("/course/{course_id}/upload-materials")
+async def upload_course_materials(
+    course_id: str,
+    materials_zip: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Step 2.5 (NEW): Upload course materials as a zip file containing PDFs and/or PPTX files.
+    Extracts files, parses content, and uses LLM to map materials to course topics.
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can upload course materials.")
+    
+    import zipfile
+    import tempfile
+    import shutil
+    from pathlib import Path
+    from src.material_mapper import map_materials_to_topics, extract_material_content
+    
+    try:
+        # Verify course exists and belongs to professor
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        if course.get("professor_username") != user["username"]:
+            raise HTTPException(status_code=403, detail="You don't have access to this course.")
+        
+        # Check if course has a plan (needed for mapping)
+        if not course.get("course_plan"):
+            raise HTTPException(status_code=400, detail="Please upload course plan before materials.")
+        
+        # Verify it's a zip file
+        if not materials_zip.filename.endswith('.zip'):
+            raise HTTPException(status_code=400, detail="File must be a ZIP archive.")
+        
+        # Create temporary directory for extraction
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_dir_path = Path(temp_dir)
+            zip_path = temp_dir_path / materials_zip.filename
+            
+            # Save uploaded zip file
+            content = await materials_zip.read()
+            with open(zip_path, 'wb') as f:
+                f.write(content)
+            
+            # Extract zip file
+            extract_dir = temp_dir_path / "extracted"
+            extract_dir.mkdir()
+            
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(extract_dir)
+            
+            # Find all PDF and PPTX files
+            materials = []
+            supported_extensions = ['.pdf', '.pptx', '.ppt']
+            
+            for file_path in extract_dir.rglob('*'):
+                if file_path.is_file() and file_path.suffix.lower() in supported_extensions:
+                    # Extract content from file
+                    content = extract_material_content(str(file_path))
+                    
+                    # Store material info
+                    materials.append({
+                        'filename': file_path.name,
+                        'content': content,
+                        'relative_path': str(file_path.relative_to(extract_dir))
+                    })
+            
+            if not materials:
+                raise HTTPException(
+                    status_code=400,
+                    detail="No PDF or PPTX files found in the zip archive."
+                )
+            
+            # Use LLM to map materials to course topics
+            print(f"Mapping {len(materials)} materials to course topics...")
+            topic_mapping = map_materials_to_topics(
+                course_plan=course['course_plan'],
+                materials=materials
+            )
+            
+            # Create materials directory for this course
+            course_materials_dir = UPLOAD_DIR / f"course_{course_id}_materials"
+            course_materials_dir.mkdir(exist_ok=True)
+            
+            # Save material files permanently
+            saved_materials = []
+            for material in materials:
+                source_path = extract_dir / material['relative_path']
+                dest_path = course_materials_dir / material['filename']
+                shutil.copy2(source_path, dest_path)
+                
+                saved_materials.append({
+                    'filename': material['filename'],
+                    'file_path': str(dest_path),
+                    'relative_path': material['relative_path']
+                })
+            
+            # Update course with materials and mapping
+            updated = atomic_db.update_course(
+                course_id,
+                {
+                    "course_materials": saved_materials,
+                    "material_topic_mapping": topic_mapping
+                }
+            )
+            
+            if not updated:
+                raise HTTPException(status_code=500, detail="Failed to update course materials.")
+            
+            return {
+                "message": "Course materials uploaded and mapped successfully",
+                "course_id": course_id,
+                "materials_count": len(saved_materials),
+                "topic_mapping": topic_mapping
+            }
+            
+    except HTTPException:
+        raise
+    except zipfile.BadZipFile:
+        raise HTTPException(status_code=400, detail="Invalid or corrupted ZIP file.")
+    except Exception as e:
+        print(f"Error uploading materials: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error uploading materials: {str(e)}")
+
+##-----------------------------------------------------------##
+
+@app.get("/course/{course_id}/materials")
+def get_course_materials(
+    course_id: str,
+    topic: str = None,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Get materials for a course, optionally filtered by topic.
+    
+    Query params:
+        topic: Optional topic path to filter materials (e.g., "Arrays/Introduction")
+    
+    Returns materials list and topic mapping.
+    """
+    try:
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        
+        # Check access - professors can see their courses, students can see enrolled courses
+        if user.get("role") == "professor":
+            if course.get("professor_username") != user["username"]:
+                raise HTTPException(status_code=403, detail="Access denied.")
+        elif user.get("role") == "student":
+            # Check if student is enrolled
+            enrollment = query_db.find_enrollment(user["username"], course_id)
+            if not enrollment:
+                raise HTTPException(status_code=403, detail="You are not enrolled in this course.")
+        else:
+            raise HTTPException(status_code=403, detail="Invalid user role.")
+        
+        materials = course.get("course_materials", [])
+        topic_mapping = course.get("material_topic_mapping", {})
+        
+        # If topic filter is specified, filter materials
+        if topic:
+            # Get filenames mapped to this topic
+            topic_files = topic_mapping.get(topic, [])
+            # Filter materials to only those mapped to this topic
+            materials = [m for m in materials if m['filename'] in topic_files]
+        
+        return {
+            "course_id": course_id,
+            "course_name": course.get("course_name"),
+            "materials": materials,
+            "topic_mapping": topic_mapping,
+            "filtered_topic": topic
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error getting course materials: {e}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving materials: {str(e)}")
+
 ##-----------------------------------------------------------##
 
 @app.get("/course/list")
@@ -593,6 +785,60 @@ def get_course_analytics(
 
 ##-----------------------------------------------------------##
 
+class SetStudentProficiencyRequest(BaseModel):
+    course_id: str
+    student_username: str
+    proficiency_level: str
+
+@app.post("/professor/set-student-proficiency")
+def set_student_proficiency(payload: SetStudentProficiencyRequest, user: dict = Depends(get_current_user)):
+    """
+    Professor sets initial proficiency level for a student enrolled in their course.
+    This is required before students can take tests.
+    """
+    if user.get("role") != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can set student proficiency.")
+    
+    try:
+        # Verify course exists and belongs to professor
+        course = query_db.find_course_by_id(payload.course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        if course.get("professor_username") != user["username"]:
+            raise HTTPException(status_code=403, detail="You don't have access to this course.")
+        
+        # Verify student is enrolled
+        if not query_db.is_student_enrolled(payload.student_username, payload.course_id):
+            raise HTTPException(status_code=400, detail="Student is not enrolled in this course.")
+        
+        # Validate proficiency level
+        if payload.proficiency_level not in ["beginner", "intermediate", "advanced"]:
+            raise HTTPException(status_code=400, detail="Invalid proficiency level. Must be beginner, intermediate, or advanced.")
+        
+        # Set proficiency
+        success = atomic_db.update_enrollment_proficiency(
+            payload.student_username,
+            payload.course_id,
+            payload.proficiency_level
+        )
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to update proficiency.")
+        
+        return {
+            "message": f"Successfully set {payload.student_username}'s proficiency to {payload.proficiency_level}",
+            "student_username": payload.student_username,
+            "proficiency_level": payload.proficiency_level
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error setting student proficiency: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to set proficiency: {str(e)}")
+
+##-----------------------------------------------------------##
+
 @app.delete("/course/{course_id}")
 def delete_course(course_id: str, user: dict = Depends(get_current_user)):
     """
@@ -811,12 +1057,11 @@ def get_available_courses(user: dict = Depends(get_current_user)):
 
 class EnrollRequest(BaseModel):
     course_id: str
-    proficiency_level: str = "intermediate"
 
 @app.post("/student/enroll")
 def enroll_in_course(payload: EnrollRequest, user: dict = Depends(get_current_user)):
     """
-    Enroll a student in a course with a proficiency level.
+    Enroll a student in a course using the course's default proficiency level.
     """
     if user.get("role") != "student":
         raise HTTPException(status_code=403, detail="Only students can enroll in courses.")
@@ -827,21 +1072,23 @@ def enroll_in_course(payload: EnrollRequest, user: dict = Depends(get_current_us
         if not course:
             raise HTTPException(status_code=404, detail="Course not found.")
         
-        # Enroll the student
+        # Get default proficiency from course (fallback to intermediate if not set)
+        default_proficiency = course.get("default_proficiency", "intermediate")
+        
+        # Enroll the student with course's default proficiency
         student_username = user["username"]
         success = atomic_db.enroll_student(
             student_username=student_username,
             course_id=payload.course_id,
-            proficiency_level=payload.proficiency_level
+            proficiency_level=default_proficiency
         )
         
         if not success:
             raise HTTPException(status_code=500, detail="Failed to enroll in course.")
         
         return {
-            "message": "Successfully enrolled in course",
-            "course_name": course.get("course_name"),
-            "proficiency_level": payload.proficiency_level
+            "message": f"Successfully enrolled in course with {default_proficiency} proficiency level.",
+            "course_name": course.get("course_name")
         }
     except HTTPException:
         raise
@@ -1149,11 +1396,18 @@ def submit_test(payload: SubmitTestRequest, user: dict = Depends(get_current_use
         
         test_id = atomic_db.insert_test_result(test_result_doc)
         
+        # Calculate and update adaptive proficiency after test submission
+        new_proficiency = atomic_db.calculate_and_update_adaptive_proficiency(
+            user["username"], 
+            payload.course_id
+        )
+        
         return {
             "test_id": test_id,
             "score": score,
             "total_questions": total_questions,
             "percentage": round(percentage, 2),
+            "proficiency_updated": new_proficiency,
             "message": f"Test submitted successfully! You scored {score}/{total_questions}"
         }
         
@@ -1207,6 +1461,137 @@ def get_test_history(course_id: str, user: dict = Depends(get_current_user)):
     except Exception as e:
         print(f"Error fetching test history: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch test history: {str(e)}")
+
+##-----------------------------------------------------------##
+
+class GenerateFlashcardsRequest(BaseModel):
+    course_id: str
+    num_cards: int = 10
+    style: str = "concise"  # concise or detailed
+    answer_format: str = "short"  # short or detailed
+
+@app.post("/student/course/{course_id}/generate-flashcards")
+def generate_flashcards(course_id: str, payload: GenerateFlashcardsRequest, user: dict = Depends(get_current_user)):
+    """
+    Generate flashcards for a course using Gemini AI.
+    Extracts content from course outline and generates review cards.
+    """
+    if user.get("role") != "student":
+        raise HTTPException(status_code=403, detail="Only students can generate flashcards.")
+    
+    try:
+        # Verify course exists
+        course = query_db.find_course_by_id(course_id)
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found.")
+        
+        # Verify student enrollment
+        student_identifier = user["username"]
+        is_enrolled = query_db.is_student_enrolled(student_identifier, course_id)
+        
+        if not is_enrolled:
+            raise HTTPException(status_code=403, detail="You are not enrolled in this course.")
+        
+        # Get course plan
+        course_plan = course.get("course_plan")
+        if not course_plan:
+            raise HTTPException(status_code=404, detail="Course plan not available.")
+        
+        print(f"[FLASHCARD GENERATION] Course plan type: {type(course_plan)}")
+        
+        # Extract content recursively from outline
+        def extract_all_content(items, content_parts=None):
+            """Recursively extract all content from course outline."""
+            if content_parts is None:
+                content_parts = []
+            
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                
+                label = item.get("label", "")
+                if label and not (label.lower().startswith("unit ") or label.lower().startswith("week ")):
+                    content_parts.append(label)
+                
+                # Recursively process children
+                if "children" in item and isinstance(item["children"], list):
+                    extract_all_content(item["children"], content_parts)
+            
+            return content_parts
+        
+        content_parts = []
+        if isinstance(course_plan, dict) and "outline" in course_plan:
+            outline = course_plan["outline"]
+            if isinstance(outline, list):
+                content_parts = extract_all_content(outline)
+        
+        if not content_parts:
+            raise HTTPException(status_code=404, detail="No content found in course plan.")
+        
+        course_content = " | ".join(content_parts)
+        print(f"[FLASHCARD GENERATION] Content length: {len(course_content)}")
+        
+        # Generate flashcards using Gemini
+        import google.generativeai as genai
+        
+        api_key = os.getenv('GEMINI_API_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured.")
+        
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        
+        prompt = f"""Based on the following course content, generate {payload.num_cards} flashcards for review.
+
+Course: {course.get("course_name")}
+Content: {course_content}
+
+Style: {payload.style}
+Answer Format: {payload.answer_format}
+
+Generate flashcards in JSON format with the following structure:
+{{
+  "cards": [
+    {{
+      "question": "Front of card - the question or prompt",
+      "answer": "Back of card - the answer or explanation"
+    }}
+  ]
+}}
+
+Make the flashcards {"concise and focused" if payload.style == "concise" else "detailed and comprehensive"}.
+Make the answers {"brief and to the point" if payload.answer_format == "short" else "detailed with explanations"}.
+"""
+        
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
+        
+        # Parse JSON response
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        response_text = response_text.strip()
+        
+        flashcard_data = json.loads(response_text)
+        cards = flashcard_data.get("cards", [])
+        
+        return {
+            "course_id": course_id,
+            "course_name": course.get("course_name"),
+            "cards": cards,
+            "num_cards": len(cards)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error generating flashcards: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to generate flashcards: {str(e)}")
 
 ##-----------------------------------------------------------##
 
