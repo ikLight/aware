@@ -9,6 +9,7 @@ capstone_env/
 .env
 .env.local
 .env.*.local
+server/.env
 
 # Python
 __pycache__/

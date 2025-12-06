@@ -1,0 +1,355 @@
+/* ================================
+   FOCUS TIMER - BASE CONTAINER
+   ================================ */
+.focus-timer {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* ================================
+   COLOR TOKENS
+   ================================ */
+:root {
+  --timer-idle: #6c757d;
+  --timer-active: #198754;
+  --timer-overtime: #fd7e14;
+  --timer-bg: #ffffff;
+  --timer-bg-hover: #f8f9fa;
+  --timer-text: #212529;
+  --timer-text-muted: #6c757d;
+  --timer-border: #dee2e6;
+  --timer-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  --timer-shadow-hover: 0 6px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* ================================
+   PULSE ANIMATION
+   ================================ */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 currentColor;
+  }
+  50% {
+    box-shadow: 0 0 8px 2px currentColor;
+  }
+}
+
+/* ================================
+   STATUS DOT STYLES
+   ================================ */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background-color 0.3s ease;
+}
+
+.status-dot-large {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.status-dot.status-idle,
+.status-dot-large.status-idle {
+  background-color: var(--timer-idle);
+}
+
+.status-dot.status-active,
+.status-dot-large.status-active {
+  background-color: var(--timer-active);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-dot.status-overtime,
+.status-dot-large.status-overtime {
+  background-color: var(--timer-overtime);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ================================
+   COLLAPSED PILL VIEW
+   ================================ */
+.timer-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background-color: var(--timer-bg);
+  border: 1px solid var(--timer-border);
+  border-radius: 50px;
+  box-shadow: var(--timer-shadow);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timer-pill:hover {
+  background-color: var(--timer-bg-hover);
+  box-shadow: var(--timer-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.timer-pill:active {
+  transform: translateY(0);
+}
+
+.timer-pill .timer-display {
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--timer-text);
+  min-width: 52px;
+  text-align: center;
+}
+
+.timer-pill .expand-icon {
+  color: var(--timer-text-muted);
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.timer-pill:hover .expand-icon {
+  transform: translateY(-2px);
+}
+
+/* ================================
+   EXPANDED CARD VIEW
+   ================================ */
+.timer-card {
+  width: 280px;
+  background-color: var(--timer-bg);
+  border: 1px solid var(--timer-border);
+  border-radius: 16px;
+  box-shadow: var(--timer-shadow);
+  overflow: hidden;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.timer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--timer-border);
+  background-color: var(--timer-bg-hover);
+}
+
+.timer-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--timer-text);
+}
+
+.collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--timer-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.collapse-btn:hover {
+  background-color: var(--timer-border);
+  color: var(--timer-text);
+}
+
+.timer-body {
+  padding: 20px 16px;
+}
+
+/* ================================
+   LARGE TIME DISPLAY
+   ================================ */
+.timer-display-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--timer-text);
+  margin-bottom: 20px;
+  transition: color 0.3s ease;
+}
+
+.timer-display-large.status-active {
+  color: var(--timer-active);
+}
+
+.timer-display-large.status-overtime {
+  color: var(--timer-overtime);
+}
+
+/* ================================
+   DURATION INPUT
+   ================================ */
+.duration-input-wrapper {
+  margin-bottom: 16px;
+}
+
+.duration-input-wrapper label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--timer-text-muted);
+  margin-bottom: 6px;
+}
+
+.duration-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+  border: 1px solid var(--timer-border);
+  border-radius: 8px;
+  background-color: var(--timer-bg);
+  color: var(--timer-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.duration-input:focus {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+/* ================================
+   CONTROL BUTTONS
+   ================================ */
+.timer-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.control-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.control-btn span {
+  line-height: 1;
+}
+
+.control-btn.primary {
+  background-color: var(--timer-active);
+  color: white;
+}
+
+.control-btn.primary:hover {
+  background-color: #157347;
+  transform: translateY(-1px);
+}
+
+.control-btn.primary.pause {
+  background-color: var(--timer-idle);
+}
+
+.control-btn.primary.pause:hover {
+  background-color: #5c636a;
+}
+
+.control-btn.secondary {
+  background-color: transparent;
+  color: var(--timer-text-muted);
+  border: 1px solid var(--timer-border);
+}
+
+.control-btn.secondary:hover {
+  background-color: var(--timer-bg-hover);
+  color: var(--timer-text);
+  border-color: #adb5bd;
+}
+
+.control-btn:active {
+  transform: translateY(0);
+}
+
+/* ================================
+   RESPONSIVE ADJUSTMENTS
+   ================================ */
+@media (max-width: 480px) {
+  .focus-timer {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .timer-card {
+    width: 260px;
+  }
+
+  .timer-display-large {
+    font-size: 2rem;
+  }
+
+  .timer-pill .timer-display {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .focus-timer {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+  }
+
+  .timer-card {
+    width: 100%;
+  }
+
+  .timer-pill {
+    width: 100%;
+    justify-content: center;
+  }
+}
+

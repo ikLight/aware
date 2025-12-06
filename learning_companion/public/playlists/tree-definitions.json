@@ -1,0 +1,141 @@
+{
+    "tree-definitions": [
+      {
+        "stepType": "lesson",
+        "content": {
+          "title": "Recursive Definition of a Tree",
+          "blocks": [
+            {
+              "type": "text",
+              "content": "A **Tree** is a collection of nodes defined recursively. Unlike a linked list which is linear, a tree is hierarchical.\n\n### The Recursive Definition\nA tree consists of:\n1.  A distinguished node called the **Root**.\n2.  Zero or more non-empty **subtrees** ($T_1, T_2, ..., T_k$), each connected to the root by a directed edge.\n\n### Terminology\n*   **Parent/Child:** Direct connection. The root is the parent of its subtrees.\n*   **Leaf (External Node):** A node with **no children**.\n*   **Internal Node:** A node with at least one child.\n*   **Siblings:** Nodes sharing the same parent."
+            },
+            {
+              "type": "mermaid",
+              "content": "graph TD\n    A((Root)) --> B((Child 1))\n    A --> C((Child 2))\n    B --> D((Leaf))\n    B --> E((Leaf))\n    C --> F((Leaf))\n    style A fill:#f9f,stroke:#333\n    style D fill:#9f9,stroke:#333\n    style E fill:#9f9,stroke:#333\n    style F fill:#9f9,stroke:#333"
+            },
+            {
+              "type": "text",
+              "content": "### Height vs. Depth\nThis is a common source of confusion:\n*   **Depth:** Distance from the **Root** down to the node. (Root depth = 0).\n*   **Height:** Distance from the **Node** down to the deepest leaf. (Leaf height = 0)."
+            }
+          ]
+        }
+      },
+      {
+        "stepType": "mcq",
+        "content": {
+          "question": "In the diagram provided in the lesson (Root A -> Children B, C -> Leaves D, E, F), what is the **Height of Node A** and the **Depth of Node D**?",
+          "options": [
+            {
+              "id": "A",
+              "text": "Height of A: 2, Depth of D: 2",
+              "feedback": "Correct. Height is the longest path to a leaf (A->B->D is 2 edges). Depth is path from root (A->B->D is 2 edges)."
+            },
+            {
+              "id": "B",
+              "text": "Height of A: 3, Depth of D: 1",
+              "feedback": "Incorrect. Count edges, not nodes. Path A->B->D has 2 edges."
+            },
+            {
+              "id": "C",
+              "text": "Height of A: 0, Depth of D: 0",
+              "feedback": "Incorrect. Only the Root has depth 0, and only Leaves have height 0."
+            }
+          ],
+          "correctOptionId": "A"
+        }
+      },
+      {
+        "stepType": "codingQuestion",
+        "content": {
+          "title": "Calculate Tree Height",
+          "markdown": "Write a recursive method `getHeight(Node node)` that returns the height of a node.\n\n**Definition:**\n*   The height of a `null` node is -1.\n*   The height of a leaf node is 0.\n*   The height of any other node is `1 + max(height(left), height(right))`.",
+          "language": "java",
+          "starterCode": "public class TreeUtils {\n    static class Node {\n        int data;\n        Node left, right;\n        public Node(int data) { this.data = data; }\n    }\n\n    public static int getHeight(Node node) {\n        // Base case: if node is null, return -1\n        // Recursive step: 1 + max height of children\n        return 0;\n    }\n\n    public static void main(String[] args) {\n        // Test Setup\n        Node root = new Node(1);\n        root.left = new Node(2);\n        root.right = new Node(3);\n        root.left.left = new Node(4);\n        System.out.println(getHeight(root));\n    }\n}",
+          "solutionCode": "public class TreeUtils {\n    static class Node {\n        int data;\n        Node left, right;\n        public Node(int data) { this.data = data; }\n    }\n\n    public static int getHeight(Node node) {\n        if (node == null) {\n            return -1;\n        }\n        int leftH = getHeight(node.left);\n        int rightH = getHeight(node.right);\n        return 1 + Math.max(leftH, rightH);\n    }\n\n    public static void main(String[] args) {\n        Node root = new Node(1);\n        root.left = new Node(2);\n        root.right = new Node(3);\n        root.left.left = new Node(4);\n        System.out.println(getHeight(root));\n    }\n}",
+          "testCases": [
+            {
+              "input": "",
+              "expectedOutput": "2\n",
+              "isHidden": false
+            }
+          ]
+        }
+      }
+    ],
+    "traversal-algorithms": [
+      {
+        "stepType": "lesson",
+        "content": {
+          "title": "The Three Great Traversals",
+          "blocks": [
+            {
+              "type": "text",
+              "content": "To \"traverse\" a tree means to visit every node exactly once. Because trees are recursive, we use recursive algorithms. The order depends on **when you visit the Root** relative to its children.\n\n### 1. Preorder (Root First)\n*   **Order:** Root $\\to$ Left $\\to$ Right\n*   **Use Case:** Prefix Notation (`+ 3 4`), copying a tree.\n\n### 2. Inorder (Root Middle)\n*   **Order:** Left $\\to$ Root $\\to$ Right\n*   **Use Case:** Infix Notation (`3 + 4`), Binary Search Trees (prints sorted).\n\n### 3. Postorder (Root Last)\n*   **Order:** Left $\\to$ Right $\\to$ Root\n*   **Use Case:** Postfix Notation (`3 4 +`), evaluating expressions, deleting a tree (delete children before parent)."
+            },
+            {
+              "type": "mermaid",
+              "content": "graph TD\n    A((+)) --> B((3))\n    A --> C((4))\n    style A fill:#fff,stroke:#333\n    style B fill:#ddd,stroke:#333\n    style C fill:#ddd,stroke:#333"
+            },
+            {
+              "type": "text",
+              "content": "*   **Preorder:** `+ 3 4`\n*   **Inorder:** `3 + 4`\n*   **Postorder:** `3 4 +`"
+            }
+          ]
+        }
+      },
+      {
+        "stepType": "workedExample",
+        "content": {
+          "title": "Tracing Recursion: The Flag Method",
+          "blocks": [
+            {
+              "type": "text",
+              "content": "A simple way to visualize traversals is to trace the outline of the tree starting from the left of the root. \n\nLet's trace the expression: `(2 * (5 - 1)) + (3 * 2)`"
+            },
+            {
+              "type": "mermaid",
+              "content": "graph TD\n    Root((+)) --> L(( * ))\n    Root --> R(( * ))\n    L --> L1((2))\n    L --> L2(( - ))\n    L2 --> L2a((5))\n    L2 --> L2b((1))\n    R --> R1((3))\n    R --> R2((2))"
+            },
+            {
+              "type": "text",
+              "content": "**Postorder Trace (Left -> Right -> Root):**\n1. Go down Left to `2`. Visit `2`.\n2. Go to ` - `. Go Left `5`. Visit `5`. Go Right `1`. Visit `1`.\n3. Now visit ` - `.\n4. Now visit ` * `.\n5. Go down Right. Visit `3`. Visit `2`. Visit ` * `.\n6. Finally, visit Root `+`.\n\n**Result:** `2 5 1 - * 3 2 * +`"
+            }
+          ]
+        }
+      },
+      {
+        "stepType": "codingQuestion",
+        "content": {
+          "title": "Implement Tree Traversals",
+          "markdown": "Implement the three standard traversals for a Binary Tree. \n\n*   `preorder`: Print value, then left, then right.\n*   `inorder`: Left, then print value, then right.\n*   `postorder`: Left, then right, then print value.\n\nPrint all values on a single line with spaces.",
+          "language": "java",
+          "starterCode": "public class Traversals {\n    static class Node {\n        String value;\n        Node left, right;\n        public Node(String value) { this.value = value; }\n    }\n\n    public static void preorder(Node n) {\n        // TODO\n    }\n\n    public static void inorder(Node n) {\n        // TODO\n    }\n\n    public static void postorder(Node n) {\n        // TODO\n    }\n\n    public static void main(String[] args) {\n        // Constructing: + * 3 4 5 (Prefix)\n        Node root = new Node(\"+\");\n        root.left = new Node(\"*\");\n        root.right = new Node(\"5\");\n        root.left.left = new Node(\"3\");\n        root.left.right = new Node(\"4\");\n\n        System.out.print(\"Pre: \"); preorder(root); System.out.println();\n        System.out.print(\"In:  \"); inorder(root); System.out.println();\n        System.out.print(\"Post: \"); postorder(root); System.out.println();\n    }\n}",
+          "solutionCode": "public class Traversals {\n    static class Node {\n        String value;\n        Node left, right;\n        public Node(String value) { this.value = value; }\n    }\n\n    public static void preorder(Node n) {\n        if (n == null) return;\n        System.out.print(n.value + \" \");\n        preorder(n.left);\n        preorder(n.right);\n    }\n\n    public static void inorder(Node n) {\n        if (n == null) return;\n        inorder(n.left);\n        System.out.print(n.value + \" \");\n        inorder(n.right);\n    }\n\n    public static void postorder(Node n) {\n        if (n == null) return;\n        postorder(n.left);\n        postorder(n.right);\n        System.out.print(n.value + \" \");\n    }\n\n    public static void main(String[] args) {\n        Node root = new Node(\"+\");\n        root.left = new Node(\"*\");\n        root.right = new Node(\"5\");\n        root.left.left = new Node(\"3\");\n        root.left.right = new Node(\"4\");\n\n        System.out.print(\"Pre: \"); preorder(root); System.out.println();\n        System.out.print(\"In:  \"); inorder(root); System.out.println();\n        System.out.print(\"Post: \"); postorder(root); System.out.println();\n    }\n}",
+          "testCases": [
+            {
+              "input": "",
+              "expectedOutput": "Pre: + * 3 4 5 \nIn:  3 * 4 + 5 \nPost: 3 4 * 5 + \n",
+              "isHidden": false
+            }
+          ]
+        }
+      },
+      {
+        "stepType": "codingQuestion",
+        "content": {
+          "title": "Evaluate Expression Tree",
+          "markdown": "An **Arithmetic Expression Tree** has operators as internal nodes and numbers as leaves.\n\n**Task:** Write a recursive function `evaluate(Node node)`.\n\n**Logic:**\n1.  **Base Case:** If the node is a leaf (no children), return its integer value.\n2.  **Recursive Step:** Evaluate the left child (`x`) and right child (`y`).\n3.  **Apply Operator:** Based on the node's operator string, compute `x op y`.\n\nSupported operators: `+`, `-`, `*`, `/`.",
+          "language": "java",
+          "starterCode": "public class ExprTreeEval {\n    static class Node {\n        String value;\n        Node left, right;\n        public Node(String value) { this.value = value; }\n        public boolean isLeaf() { return left == null && right == null; }\n    }\n\n    public static int evaluate(Node node) {\n        // 1. Base Case: Leaf\n        if (node.isLeaf()) {\n            return Integer.parseInt(node.value);\n        }\n\n        // 2. Recursive Step\n        int leftVal = evaluate(node.left);\n        int rightVal = evaluate(node.right);\n\n        // 3. Apply Operator\n        switch (node.value) {\n            case \"+\": return leftVal + rightVal;\n            case \"-\": return leftVal - rightVal;\n            case \"*\": return leftVal * rightVal;\n            case \"/\": return leftVal / rightVal;\n        }\n        return 0;\n    }\n\n    public static void main(String[] args) {\n        // Tree for: (5 - 1) * 2\n        Node root = new Node(\"*\");\n        root.right = new Node(\"2\");\n        root.left = new Node(\"-\");\n        root.left.left = new Node(\"5\");\n        root.left.right = new Node(\"1\");\n\n        System.out.println(evaluate(root));\n    }\n}",
+          "solutionCode": "public class ExprTreeEval {\n    static class Node {\n        String value;\n        Node left, right;\n        public Node(String value) { this.value = value; }\n        public boolean isLeaf() { return left == null && right == null; }\n    }\n\n    public static int evaluate(Node node) {\n        if (node.isLeaf()) {\n            return Integer.parseInt(node.value);\n        }\n\n        int leftVal = evaluate(node.left);\n        int rightVal = evaluate(node.right);\n\n        switch (node.value) {\n            case \"+\": return leftVal + rightVal;\n            case \"-\": return leftVal - rightVal;\n            case \"*\": return leftVal * rightVal;\n            case \"/\": return leftVal / rightVal;\n        }\n        return 0;\n    }\n\n    public static void main(String[] args) {\n        Node root = new Node(\"*\");\n        root.right = new Node(\"2\");\n        root.left = new Node(\"-\");\n        root.left.left = new Node(\"5\");\n        root.left.right = new Node(\"1\");\n\n        System.out.println(evaluate(root));\n    }\n}",
+          "testCases": [
+            {
+              "input": "",
+              "expectedOutput": "8\n",
+              "isHidden": false
+            }
+          ]
+        }
+      }
+    ]
+  }

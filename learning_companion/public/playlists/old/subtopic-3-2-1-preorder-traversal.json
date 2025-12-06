@@ -1,0 +1,87 @@
+[
+  {
+    "stepType": "Lesson",
+    "content": {
+      "title": "Introduction to Tree Traversal",
+      "blocks": [
+        {
+          "type": "text",
+          "content": "So far, we've learned how to define a tree. But how do we visit every node in a structured way? This process is called **traversal**.\n\nA traversal 'walks' the tree and processes each node exactly once. Because trees are naturally recursive (a tree has a root and two subtrees), the algorithms for traversing them are also naturally recursive."
+        },
+        {
+          "type": "subtitle",
+          "text": "Pre-order: Root, Left, Right"
+        },
+        {
+          "type": "text",
+          "content": "The first traversal we'll explore is **pre-order traversal**. In this method, we process the nodes in a specific sequence:\n\n1.  Visit the **root** node.\n2.  Recursively traverse the **left** subtree.\n3.  Recursively traverse the **right** subtree.\n\nThe key is that the root is visited *before* its children."
+        },
+        {
+          "type": "diagram",
+          "content": "A visual way to remember pre-order traversal. Imagine a flag on the left side of each node. As you trace around the outside of the tree, you collect the flags in pre-order. A -> B -> D -> E -> C -> F -> G."
+        }
+      ]
+    }
+  },
+  {
+    "stepType": "Lesson",
+    "content": {
+      "title": "Implementing Pre-order Traversal",
+      "blocks": [
+        {
+          "type": "text",
+          "content": "The recursive definition of pre-order traversal leads to a very elegant implementation. Notice how the code directly follows the 'Root, Left, Right' pattern."
+        },
+        {
+          "type": "code",
+          "content": "/**\n * A pre-order traversal to print tree elements.\n */\nprivate void prefix(Node t) {\n    if(t != null) {\n        System.out.print(t);  // 1. Visit the root\n        prefix(t.left);     // 2. Traverse the left subtree\n        prefix(t.right);    // 3. Traverse the right subtree\n    }\n}"
+        },
+        {
+          "type": "text",
+          "content": "The base case for the recursion is when we encounter a `null` node (an empty subtree), at which point the method simply returns."
+        }
+      ]
+    }
+  },
+  {
+    "stepType": "MCQ",
+    "content": {
+      "question": "Given the tree from the `TreeTraversal.java` example (root 'a', left child 'b', right child 'c', 'b' has children 'd' and 'e'), what is the correct pre-order traversal?",
+      "options": [
+        {
+          "id": "A",
+          "text": "d, b, e, a, c"
+        },
+        {
+          "id": "B",
+          "text": "a, b, c, d, e"
+        },
+        {
+          "id": "C",
+          "text": "a, b, d, e, c"
+        }
+      ],
+      "correctOptionId": "C",
+      "explanation": "Correct! Following the Root-Left-Right pattern: Visit 'a'. Go left to 'b', visit 'b'. Go left from 'b' to 'd', visit 'd'. Backtrack to 'b', go right to 'e', visit 'e'. Backtrack to 'a', go right to 'c', visit 'c'. The result is a, b, d, e, c."
+    }
+  },
+  {
+    "stepType": "OpenQuestion",
+    "content": {
+      "question": "In your own words, what are the three steps of a pre-order traversal? What is the base case that stops the recursion?",
+      "hint": "Think about the order: Root, Left, Right. What happens when a node is null?"
+    }
+  },
+    {
+      "stepType": "CodingQuestion",
+      "content": {
+        "prompt": "Complete the `preOrder` method so that it visits nodes in Root-Left-Right order and records the sequence. A small sample tree is provided for you in the program wrapper.",
+        "language": "java",
+        "displayCode": "private static void preOrder(TreeNode node) {\n    // Visit the current node, then traverse the left and right subtrees\n}\n",
+        "wrapperPrefix": "import java.util.*;\n\npublic class Main {\n    static class TreeNode {\n        String value;\n        TreeNode left;\n        TreeNode right;\n        TreeNode(String value) { this.value = value; }\n    }\n\n    static List<String> traversal = new ArrayList<>();\n\n    public static void main(String[] args) {\n        TreeNode root = buildSampleTree();\n        preOrder(root);\n        System.out.println(String.join(\" \", traversal));\n    }\n\n    private static TreeNode buildSampleTree() {\n        TreeNode a = new TreeNode(\"A\");\n        TreeNode b = new TreeNode(\"B\");\n        TreeNode c = new TreeNode(\"C\");\n        TreeNode d = new TreeNode(\"D\");\n        TreeNode e = new TreeNode(\"E\");\n        TreeNode f = new TreeNode(\"F\");\n        a.left = b; a.right = c;\n        b.left = d; b.right = e;\n        c.left = f;\n        return a;\n    }\n\n    // ==== student code starts ====\n",
+        "wrapperSuffix": "    // ==== student code ends ====\n\n    private static void visit(TreeNode node) {\n        traversal.add(node.value);\n    }\n}\n",
+        "expectedOutput": "A B D E C F",
+        "solution": "private static void preOrder(TreeNode node) {\n    if (node == null) {\n        return;\n    }\n    visit(node);\n    preOrder(node.left);\n    preOrder(node.right);\n}\n"
+      }
+    }
+]

@@ -1,0 +1,76 @@
+[
+    {
+      "stepType": "Lesson",
+      "content": {
+        "title": "In-order Traversal",
+        "blocks": [
+          {
+            "type": "subtitle",
+            "text": "In-order: Left, Root, Right"
+          },
+          {
+            "type": "text",
+            "content": "Next up is **in-order traversal**. The pattern here is slightly different:\n\n1.  Recursively traverse the **left** subtree.\n2.  Visit the **root** node.\n3.  Recursively traverse the **right** subtree.\n\nIn this case, the root is visited *in-between* its left and right subtrees."
+          },
+          {
+            "type": "diagram",
+            "content": "Using the 'flags' visual, in-order traversal attaches the flag to the bottom of the node. Tracing the tree's exterior, you'd collect flags in the order D -> B -> E -> A -> F -> C -> G."
+          }
+        ]
+      }
+    },
+    {
+      "stepType": "Lesson",
+      "content": {
+        "title": "Implementing In-order Traversal",
+        "blocks": [
+          {
+            "type": "text",
+            "content": "The code for in-order traversal mirrors its 'Left, Root, Right' definition."
+          },
+          {
+            "type": "code",
+            "content": "/**\n * An in-order traversal to print tree elements.\n */\nprivate void infix(Node t) {\n    if(t != null) {\n        infix(t.left);      // 1. Traverse the left subtree\n        System.out.print(t);  // 2. Visit the root\n        infix(t.right);     // 3. Traverse the right subtree\n    }\n}"
+          },
+          {
+            "type": "text",
+            "content": "A very important property of in-order traversal is that when performed on a **Binary Search Tree (BST)**, it visits the nodes in ascending sorted order. This is a powerful and frequently used feature!"
+          }
+        ]
+      }
+    },
+    {
+      "stepType": "MCQ",
+      "content": {
+        "question": "If you perform an in-order traversal on a valid Binary Search Tree, what is the most significant characteristic of the resulting sequence of values?",
+        "options": [
+          {
+            "id": "A",
+            "text": "The values will be in a random order."
+          },
+          {
+            "id": "B",
+            "text": "The values will be sorted in ascending order."
+          },
+          {
+            "id": "C",
+            "text": "The values will be sorted in descending order."
+          }
+        ],
+        "correctOptionId": "B",
+        "explanation": "Correct. Because of the BST property (left child < parent < right child) and the in-order traversal pattern (Left, Root, Right), the nodes are always visited in sorted order."
+      }
+    },
+    {
+      "stepType": "CodingQuestion",
+      "content": {
+        "prompt": "Complete the `inOrder` method so that it visits nodes in Left-Root-Right order and records the sequence. A sample tree and helper utilities are already provided in the wrapper program.",
+        "language": "java",
+        "displayCode": "private static void inOrder(TreeNode node) {\n    // Traverse the left subtree, visit the node, then traverse the right subtree\n}\n",
+        "wrapperPrefix": "import java.util.*;\n\npublic class Main {\n    static class TreeNode {\n        String value;\n        TreeNode left;\n        TreeNode right;\n        TreeNode(String value) { this.value = value; }\n    }\n\n    static List<String> traversal = new ArrayList<>();\n\n    public static void main(String[] args) {\n        TreeNode root = buildSampleTree();\n        inOrder(root);\n        System.out.println(String.join(\" \", traversal));\n    }\n\n    private static TreeNode buildSampleTree() {\n        TreeNode a = new TreeNode(\"A\");\n        TreeNode b = new TreeNode(\"B\");\n        TreeNode c = new TreeNode(\"C\");\n        TreeNode d = new TreeNode(\"D\");\n        TreeNode e = new TreeNode(\"E\");\n        TreeNode f = new TreeNode(\"F\");\n        a.left = b; a.right = c;\n        b.left = d; b.right = e;\n        c.left = f;\n        return a;\n    }\n\n    // ==== student code starts ====\n",
+        "wrapperSuffix": "    // ==== student code ends ====\n\n    private static void visit(TreeNode node) {\n        traversal.add(node.value);\n    }\n}\n",
+        "expectedOutput": "D B E A F C",
+        "solution": "private static void inOrder(TreeNode node) {\n    if (node == null) {\n        return;\n    }\n    inOrder(node.left);\n    visit(node);\n    inOrder(node.right);\n}\n"
+      }
+    }
+]
