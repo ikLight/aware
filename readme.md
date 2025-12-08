@@ -1,4 +1,4 @@
-# Loop - AI-Powered Adaptive Learning Platform
+# Loop - AI-Powered Adaptive Learning Platform (previously known as Aware)
 
 An intelligent educational platform that personalizes learning experiences through AI-driven test generation, performance analytics, and adaptive proficiency tracking.
 
