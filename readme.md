@@ -53,7 +53,7 @@ aware/
 
 1. **Clone and navigate to project**
 ```bash
-cd /Users/malavika/loop/aware
+cd /Users/yourname/loop/aware
 ```
 
 2. **Create virtual environment**
